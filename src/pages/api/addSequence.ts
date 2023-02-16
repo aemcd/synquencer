@@ -10,16 +10,13 @@ const catchFunction = (e: unknown) => {
 	}
 };
 
-const addPost = async (req: NextApiRequest, res: NextApiResponse) => {
+const addSequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
-		const db = client.db("posts");
-		const { title, content } = req.body;
+		const db = client.db("sequences");
+		const { id } = req.body;
 
-		const post = await db.collection("posts").insertOne({
-			title,
-			content,
-		});
+		const post = await db.collection("sequences").insertOne({});
 
 		res.json(post);
 	} catch (e) {
@@ -27,4 +24,4 @@ const addPost = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 };
 
-export default addPost;
+export default addSequence;

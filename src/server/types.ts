@@ -1,4 +1,3 @@
-import { NumberLiteralType } from "typescript";
 
 //JSON serialization code references these resources:
 //https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
@@ -18,15 +17,15 @@ export abstract class Serializable {
 
 export class Sequence extends Serializable{
     id: String;
-    length: Number = 0;
-    bpm: Number = 120;
-    timeSignature: {numerator: Number, denominator: Number};
+    length: number = 0;
+    bpm: number = 120;
+    timeSignature: {numerator: number, denominator: number};
     
     constructor (args:
         {id: String,
-        length: Number,
-        bpm: Number,
-        timeSignature: {numerator: Number, denominator: Number},},
+        length: number,
+        bpm: number,
+        timeSignature: {numerator: number, denominator: number},},
     ) {
         super();
         this.id = args.id;
@@ -36,35 +35,79 @@ export class Sequence extends Serializable{
     }
 
 }
-/*
-export class Note {
-    pitch: Pitch;
-    location: Number;
-    instrument: Instrument;
-    velocity: Number;
-    duration: Number;
 
-    constructor (
-        pitch: Pitch,
-        location: Number,
-        instrument: Instrument,
-        velocity: Number,
-        duration: Number
+export class Note extends Serializable{
+    location: number;
+    velocity: number;
+    duration: number;
+    pitch: number;
+
+    constructor (args: {
+        location: number,
+        velocity: number,
+        duration: number,
+        pitch: number,
+    }
     ) {
-        this.pitch = pitch;
-        this.location = location;
-        this.instrument = instrument;
-        this.velocity = velocity;
-        this.duration = duration;
+        super();
+        this.location = args.location;
+        this.velocity = args.velocity;
+        this.duration = args.duration;
+        this.pitch = args.pitch;
+    }
+    public pitchName() {
+        let pitchnumber: number = this.pitch % 12;
+        let octavenumber: number = (this.pitch - pitchnumber)/12;
+        let pitchName: string = "";
+        switch(pitchnumber) {
+            case 0:
+                pitchName = "C";
+                break;
+            case 1:
+                pitchName = "C#";
+                break;
+            case 2:
+                pitchName = "D";
+                break;
+            case 3:
+                pitchName = "D#";
+                break;
+            case 4:
+                pitchName = "E";
+                break;
+            case 5:
+                pitchName = "F";
+                break;
+            case 6:
+                pitchName = "F#";
+                break;
+            case 7:
+                pitchName = "G";
+                break;
+            case 8:
+                pitchName = "G#";
+                break;
+            case 9:
+                pitchName = "A";
+                break;
+            case 10:
+                pitchName = "A#";
+                break;
+            case 11:
+                pitchName = "B";
+                break;
+        }
+        return `${pitchName}${octavenumber}`;
     }
 }
 
+/*
 export class Pitch {
-    height: Number;
+    height: number;
     name: String;
 
     constructor (
-        height: Number,
+        height: number,
         name: String
     ) {
         this.height = height;
@@ -74,16 +117,17 @@ export class Pitch {
 */
 
 export class Instrument extends Serializable{
-    channel: Number;
+    channel: number;
     name: String;
 
-    constructor (
-        channel: Number,
+    constructor (args: {
+        channel: number,
         name: String,
+    }
     ) {
         super();
-        this.channel = channel;
-        this.name = name;
+        this.channel = args.channel;
+        this.name = args.name;
     }
 }
 

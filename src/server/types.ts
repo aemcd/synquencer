@@ -8,13 +8,15 @@ export abstract class Serializable {
     serialize() {
         return JSON.stringify(Object.values(self));
     }
-    static deserialize<A extends Serializable>(str: String, c: new (...args: any) => A) {
+    static deserialize<A extends Serializable>(str: string, con: (...args: any) => A) {
         //second argument should be a constructor to a Serializable object
-        type Struct = (...args: Parameters<typeof c>) => A;
+        type Struct = Parameters<typeof con>;
+        const structArg: Struct = JSON.parse(str);
+        return con(structArg);
     }
 }
 
-export class Sequence {
+export class Sequence extends Serializable{
     id: String;
     length: Number = 0;
     bpm: Number = 120;
@@ -26,6 +28,7 @@ export class Sequence {
         bpm: Number,
         timeSignature: {numerator: Number, denominator: Number},},
     ) {
+        super();
         this.id = args.id;
         this.length = args.length;
         this.bpm = args.bpm;
@@ -68,8 +71,9 @@ export class Pitch {
         this.name = name;
     }
 }
+*/
 
-export class Instrument {
+export class Instrument extends Serializable{
     channel: Number;
     name: String;
 
@@ -77,10 +81,11 @@ export class Instrument {
         channel: Number,
         name: String,
     ) {
+        super();
         this.channel = channel;
         this.name = name;
     }
 }
-*/
+
 
 export {}

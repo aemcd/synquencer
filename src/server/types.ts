@@ -1,31 +1,40 @@
 import { NumberLiteralType } from "typescript";
 
-class Sequence {
-    readonly id: String;
-    length: Number = 0;
-    bpm: Number = 120;
-    timeSignature: {numerator: Number, denominator: Number};
-    notes: Array<Note>;
+//JSON serialization code references these resources:
+//https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
+//https://www.xolv.io/blog/dev-notes/how-to-pass-a-class-to-a-function-in-typescript/
 
-    constructor (
-        id: String,
-        length: Number,
-        bpm: Number,
-        timeSignature: {numerator: Number, denominator: Number},
-    ) {
-        this.id = id;
-        this.length = length;
-        this.bpm = bpm;
-        this.timeSignature = timeSignature;
-        this.notes = new Array<Note>;
+export abstract class Serializable {
+    serialize() {
+        return JSON.stringify(Object.values(self));
     }
-
-    addNote(note: Note) {
-        this.notes.push(note);
+    static deserialize<A extends Serializable>(str: String, c: new (...args: any) => A) {
+        //second argument should be a constructor to a Serializable object
+        type Struct = (...args: Parameters<typeof c>) => A;
     }
 }
 
-class Note {
+export class Sequence {
+    id: String;
+    length: Number = 0;
+    bpm: Number = 120;
+    timeSignature: {numerator: Number, denominator: Number};
+    
+    constructor (args:
+        {id: String,
+        length: Number,
+        bpm: Number,
+        timeSignature: {numerator: Number, denominator: Number},},
+    ) {
+        this.id = args.id;
+        this.length = args.length;
+        this.bpm = args.bpm;
+        this.timeSignature = args.timeSignature;
+    }
+
+}
+/*
+export class Note {
     pitch: Pitch;
     location: Number;
     instrument: Instrument;
@@ -47,7 +56,7 @@ class Note {
     }
 }
 
-class Pitch {
+export class Pitch {
     height: Number;
     name: String;
 
@@ -60,7 +69,7 @@ class Pitch {
     }
 }
 
-class Instrument {
+export class Instrument {
     channel: Number;
     name: String;
 
@@ -72,5 +81,6 @@ class Instrument {
         this.name = name;
     }
 }
+*/
 
-export{}
+export {}

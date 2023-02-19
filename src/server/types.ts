@@ -33,6 +33,19 @@ export class Sequence extends Serializable{
         this.bpm = args.bpm;
         this.timeSignature = args.timeSignature;
     }
+getLength(number) {
+    return this.length;
+}
+setLength(length: number) {
+    this.length = length;
+}
+
+    getBPM(number) {
+    return bpm;
+}
+setBPM(bpm: number) {
+    this.bpm = bpm;
+}
 
 }
 
@@ -55,6 +68,37 @@ export class Note extends Serializable{
         this.duration = args.duration;
         this.pitch = args.pitch;
     }
+    getlocation(number) {
+        return this.location;
+    }
+    setLocation(location: number) {
+        if (location < 0) {
+            this.location = 0;
+            return;
+
+        } else if (location > this.length) {
+            this.location = this.length();
+        return;
+    } else {
+        this.location = location;
+    }
+    }
+    getVelocity(number) {
+        return this.velocity;
+
+}   
+    setVelocity(velocity: number) {
+        if (velocity < 0) {
+            this.velocity = 0;
+            return;
+
+        } else if (velocity > 127) {
+            this.velocity = 127;
+            return;
+            
+        }
+    this.velocity = velocity;
+}
     public pitchName() {
         let pitchnumber: number = this.pitch % 12;
         let octavenumber: number = (this.pitch - pitchnumber)/12;

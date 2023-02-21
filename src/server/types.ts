@@ -5,16 +5,19 @@
 
 export abstract class Serializable {
     serialize() {
-        return JSON.stringify(Object.values(self));
+        return JSON.stringify(Object.entries(this));
     }
-    static deserialize<A extends Serializable>(str: string, con: (...args: any) => A) {
-        //second argument should be a constructor to a Serializable object
-        type Struct = Parameters<typeof con>;
-        const structArg: Struct = JSON.parse(str);
-        return con(structArg);
+    static deserialize<A extends Serializable>(str: string, clazz: new(arg: any) => A) {
+        //second argument should be a class that extends Serializable
+        const structArg = Object.fromEntries(JSON.parse(str));
+        return new clazz(structArg);
     }
 }
 
+//all constructors to anything that extends Serializable must have one argument only
+//structured as a set of initial parameters
+//Also don't nest objects inside other objects, it might work but I'm not counting on it
+//At the level of fluid that should be handled through SharedMap anyways
 export class Sequence extends Serializable{
     id: String;
     length: number = 0;

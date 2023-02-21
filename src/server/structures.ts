@@ -11,15 +11,19 @@
                 -key: pitch/location of note (only one note can occupy a given pitch and location at same time for one instrument)
                 -value: JSON serialized form of Note object
 */
-import {Sequence, Note, Instrument, Pitch} from "./types.js";
+
+/*
+import {Sequence, Note, Instrument} from "./types.js";
+import {SharedString, SharedMap} from "@fluidframework/sequence";
 
 const schema = {
     initialObjects: {
-        sequence: Sequence,
+        metadata: SharedString,
+        sequence: SharedMap,
     },
-    dynamicObjectTypes: [Note, Instrument, Pitch],
+    dynamicObjectTypes: [SharedString, SharedMap],
 }
 
 const {container, services} = await(client.createContainer(schema));
-
+*/
 export {}

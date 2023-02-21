@@ -18,12 +18,11 @@ export default function Home() {
         height: "100vh",
       }}>
         <div style={{
-            textAlign: "center",
-            // marginTop: "-50px"
+            textAlign: "center"
         }}>
           <h1 style={{margin: "0 0 24px 0"}}>Synquencer</h1>
-          <Link href="/sequencer" className="homeMenuButton">New Sequence</Link>
-          <button className="homeMenuButton">About</button>
+          <Link href="/sequencer" className="home-menu-button">New Sequence</Link>
+          <button className="home-menu-button">About</button>
         </div>
       </div>
     </>

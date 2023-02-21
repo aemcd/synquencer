@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import TopBar from '@/components/TopBar'
 
 export default function Home() {
   return (
@@ -9,15 +10,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div style={{
-        display: "flex",
-        flexFlow: "row nowrap",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-      }}>
-        <p>nothing here (yet!)</p>
-      </div>
+      <TopBar />
     </>
   )
 }

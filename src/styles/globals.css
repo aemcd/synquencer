@@ -1,5 +1,18 @@
 :root {
   /* gruvbox dark */
+  --fg: #ebdbb2;
+  --fg0: #fbf1c7;
+  --fg1: #ebdbb2;
+  --fg2: #d5c4a1;
+  --fg3: #bdae93;
+  --fg4: #a89984;
+  --bg: #282828;
+  --bg0: #282828;
+  --bg1: #3c3836;
+  --bg2: #504945;
+  --bg3: #665c54;
+  --bg4: #7c6f64;
+
   --black: #282828;
   --red: #cc241d;
   --green: #98971a;
@@ -16,18 +29,15 @@
   --brightPurple: #d3869b;
   --brightCyan: #8ec07c;
   --brightWhite: #ebdbb2;
-  --background: #282828;
-  --foreground: #ebdbb2;
-  --selectionBackground: #665c54;
-  --cursorColor: #ebdbb2;
 }
 
 body {
-  color: var(--foreground);
-  background-color: var(--background);
+  color: var(--fg);
+  background-color: var(--bg);
   font-family: monospace;
   font-size: 1.25rem;
   margin: 0;
+  padding: 0;
 }
 
 h1 {
@@ -36,9 +46,9 @@ h1 {
   font-family: monospace;
 }
 
-.homeMenuButton {
-  color: var(--white);
-  background-color: var(--background);
+.home-menu-button {
+  color: var(--fg2);
+  background-color: var(--bg);
   font-family: monospace;
   font-size: 1.25rem;
   background: none;
@@ -49,6 +59,26 @@ h1 {
   text-decoration: none;
 }
 
-.homeMenuButton:hover {
-  color: var(--brightWhite);
+.home-menu-button:hover {
+  color: var(--fg0);
+}
+
+.top-bar {
+  background-color: var(--bg1);
+}
+
+.top-button {
+  font-size: 1.25rem;
+  line-height: 0px;
+  height: 48px;
+  width: 48px;
+  margin: 8px 0px 8px 8px;
+  color: var(--fg2);
+  background-color: var(--bg2);
+  border-style: none;
+  border-radius: 8px;
+}
+
+.top-button:hover {
+  background-color: var(--bg3);
 }

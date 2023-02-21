@@ -1,6 +1,16 @@
 import { Sequence, Note } from "@/server/types";
+import exp from "constants";
 
-const handleAddSequence = async (newSequence: Sequence) => {
+const catchFunction = (e: unknown) => {
+	console.error(e);
+	if (e instanceof Error) {
+		throw new Error(e.message);
+	} else {
+		throw new Error(String(e));
+	}
+};
+
+export const addSequence = async (newSequence: Sequence) => {
 	try {
 		let response = await fetch("/api/addSequence/", {
 			method: "POST",
@@ -11,8 +21,8 @@ const handleAddSequence = async (newSequence: Sequence) => {
 			},
 		});
 		response = await response.json();
-		console.log(response);
+		// console.log(response);
 	} catch (e) {
-		throw new Error(String(e));
+		catchFunction(e);
 	}
 };

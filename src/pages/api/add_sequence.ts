@@ -11,7 +11,7 @@ const catchFunction = (e: unknown) => {
 	}
 };
 
-const addSequence = async (req: NextApiRequest, res: NextApiResponse) => {
+const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
 		const db = client.db("sequences");
@@ -26,4 +26,4 @@ const addSequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 };
 
-export default addSequence;
+export default add_sequence;

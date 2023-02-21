@@ -10,9 +10,10 @@ const catchFunction = (e: unknown) => {
 	}
 };
 
-export const addSequence = async (newSequence: Sequence) => {
+export const AddSequence = async (newSequence: Sequence) => {
+	console.log(newSequence);
 	try {
-		let response = await fetch("/api/addSequence/", {
+		let response = await fetch("/api/add_sequence/", {
 			method: "POST",
 			body: JSON.stringify(newSequence),
 			headers: {

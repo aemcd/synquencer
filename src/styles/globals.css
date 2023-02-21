@@ -46,6 +46,7 @@ h1 {
   margin: 1em auto;
   display: block;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .homeMenuButton:hover {

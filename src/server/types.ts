@@ -56,102 +56,96 @@ export class Note extends Serializable {
 	duration: number;
 	pitch: number;
 
-    constructor (args: {
-        location: number,
-        velocity: number,
-        duration: number,
-        pitch: number,
-    }
-    ) {
-        super();
-        this.location = args.location;
-        this.velocity = args.velocity;
-        this.duration = args.duration;
-        this.pitch = args.pitch;
-    }
-    getlocation(number) {
-        return this.location;
-    }
-    setLocation(location: number) {
-        if (location < 0) {
-            this.location = 0;
-            return;
+	constructor(args: {
+		location: number;
+		velocity: number;
+		duration: number;
+		pitch: number;
+	}) {
+		super();
+		this.location = args.location;
+		this.velocity = args.velocity;
+		this.duration = args.duration;
+		this.pitch = args.pitch;
+	}
+	getlocation() {
+		return this.location;
+	}
+	setLocation(location: number) {
+		if (location < 0) {
+			this.location = 0;
+			return;
+			// } else if (location > this.length) {
+			// 	this.location = this.length();
+			// 	return;
+		} else {
+			this.location = location;
+		}
+	}
+	getVelocity() {
+		return this.velocity;
+	}
+	setVelocity(velocity: number) {
+		if (velocity < 0) {
+			this.velocity = 0;
+			return;
+		} else if (velocity > 127) {
+			this.velocity = 127;
+			return;
+		}
+		this.velocity = velocity;
+	}
+	getDuration() {
+		return this.duration;
+	}
+	setDuration(duration: number) {
+		this.duration = duration;
+	}
 
-        } else if (location > this.length) {
-            this.location = this.length();
-        return;
-    } else {
-        this.location = location;
-    }
-    }
-    getVelocity(number) {
-        return this.velocity;
-
-}   
-    setVelocity(velocity: number) {
-        if (velocity < 0) {
-            this.velocity = 0;
-            return;
-
-        } else if (velocity > 127) {
-            this.velocity = 127;
-            return;
-            
-        }
-    this.velocity = velocity;
-}
-getDuration(number) {
-    return this.duration;
-
-}
-setDuration(duration: number) {
-    this.duration = duration;
-}
-
-    public pitchName() {
-        let pitchnumber: number = this.pitch % 12;
-        let octavenumber: number = (this.pitch - pitchnumber)/12;
-        let pitchName: string = "";
-        switch(pitchnumber) {
-            case 0:
-                pitchName = "C";
-                break;
-            case 1:
-                pitchName = "C#";
-                break;
-            case 2:
-                pitchName = "D";
-                break;
-            case 3:
-                pitchName = "D#";
-                break;
-            case 4:
-                pitchName = "E";
-                break;
-            case 5:
-                pitchName = "F";
-                break;
-            case 6:
-                pitchName = "F#";
-                break;
-            case 7:
-                pitchName = "G";
-                break;
-            case 8:
-                pitchName = "G#";
-                break;
-            case 9:
-                pitchName = "A";
-                break;
-            case 10:
-                pitchName = "A#";
-                break;
-            case 11:
-                pitchName = "B";
-                break;
-        }
-        return `${pitchName}${octavenumber}`;
-    }
+	public pitchName() {
+		let pitchnumber: number = this.pitch % 12;
+		let octavenumber: number = (this.pitch - pitchnumber) / 12;
+		let pitchName: string = "";
+		switch (pitchnumber) {
+			case 0:
+				pitchName = "C";
+				break;
+			case 1:
+				pitchName = "C#";
+				break;
+			case 2:
+				pitchName = "D";
+				break;
+			case 3:
+				pitchName = "D#";
+				break;
+			case 4:
+				pitchName = "E";
+				break;
+			case 5:
+				pitchName = "F";
+				break;
+			case 6:
+				pitchName = "F#";
+				break;
+			case 7:
+				pitchName = "G";
+				break;
+			case 8:
+				pitchName = "G#";
+				break;
+			case 9:
+				pitchName = "A";
+				break;
+			case 10:
+				pitchName = "A#";
+				break;
+			case 11:
+				pitchName = "B";
+				break;
+		}
+		return `${pitchName}${octavenumber}`;
+	}
 }
 
 /*
@@ -178,26 +172,22 @@ export class Instrument extends Serializable {
 		this.channel = args.channel;
 		this.name = args.name;
 	}
+
+	getChannel() {
+		return this.channel;
+	}
+	setChannel(channel: number) {
+		this.channel = channel;
+	}
+	getName() {
+		return this.name;
+	}
+	setTokenSourceMapRange(name: String) {
+		this.name = name;
+	}
+	setName(name: String) {
+		this.name = name;
+	}
 }
 
-getChannel(number) {
-    return this.channel;
-
-}
-setChannel(channel: number) {
-    this.channel = channel;
-}
-getName)String) {
-    return this.name;
-}
-setTokenSourceMapRange(name, String) {
-    this.name = name;
-    
-}
-setName(name, String) {
-    this.name = name;
-
-
-}
-}
-export {}
+export {};

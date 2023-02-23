@@ -1,15 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { ObjectId } from "mongodb";
-import { Sequence } from "@/server/types";
 
-const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
+const delete_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
 		const db = client.db("sequences");
-		const newSequence = req.body as Sequence;
+		const delID = req.query;
 
-		const post = await db.collection("sequences").insertOne(newSequence);
+		const post = await db.collection("sequences").deleteOne(delID);
+
+		if (post.deletedCount == 0) {
+			res.status(500).json({
+				error: "Failed to delete: Sequence not found",
+			});
+			return;
+		}
 
 		res.status(200).json(post);
 	} catch (e) {
@@ -22,4 +27,4 @@ const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 };
 
-export default add_sequence;
+export default delete_sequence;

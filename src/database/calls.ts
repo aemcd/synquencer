@@ -11,7 +11,6 @@ const catchFunction = (e: unknown) => {
 };
 
 export const AddSequence = async (newSequence: Sequence) => {
-	console.log(newSequence);
 	try {
 		let response = await fetch("/api/add_sequence/", {
 			method: "POST",
@@ -22,7 +21,44 @@ export const AddSequence = async (newSequence: Sequence) => {
 			},
 		});
 		response = await response.json();
-		// console.log(response);
+	} catch (e) {
+		catchFunction(e);
+	}
+};
+
+export const DeleteSequence = async (id: String) => {
+	try {
+		let response = await fetch("/api/delete_sequence?id=" + id, {
+			method: "DELETE",
+			body: JSON.stringify(id),
+			headers: {
+				Accept: "application/json, text/plain, */*",
+				"Content-Type": "application/json",
+			},
+		});
+		response = await response.json();
+	} catch (e) {
+		catchFunction(e);
+	}
+};
+
+/**
+ *
+ * @param id ID of the sequence
+ * @returns A sequence from the database with the same ID. If no such sequence, an object in the form: {error: "message"} is returned.
+ */
+export const GetSequence = async (id: String) => {
+	try {
+		let resp = await (
+			await fetch("/api/get_sequence?id=" + id, {
+				method: "GET",
+				headers: {
+					Accept: "application/json, text/plain, */*",
+					"Content-Type": "application/json",
+				},
+			})
+		).json();
+		return resp.id === id ? new Sequence(resp) : resp;
 	} catch (e) {
 		catchFunction(e);
 	}

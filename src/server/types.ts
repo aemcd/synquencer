@@ -99,6 +99,14 @@ export class Note extends Serializable{
         }
     this.velocity = velocity;
 }
+getDuration(number) {
+    return this.duration;
+
+}
+setDuration(duration: number) {
+    this.duration = duration;
+}
+
     public pitchName() {
         let pitchnumber: number = this.pitch % 12;
         let octavenumber: number = (this.pitch - pitchnumber)/12;
@@ -175,5 +183,24 @@ export class Instrument extends Serializable{
     }
 }
 
+getChannel(number) {
+    return this.channel;
 
+}
+setChannel(channel: number) {
+    this.channel = channel;
+}
+getName)String) {
+    return this.name;
+}
+setTokenSourceMapRange(name, String) {
+    this.name = name;
+    
+}
+setName(name, String) {
+    this.name = name;
+
+
+}
+}
 export {}

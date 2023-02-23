@@ -68,7 +68,7 @@ export class Note extends Serializable {
 		this.duration = args.duration;
 		this.pitch = args.pitch;
 	}
-	getlocation() {
+	getLocation() {
 		return this.location;
 	}
 	setLocation(location: number) {

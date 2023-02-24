@@ -2,22 +2,25 @@ import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
 import { Sequence, Note } from "@/server/types";
 
-const delete_note = async (req: NextApiRequest, res: NextApiResponse) => {
+const edit_note = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
 		const db = client.db("sequences");
-		const delID = req.query;
-		const { location, pitch } = req.body;
+		const editID = req.query;
+		const { location, pitch, note } = req.body;
 
-		const post = await db.collection("sequences").updateOne(delID, {
-			$pull: {
-				notes: { location, pitch },
-			},
-		});
+		const post = await db.collection("sequences").updateOne(
+			{ ...editID, notes: { $elemMatch: { location, pitch } } },
+			{
+				$set: {
+					"notes.$": note,
+				},
+			}
+		);
 
 		if (post.matchedCount === 0) {
 			res.status(500).json({
-				error: "Failed to delete note: Sequence not found",
+				error: "Failed to edit note: Sequence or note not found",
 			});
 			return;
 		}
@@ -40,4 +43,4 @@ const delete_note = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 };
 
-export default delete_note;
+export default edit_note;

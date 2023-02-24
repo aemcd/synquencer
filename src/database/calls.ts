@@ -12,7 +12,7 @@ const catchFunction = (e: unknown) => {
 export const AddSequence = async (newSequence: Sequence) => {
 	try {
 		let resp = await (
-			await fetch("/api/add_sequence/", {
+			await fetch("/api/add_sequence", {
 				method: "POST",
 				body: JSON.stringify(newSequence),
 				headers: {
@@ -80,6 +80,57 @@ export const EditSequence = async (id: String, updateSequence: Sequence) => {
 			await fetch("/api/edit_sequence?id=" + id, {
 				method: "POST",
 				body: JSON.stringify(updateSequence),
+				headers: {
+					Accept: "application/json, text/plain, */*",
+					"Content-Type": "application/json",
+				},
+			})
+		).json();
+		return resp;
+	} catch (e) {
+		catchFunction(e);
+	}
+};
+
+/**
+ *
+ * @param id ID of the sequence
+ * @param newNote new note
+ * @returns A promise of a response message. If no such sequence, an object in the form: {error: "message"} is returned.
+ */
+export const AddNote = async (id: String, newNote: Note) => {
+	try {
+		let resp = await (
+			await fetch("/api/add_note/?id=" + id, {
+				method: "POST",
+				body: JSON.stringify(newNote),
+				headers: {
+					Accept: "application/json, text/plain, */*",
+					"Content-Type": "application/json",
+				},
+			})
+		).json();
+		return resp;
+	} catch (e) {
+		catchFunction(e);
+	}
+};
+
+/**
+ *
+ * @param id ID of the sequence
+ * @param delNote note to delete
+ * @returns A promise of a response message. If no such sequence, an object in the form: {error: "message"} is returned.
+ */
+export const DeleteNote = async (
+	id: String,
+	delNote: { location: number; pitch: number }
+) => {
+	try {
+		let resp = await (
+			await fetch("/api/delete_note/?id=" + id, {
+				method: "DELETE",
+				body: JSON.stringify(delNote),
 				headers: {
 					Accept: "application/json, text/plain, */*",
 					"Content-Type": "application/json",

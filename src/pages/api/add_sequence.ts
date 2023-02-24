@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { ObjectId } from "mongodb";
-import { Sequence } from "@/server/types";
+import { Sequence, Note } from "@/server/types";
 
 const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
@@ -9,7 +8,9 @@ const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 		const db = client.db("sequences");
 		const newSequence = req.body as Sequence;
 
-		const post = await db.collection("sequences").insertOne(newSequence);
+		const post = await db
+			.collection("sequences")
+			.insertOne({ ...newSequence, notes: new Array<Note>() });
 
 		res.status(200).json(post);
 	} catch (e) {

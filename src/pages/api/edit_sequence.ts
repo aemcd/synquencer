@@ -13,8 +13,6 @@ const edit_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 			.collection("sequences")
 			.updateOne(editID, { $set: updateSequence });
 
-		console.log(post);
-
 		if (post.matchedCount === 0) {
 			res.status(500).json({
 				error: "Failed to edit: Sequence not found",

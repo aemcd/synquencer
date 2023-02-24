@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
+import { Sequence, Note } from "@/server/types";
 
 const delete_note = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {

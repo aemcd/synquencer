@@ -68,17 +68,54 @@ h1 {
 }
 
 .top-button {
+  font-family: monospace;
   font-size: 1.25rem;
   line-height: 0px;
-  height: 48px;
-  width: 48px;
-  margin: 8px 0px 8px 8px;
+  height: 40px;
+  width: 40px;
+  margin: 6px 0px 6px 6px;
   color: var(--fg2);
   background-color: var(--bg2);
   border-style: none;
-  border-radius: 8px;
+  border-radius: 6px;
+  vertical-align: top;
 }
 
 .top-button:hover {
   background-color: var(--bg3);
+  cursor: pointer;
+}
+
+.settings {
+  font-size: 1.25rem;
+  font-family: monospace;
+  height: 40px;
+  margin: 6px 0px 6px 6px;
+  color: var(--fg2);
+  background-color: var(--bg);
+  border-style: none;
+  border-radius: 6px;
+  width: fit-content;
+  display: inline-block;
+  line-height: 40px;
+  padding: 0px 8px 0px 12px;
+  vertical-align: top;
+}
+
+.settings-input {
+  font-size: 1.25rem;
+  font-family: monospace;
+  color: var(--fg2);
+  background:none;
+  text-align: center;
+  border-style: none;
+  border-radius: 4px;
+}
+
+.settings-input:hover {
+  background-color: var(--bg1);
+}
+
+.settings-input:focus {
+  background: none;
 }

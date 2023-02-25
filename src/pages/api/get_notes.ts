@@ -1,16 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { Sequence } from "@/server/types";
+import { Sequence, Note } from "@/server/types";
 
-const get_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
+const get_notes = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
 		const db = client.db("sequences");
 		const getID = req.query;
 
-		const post = await db
-			.collection("sequences")
-			.findOne(getID, { projection: { _id: 0, notes: 0 } });
+		const post = await db.collection("sequences").findOne(getID, {
+			projection: {
+				_id: 0,
+				notes: 1,
+			},
+		});
 
 		if (!post) {
 			res.status(500).json({
@@ -19,7 +22,7 @@ const get_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 			return;
 		}
 
-		res.status(200).json(post as unknown as Sequence);
+		res.status(200).json(post.notes as unknown as Array<Note>);
 	} catch (e) {
 		console.error(e);
 		if (e instanceof Error) {
@@ -30,4 +33,4 @@ const get_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	}
 };
 
-export default get_sequence;
+export default get_notes;

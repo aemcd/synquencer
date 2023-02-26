@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import TopBar from '@/components/TopBar'
+import PianoRoll from '@/components/PianoRoll'
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <TopBar />
+      <PianoRoll />
     </>
   )
 }

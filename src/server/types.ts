@@ -18,23 +18,29 @@ export abstract class Serializable {
 //structured as a set of initial parameters
 //Also don't nest objects inside other objects, it might work but I'm not counting on it
 //At the level of fluid that should be handled through SharedMap anyways
-export class Sequence extends Serializable{
-    id: String;
+export class SequenceMetadata extends Serializable{
+    //id: String;
     length: number = 0;
     bpm: number = 120;
-    timeSignature: {numerator: number, denominator: number};
-    
-    constructor (args:
-        {id: String,
-        length: number,
-        bpm: number,
-        timeSignature: {numerator: number, denominator: number},},
+    numerator: number = 4;
+    denominator: number = 4;
+
+    constructor (args?:
+        {//id: String,
+        length: number | string,
+        bpm: number | string,
+        numerator: number | string, 
+        denominator: number | string,
+        }
     ) {
         super();
-        this.id = args.id;
-        this.length = args.length;
-        this.bpm = args.bpm;
-        this.timeSignature = args.timeSignature;
+        //this.id = args.id;
+        if (args) {
+            this.length = args.length as number;
+            this.bpm = args.bpm as number;
+            this.numerator = args.numerator as number;
+            this.denominator = args.denominator as number;
+        }
     }
 
 }

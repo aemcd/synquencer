@@ -32,8 +32,7 @@ function keyMoveLeft() {
         }
         
     function keyCSixteenth() {
-        const { flushHeldKeys } = useKeyboardShortcut(
-      ["1"], setDuration(16)) ,{ overrideSystem: false, ignoreInputFields: false, repeatOnHold: false});
+        const { flushHeldKeys } = useKeyboardShortcut(["1"], setDuration(16),{ overrideSystem: false, ignoreInputFields: false, repeatOnHold: false});
         }
         
     function keyChangeEighth() {
@@ -41,4 +40,14 @@ function keyMoveLeft() {
       ["2"], setDuration(8), { overrideSystem: false, ignoreInputFields: false, repeatOnHold: false});
         }
         
+            
+        function keyChangefourth() {
+
+       const { flushHeldKeys } = useKeyboardShortcut(
+      ["3"], setDuration(4), { overrideSystem: false, ignoreInputFields: false, repeatOnHold: false});
+         }
+         function keyChangeHalf() {
+          const { flushHeldKeys } = useKeyboardShortcut(
+      ["4"], setDuration(2), { overrideSystem: false, ignoreInputFields: false, repeatOnHold: false});
         
+        }

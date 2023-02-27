@@ -108,6 +108,24 @@ export class Note extends Serializable{
         }
         return `${pitchName}${octavenumber}`;
     }
+
+    public getPitchLocation() {
+        return new PitchLocation({pitch: this.pitch, height: this.location},);
+    }
+}
+
+export class PitchLocation extends Serializable {
+    pitch: number;
+    height: number;
+
+    constructor (args: {
+        pitch: number;
+        height: number;
+    }) {
+        super();
+        this.pitch = args.pitch;
+        this.height = args.height;
+    }
 }
 
 /*

@@ -51,10 +51,12 @@ export const DeleteSequence = async (id: String) => {
  * @returns A promise for sequence from the database with the same ID. If error or no such sequence,
  * an object in the form: {error: "message"} is returned.
  */
-export const GetSequence = async (id: String) => {
+export const GetSequence = async (
+	id: String
+): Promise<Sequence | undefined> => {
 	try {
 		let resp = await (
-			await fetch("/api/get_sequence?id=" + id, {
+			await fetch("http://localhost:3000/api/get_sequence?id=" + id, {
 				method: "GET",
 				headers: {
 					Accept: "application/json, text/plain, */*",
@@ -229,10 +231,10 @@ export const GetNote = async (
  * @param id ID of the sequence
  * @returns A promise for an array of notes. If no such sequence, an object in the form: {error: "message"} is returned.
  */
-export const GetNotes = async (id: String) => {
+export const GetNotes = async (id: String): Promise<Note[] | undefined> => {
 	try {
 		let resp = await (
-			await fetch("/api/get_notes?id=" + id, {
+			await fetch("http://localhost:3000/api/get_notes?id=" + id, {
 				method: "GET",
 				headers: {
 					Accept: "application/json, text/plain, */*",

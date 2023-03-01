@@ -14,6 +14,7 @@ import {
 	GetNotes,
 	GetSequence,
 } from "@/database/calls";
+import { WriteMidi } from "@/client/write_midi";
 
 const inter = Inter({ subsets: ["latin"] });
 let noteLoc = -1;
@@ -22,7 +23,7 @@ export default function Test() {
 	const defaultSequence = new Sequence({
 		id: "default",
 		length: 100,
-		bpm: 100,
+		bpm: 60,
 		timeSignature: {
 			numerator: 4,
 			denominator: 4,
@@ -35,9 +36,9 @@ export default function Test() {
 
 	const defaultNote = new Note({
 		location: 0,
-		velocity: 1,
-		duration: 2,
-		pitch: 3,
+		velocity: 50,
+		duration: 4,
+		pitch: 50,
 	});
 	const defaultNote2 = new Note({
 		location: 999,
@@ -179,6 +180,23 @@ export default function Test() {
 						}}
 					>
 						Edit Note
+					</button>
+				</div>
+				<div>
+					<button
+						onClick={(e: any) => {
+							const notes = Array<Note>();
+							for (let i = 0; i < 16; i++) {
+								notes.push(new Note(defaultNote));
+								defaultNote.setLocation(
+									defaultNote.getLocation() + 4
+								);
+							}
+							console.log(notes);
+							WriteMidi(defaultSequence, notes);
+						}}
+					>
+						Download Sequence
 					</button>
 				</div>
 			</main>

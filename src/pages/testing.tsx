@@ -21,7 +21,7 @@ let noteLoc = -1;
 
 export default function Test() {
 	const defaultSequence = new Sequence({
-		id: "default",
+		id: "pasta",
 		length: 100,
 		bpm: 60,
 		timeSignature: {
@@ -161,7 +161,7 @@ export default function Test() {
 							console.log(
 								GetNotes(defaultSequence.id).then((value) => {
 									console.log(value);
-									console.log(value[0] instanceof Note);
+									console.log(value instanceof Array<Note>);
 								})
 							);
 						}}

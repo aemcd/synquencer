@@ -8,6 +8,10 @@ export default function PianoRoll() {
     let gridWidth = 24;
     let gridHeight = 24;
 
+    let isDragging = false;
+    let startGridX = -1;
+    let startGridY = -1;
+
     const bgRef = useRef<HTMLCanvasElement | null>(null);
     const fgRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -33,6 +37,8 @@ export default function PianoRoll() {
     function drawBG() {
         if (!bgCtx) return;
 
+        bgCtx.clearRect(0, 0, rollWidth, rollHeight);
+
         bgCtx.lineWidth = 2;
 
         // horizontal grid lines
@@ -54,8 +60,10 @@ export default function PianoRoll() {
         fgCtx.clearRect(0, 0, rollWidth, rollHeight);
 
         sequenceMap.forEach((value, key) => {
-            let [x, y] = key.split(',').map(str => parseInt(str));
-            drawNote(x, y, value, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+            if (!(key === `${startGridX},${startGridY}`)) {
+                let [x, y] = key.split(',').map(str => parseInt(str));
+                drawNote(x, y, value, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+            }
         });
     }
 
@@ -70,29 +78,118 @@ export default function PianoRoll() {
         fgCtx.strokeRect(gridX * gridWidth, gridY * gridHeight, gridWidth * length, gridHeight);
     }
 
-    function handleClick(e: MouseEvent) {
-        e.preventDefault();
+    function getGridPos(e: MouseEvent) {
         let rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+
         let pixelX = e.clientX - rect.left - 2;
-        let gridX = Math.floor(pixelX / gridWidth);
         let pixelY = e.clientY - rect.top - 2;
+        
+        let gridX = Math.floor(pixelX / gridWidth);
         let gridY = Math.floor(pixelY / gridHeight);
 
-        console.log(e);
+        return {gridX, gridY};
+    }
+    
+    function handleMouseDown(e: MouseEvent) {
+        e.preventDefault();
 
-        if (e.type === "click") {
-            sequenceMap.set(`${gridX},${gridY}`, 1);
-        } else if (e.type === "contextmenu") {
-            sequenceMap.set(`${gridX},${gridY}`, -1);
+        let {gridX, gridY} = getGridPos(e);
+
+        if (e.button === 2) {
+            if (sequenceMap.has(`${gridX},${gridY}`)) {
+                sequenceMap.delete(`${gridX},${gridY}`);
+                drawFG();
+            }
+
+            return;
         }
 
+        if (e.button !== 0) {
+            return;
+        }
+
+        if (!sequenceMap.has(`${gridX},${gridY}`)) {
+            sequenceMap.set(`${gridX},${gridY}`, 1);
+            drawFG();
+            return;
+        }
+
+        isDragging = true;
+        startGridX = gridX;
+        startGridY = gridY;
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+        e.preventDefault();
+        
+        if (!isDragging) return;
+
+        if (!sequenceMap.has(`${startGridX},${startGridY}`)) {
+            isDragging = false;
+            startGridX = -1;
+            startGridY = -1;
+            drawFG();
+            return;
+        }
+
+        let {gridX, gridY} = getGridPos(e);
+
         drawFG();
+        drawNote(gridX, gridY, sequenceMap.get(`${startGridX},${startGridY}`)!, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+    }
+
+    function handleMouseUp(e: MouseEvent) {
+        e.preventDefault();
+
+        if (!isDragging) return;
+
+        if (!sequenceMap.has(`${startGridX},${startGridY}`)) {
+            isDragging = false;
+            startGridX = -1;
+            startGridY = -1;
+            drawFG();
+            return;
+        }
+
+        let {gridX, gridY} = getGridPos(e);
+
+        if (!(gridX == startGridX && gridY == startGridY)) {
+            sequenceMap.set(`${gridX},${gridY}`, sequenceMap.get(`${startGridX},${startGridY}`)!);
+            sequenceMap.delete(`${startGridX},${startGridY}`);
+        }
+
+        isDragging = false;
+        startGridX = -1;
+        startGridY = -1;
+
+        drawFG();
+    }
+
+    function handleMouseOut(e: MouseEvent) {
+        e.preventDefault();
+
+        isDragging = false;
+        startGridX = -1;
+        startGridY = -1;
+        drawFG();
+    }
+
+    function handleContextMenu(e: MouseEvent) {
+        e.preventDefault();
     }
 
     return(
         <div style={{position: "relative"}}>
             <canvas ref={bgRef} width={rollWidth} height={rollHeight} style={{position: "absolute", left: "0", top: "0", zIndex: "0", imageRendering: "pixelated", border: "solid", borderColor: "var(--bg4)", borderWidth: "2px"}} />
-            <canvas ref={fgRef} onClick={handleClick} onContextMenu={handleClick} width={rollWidth} height={rollHeight} style={{position: "absolute", left: "0", top: "0", zIndex: "1", imageRendering: "pixelated", border: "solid", borderColor: "var(--bg3)", borderWidth: "2px"}} />
+            <canvas ref={fgRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseOut={handleMouseOut}
+                onContextMenu={handleContextMenu}
+                width={rollWidth}
+                height={rollHeight}
+                style={{position: "absolute", left: "0", top: "0", zIndex: "1", imageRendering: "pixelated", border: "solid", borderColor: "var(--bg3)", borderWidth: "2px"}} />
         </div>
     )
 }

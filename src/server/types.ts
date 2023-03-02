@@ -51,18 +51,22 @@ export class Note extends Serializable {
 	velocity: number;
 	duration: number;
 	pitch: number;
+	instrument: Instrument;
+	velocity: number;
 
 	constructor(args: {
 		location: number;
 		velocity: number;
 		duration: number;
 		pitch: number;
+		instrument: Instrument;
 	}) {
 		super();
 		this.location = args.location;
 		this.velocity = args.velocity;
 		this.duration = args.duration;
 		this.pitch = args.pitch;
+		this.instrument = args.instrument;
 	}
 	public pitchName() {
 		let pitchnumber: number = this.pitch % 12;
@@ -158,9 +162,6 @@ export class Instrument extends Serializable {
 	}
 	getName() {
 		return this.name;
-	}
-	setTokenSourceMapRange(name: String) {
-		this.name = name;
 	}
 	setName(name: String) {
 		this.name = name;

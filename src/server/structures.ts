@@ -12,11 +12,12 @@
                 -value: JSON serialized form of Note object
 */
 
-
+/*
 import {SequenceMetadata, Note, Instrument, PitchLocation} from "./types.js";
 import {SharedString} from "@fluidframework/sequence";
 import {IValueChanged, SharedMap} from "fluid-framework";
 import {TinyliciousClient} from "@fluidframework/tinylicious-client"
+import {GetNotes} from "../database/calls.js";
 
 const schema = {
     initialObjects: {
@@ -30,7 +31,7 @@ const schema = {
 let client: TinyliciousClient = new TinyliciousClient();
 const id = "TESTID";
 
-const {container, services} = await(client.getContainer(id, schema));
+const {container, services} = await(client.createContainer(schema));
 
 const metadataContainer = container.initialObjects.metadata as SharedMap;
 const sequenceContainer = container.initialObjects.sequence as SharedMap;
@@ -110,3 +111,4 @@ export async function editNote(originalNote: Note, newNote: Note, instrument: In
     removeNote(originalNote.getPitchLocation(), instrument);
     addNote(newNote, instrument);
 }
+*/

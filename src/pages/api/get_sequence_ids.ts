@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { Sequence } from "@/server/types";
 
 const get_sequence_ids = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {

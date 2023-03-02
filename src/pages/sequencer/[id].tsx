@@ -1,6 +1,6 @@
 import Head from "next/head";
 import styles from "@/styles/Home.module.css";
-import { Note, Sequence } from "@/server/types";
+import { Note, SequenceMetadata } from "@/server/types";
 import { GetStaticPropsContext, GetStaticPropsResult } from "next";
 import { GetNotes, GetSequence } from "@/database/calls";
 
@@ -9,12 +9,12 @@ type PageParams = {
 };
 
 type ContentPageProps = {
-	sequence: Sequence;
+	sequence: SequenceMetadata;
 	notes: Array<Note>;
 };
 
 export default function FromID({ sequence, notes }: ContentPageProps) {
-	sequence = new Sequence(sequence);
+	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
 		return new Note(note);
 	});
@@ -77,7 +77,7 @@ export async function getStaticProps({
 		if (
 			!(
 				databaseNotes instanceof Array<Note> &&
-				databaseSequence instanceof Sequence
+				databaseSequence instanceof SequenceMetadata
 			)
 		) {
 			throw new Error("Notes or Sequence not found");
@@ -94,16 +94,7 @@ export async function getStaticProps({
 		console.error("error ", e);
 		return {
 			props: {
-				sequence: JSON.parse(
-					JSON.stringify(
-						new Sequence({
-							id: "",
-							length: 0,
-							bpm: 0,
-							timeSignature: { numerator: 0, denominator: 0 },
-						})
-					)
-				),
+				sequence: JSON.parse(JSON.stringify(new SequenceMetadata())),
 				notes: JSON.parse(JSON.stringify(new Array<Note>())),
 			},
 		};

@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { Sequence, Note } from "@/server/types";
+import { SequenceMetadata, Note } from "@/server/types";
 
 const add_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
 		const client = await clientPromise;
 		const db = client.db("sequences");
-		const newSequence = req.body as Sequence;
+		const newSequence = req.body as SequenceMetadata;
 
 		const post = await db
 			.collection("sequences")

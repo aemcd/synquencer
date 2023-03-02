@@ -1,4 +1,4 @@
-import { Note, Sequence } from "@/server/types";
+import { Note, SequenceMetadata } from "@/server/types";
 import MW from "midi-writer-js";
 
 /**
@@ -8,23 +8,20 @@ import MW from "midi-writer-js";
  * @param notes The notes of the sequence
  * @returns A midi file as Uint8Array
  */
-export function WriteMidi(sequence: Sequence, notes: Array<Note>) {
+export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
 	const track = new MW.Track();
 
-	track.setTimeSignature(
-		sequence.timeSignature.numerator,
-		sequence.timeSignature.denominator
-	);
-	track.setTempo(sequence.getBPM(), 0);
+	track.setTimeSignature(sequence.numerator, sequence.denominator);
+	track.setTempo(sequence.bpm, 0);
 
 	const events = new Array<MW.NoteEvent>();
 	notes.forEach((note) => {
 		events.push(
 			new MW.NoteEvent({
 				pitch: note.pitchName() as MW.Pitch,
-				duration: `T${toTick(note.getDuration())}`,
-				velocity: note.getVelocity(),
-				startTick: toTick(note.getLocation()),
+				duration: `T${toTick(note.duration)}`,
+				velocity: note.velocity,
+				startTick: toTick(note.location),
 			})
 		);
 	});

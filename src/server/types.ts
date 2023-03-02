@@ -4,49 +4,45 @@
 
 export abstract class Serializable {
 	serialize() {
-		return JSON.stringify(Object.values(self));
+		return JSON.stringify(Object.entries(this));
 	}
 	static deserialize<A extends Serializable>(
 		str: string,
-		con: (...args: any) => A
+		clazz: new (arg: any) => A
 	) {
-		//second argument should be a constructor to a Serializable object
-		type Struct = Parameters<typeof con>;
-		const structArg: Struct = JSON.parse(str);
-		return con(structArg);
+		//second argument should be a class that extends Serializable
+		const structArg = Object.fromEntries(JSON.parse(str));
+		return new clazz(structArg);
 	}
 }
 
-export class Sequence extends Serializable {
-	id: String;
+//all constructors to anything that extends Serializable must have one argument only
+//structured as a set of initial parameters
+//Also don't nest objects inside other objects, it might work but I'm not counting on it
+//At the level of fluid that should be handled through SharedMap anyways
+export class SequenceMetadata extends Serializable {
+	id: string = "";
 	length: number = 0;
 	bpm: number = 120;
-	timeSignature: { numerator: number; denominator: number };
+	numerator: number = 4;
+	denominator: number = 4;
 
-	constructor(args: {
-		id: String;
-		length: number;
-		bpm: number;
-		timeSignature: { numerator: number; denominator: number };
+	constructor(args?: {
+		id: string;
+		length: number | string;
+		bpm: number | string;
+		numerator: number | string;
+		denominator: number | string;
 	}) {
 		super();
-		this.id = args.id;
-		this.length = args.length;
-		this.bpm = args.bpm;
-		this.timeSignature = args.timeSignature;
-	}
-	getLength() {
-		return this.length;
-	}
-	setLength(length: number) {
-		this.length = length;
-	}
-
-	getBPM() {
-		return this.bpm;
-	}
-	setBPM(bpm: number) {
-		this.bpm = bpm;
+		//this.id = args.id;
+		if (args) {
+			this.id = args.id as string;
+			this.length = args.length as number;
+			this.bpm = args.bpm as number;
+			this.numerator = args.numerator as number;
+			this.denominator = args.denominator as number;
+		}
 	}
 }
 
@@ -68,40 +64,6 @@ export class Note extends Serializable {
 		this.duration = args.duration;
 		this.pitch = args.pitch;
 	}
-	getLocation() {
-		return this.location;
-	}
-	setLocation(location: number) {
-		if (location < 0) {
-			this.location = 0;
-			return;
-			// } else if (location > this.length) {
-			// 	this.location = this.length();
-			// 	return;
-		} else {
-			this.location = location;
-		}
-	}
-	getVelocity() {
-		return this.velocity;
-	}
-	setVelocity(velocity: number) {
-		if (velocity < 0) {
-			this.velocity = 0;
-			return;
-		} else if (velocity > 127) {
-			this.velocity = 127;
-			return;
-		}
-		this.velocity = velocity;
-	}
-	getDuration() {
-		return this.duration;
-	}
-	setDuration(duration: number) {
-		this.duration = duration;
-	}
-
 	public pitchName() {
 		let pitchnumber: number = this.pitch % 12;
 		let octavenumber: number = (this.pitch - pitchnumber) / 12;
@@ -145,6 +107,21 @@ export class Note extends Serializable {
 				break;
 		}
 		return `${pitchName}${octavenumber}`;
+	}
+
+	public getPitchLocation() {
+		return new PitchLocation({ pitch: this.pitch, height: this.location });
+	}
+}
+
+export class PitchLocation extends Serializable {
+	pitch: number;
+	height: number;
+
+	constructor(args: { pitch: number; height: number }) {
+		super();
+		this.pitch = args.pitch;
+		this.height = args.height;
 	}
 }
 

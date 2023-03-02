@@ -1,4 +1,4 @@
-import { Sequence, Note } from "@/server/types";
+import { SequenceMetadata, Note } from "@/server/types";
 
 const catchFunction = (e: unknown) => {
 	console.error(e);
@@ -9,7 +9,7 @@ const catchFunction = (e: unknown) => {
 	}
 };
 
-export const AddSequence = async (newSequence: Sequence) => {
+export const AddSequence = async (newSequence: SequenceMetadata) => {
 	try {
 		let resp = await (
 			await fetch("/api/add_sequence", {
@@ -53,7 +53,7 @@ export const DeleteSequence = async (id: String) => {
  */
 export const GetSequence = async (
 	id: String
-): Promise<Sequence | undefined> => {
+): Promise<SequenceMetadata | undefined> => {
 	try {
 		let resp = await (
 			await fetch("http://localhost:3000/api/get_sequence?id=" + id, {
@@ -64,7 +64,7 @@ export const GetSequence = async (
 				},
 			})
 		).json();
-		return resp.id === id ? new Sequence(resp) : resp;
+		return resp.id === id ? new SequenceMetadata(resp) : resp;
 	} catch (e) {
 		catchFunction(e);
 	}
@@ -77,7 +77,10 @@ export const GetSequence = async (
  * @param updateSequence updated sequence
  * @returns A promise of a response message. If no such sequence, an object in the form: {error: "message"} is returned.
  */
-export const EditSequence = async (id: String, updateSequence: Sequence) => {
+export const EditSequence = async (
+	id: String,
+	updateSequence: SequenceMetadata
+) => {
 	try {
 		let resp = await (
 			await fetch("/api/edit_sequence?id=" + id, {

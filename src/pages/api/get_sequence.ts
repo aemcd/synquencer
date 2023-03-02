@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { Sequence } from "@/server/types";
+import { SequenceMetadata } from "@/server/types";
 
 const get_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {
@@ -19,7 +19,7 @@ const get_sequence = async (req: NextApiRequest, res: NextApiResponse) => {
 			return;
 		}
 
-		res.status(200).json(post as unknown as Sequence);
+		res.status(200).json(post as unknown as SequenceMetadata);
 	} catch (e) {
 		console.error(e);
 		if (e instanceof Error) {

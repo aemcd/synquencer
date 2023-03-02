@@ -1,6 +1,6 @@
 import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
-import { Note, Sequence } from "@/server/types";
+import { Note, SequenceMetadata } from "@/server/types";
 import {
 	AddNote,
 	AddNotes,
@@ -20,19 +20,17 @@ const inter = Inter({ subsets: ["latin"] });
 let noteLoc = -1;
 
 export default function Test() {
-	const defaultSequence = new Sequence({
+	const defaultSequence = new SequenceMetadata({
 		id: "pasta",
 		length: 100,
 		bpm: 60,
-		timeSignature: {
-			numerator: 4,
-			denominator: 4,
-		},
+		numerator: 4,
+		denominator: 4,
 	});
 
-	const defaultSequence2 = new Sequence(defaultSequence);
-	defaultSequence2.setBPM(23232);
-	defaultSequence2.setLength(33);
+	const defaultSequence2 = new SequenceMetadata(defaultSequence);
+	defaultSequence2.bpm = 23232;
+	defaultSequence2.length = 33;
 
 	const defaultNote = new Note({
 		location: 0,
@@ -99,7 +97,7 @@ export default function Test() {
 				<div>
 					<button
 						onClick={(e: any) => {
-							defaultNote.setLocation(++noteLoc);
+							defaultNote.location = ++noteLoc;
 							console.log(
 								AddNote(defaultSequence.id, defaultNote).then(
 									(value) => console.log(value)
@@ -129,7 +127,7 @@ export default function Test() {
 									defaultNote
 								).then((value) => console.log(value))
 							);
-							defaultNote.setLocation(--noteLoc);
+							defaultNote.location = --noteLoc;
 						}}
 					>
 						Delete Note
@@ -188,9 +186,7 @@ export default function Test() {
 							const notes = Array<Note>();
 							for (let i = 0; i < 16; i++) {
 								notes.push(new Note(defaultNote));
-								defaultNote.setLocation(
-									defaultNote.getLocation() + 4
-								);
+								defaultNote.location = defaultNote.location + 4;
 							}
 							console.log(notes);
 							WriteMidi(defaultSequence, notes);

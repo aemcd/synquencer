@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import clientPromise from "lib/mongodb";
-import { Sequence, Note } from "@/server/types";
 
 const edit_note = async (req: NextApiRequest, res: NextApiResponse) => {
 	try {

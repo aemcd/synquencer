@@ -1,8 +1,10 @@
 import Head from "next/head";
-import styles from "@/styles/Home.module.css";
 import { Note, SequenceMetadata } from "@/server/types";
-import { GetStaticPropsContext, GetStaticPropsResult } from "next";
+import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { GetNotes, GetSequence } from "@/database/calls";
+import PianoRoll from "@/components/PianoRoll";
+import TopBar from "@/components/TopBar";
+import { useRouter } from "next/router";
 
 type PageParams = {
 	id: string;
@@ -13,7 +15,7 @@ type ContentPageProps = {
 	notes: Array<Note>;
 };
 
-export default function FromID({ sequence, notes }: ContentPageProps) {
+export default function Home({ sequence, notes }: ContentPageProps) {
 	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
 		return new Note(note);
@@ -33,42 +35,16 @@ export default function FromID({ sequence, notes }: ContentPageProps) {
 				/>
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<main className={styles.main}>
-				<div>
-					<button
-						onClick={(e: any) => {
-							console.log(sequence);
-							console.log(notes);
-						}}
-					>
-						Log Sequence and Notes
-					</button>
-				</div>
-			</main>
+			<TopBar />
+			<PianoRoll />
 		</>
 	);
 }
 
-export async function getStaticPaths() {
-	const ids = await fetch("http://localhost:3000/api/get_sequence_ids");
-
-	const postFromServer: [{ id: string }] = await ids.json();
-	return {
-		paths: postFromServer.map((post) => {
-			return {
-				params: {
-					id: post.id,
-				},
-			};
-		}),
-		fallback: false, // can also be true or 'blocking'
-	};
-}
-
-export async function getStaticProps({
+export async function getServerSideProps({
 	params,
-}: GetStaticPropsContext<PageParams>): Promise<
-	GetStaticPropsResult<ContentPageProps>
+}: GetServerSidePropsContext<PageParams>): Promise<
+	GetServerSidePropsResult<ContentPageProps>
 > {
 	try {
 		const databaseSequence = await GetSequence((params as PageParams).id);
@@ -91,12 +67,9 @@ export async function getStaticProps({
 			},
 		};
 	} catch (e) {
-		console.error("error ", e);
+		console.error(e);
 		return {
-			props: {
-				sequence: JSON.parse(JSON.stringify(new SequenceMetadata())),
-				notes: JSON.parse(JSON.stringify(new Array<Note>())),
-			},
+			notFound: true,
 		};
 	}
 }

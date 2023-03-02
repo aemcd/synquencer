@@ -1,131 +1,128 @@
-
 //JSON serialization code references these resources:
 //https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
 //https://www.xolv.io/blog/dev-notes/how-to-pass-a-class-to-a-function-in-typescript/
 
 export abstract class Serializable {
-    serialize() {
-        return JSON.stringify(Object.entries(this));
-    }
-    static deserialize<A extends Serializable>(str: string, clazz: new(arg: any) => A) {
-        //second argument should be a class that extends Serializable
-        const structArg = Object.fromEntries(JSON.parse(str));
-        return new clazz(structArg);
-    }
+	serialize() {
+		return JSON.stringify(Object.entries(this));
+	}
+	static deserialize<A extends Serializable>(
+		str: string,
+		clazz: new (arg: any) => A
+	) {
+		//second argument should be a class that extends Serializable
+		const structArg = Object.fromEntries(JSON.parse(str));
+		return new clazz(structArg);
+	}
 }
 
 //all constructors to anything that extends Serializable must have one argument only
 //structured as a set of initial parameters
 //Also don't nest objects inside other objects, it might work but I'm not counting on it
 //At the level of fluid that should be handled through SharedMap anyways
-export class SequenceMetadata extends Serializable{
-    //id: String;
-    length: number = 0;
-    bpm: number = 120;
-    numerator: number = 4;
-    denominator: number = 4;
+export class SequenceMetadata extends Serializable {
+	id: string = "";
+	length: number = 0;
+	bpm: number = 120;
+	numerator: number = 4;
+	denominator: number = 4;
 
-    constructor (args?:
-        {//id: String,
-        length: number | string,
-        bpm: number | string,
-        numerator: number | string, 
-        denominator: number | string,
-        }
-    ) {
-        super();
-        //this.id = args.id;
-        if (args) {
-            this.length = args.length as number;
-            this.bpm = args.bpm as number;
-            this.numerator = args.numerator as number;
-            this.denominator = args.denominator as number;
-        }
-    }
-
+	constructor(args?: {
+		id: string;
+		length: number | string;
+		bpm: number | string;
+		numerator: number | string;
+		denominator: number | string;
+	}) {
+		super();
+		//this.id = args.id;
+		if (args) {
+			this.id = args.id as string;
+			this.length = args.length as number;
+			this.bpm = args.bpm as number;
+			this.numerator = args.numerator as number;
+			this.denominator = args.denominator as number;
+		}
+	}
 }
 
-export class Note extends Serializable{
-    location: number;
-    velocity: number;
-    duration: number;
-    pitch: number;
+export class Note extends Serializable {
+	location: number;
+	velocity: number;
+	duration: number;
+	pitch: number;
 
-    constructor (args: {
-        location: number,
-        velocity: number,
-        duration: number,
-        pitch: number,
-    }
-    ) {
-        super();
-        this.location = args.location;
-        this.velocity = args.velocity;
-        this.duration = args.duration;
-        this.pitch = args.pitch;
-    }
-    public pitchName() {
-        let pitchnumber: number = this.pitch % 12;
-        let octavenumber: number = (this.pitch - pitchnumber)/12;
-        let pitchName: string = "";
-        switch(pitchnumber) {
-            case 0:
-                pitchName = "C";
-                break;
-            case 1:
-                pitchName = "C#";
-                break;
-            case 2:
-                pitchName = "D";
-                break;
-            case 3:
-                pitchName = "D#";
-                break;
-            case 4:
-                pitchName = "E";
-                break;
-            case 5:
-                pitchName = "F";
-                break;
-            case 6:
-                pitchName = "F#";
-                break;
-            case 7:
-                pitchName = "G";
-                break;
-            case 8:
-                pitchName = "G#";
-                break;
-            case 9:
-                pitchName = "A";
-                break;
-            case 10:
-                pitchName = "A#";
-                break;
-            case 11:
-                pitchName = "B";
-                break;
-        }
-        return `${pitchName}${octavenumber}`;
-    }
+	constructor(args: {
+		location: number;
+		velocity: number;
+		duration: number;
+		pitch: number;
+	}) {
+		super();
+		this.location = args.location;
+		this.velocity = args.velocity;
+		this.duration = args.duration;
+		this.pitch = args.pitch;
+	}
+	public pitchName() {
+		let pitchnumber: number = this.pitch % 12;
+		let octavenumber: number = (this.pitch - pitchnumber) / 12;
+		let pitchName: string = "";
+		switch (pitchnumber) {
+			case 0:
+				pitchName = "C";
+				break;
+			case 1:
+				pitchName = "C#";
+				break;
+			case 2:
+				pitchName = "D";
+				break;
+			case 3:
+				pitchName = "D#";
+				break;
+			case 4:
+				pitchName = "E";
+				break;
+			case 5:
+				pitchName = "F";
+				break;
+			case 6:
+				pitchName = "F#";
+				break;
+			case 7:
+				pitchName = "G";
+				break;
+			case 8:
+				pitchName = "G#";
+				break;
+			case 9:
+				pitchName = "A";
+				break;
+			case 10:
+				pitchName = "A#";
+				break;
+			case 11:
+				pitchName = "B";
+				break;
+		}
+		return `${pitchName}${octavenumber}`;
+	}
 
-    public getPitchLocation() {
-        return new PitchLocation({pitch: this.pitch, height: this.location},);
-    }
+	public getPitchLocation() {
+		return new PitchLocation({ pitch: this.pitch, height: this.location });
+	}
 }
 
 export class PitchLocation extends Serializable {
-    pitch: number;
-    height: number;
+	pitch: number;
+	height: number;
 
-    constructor (args: {
-        pitch: number;
-        height: number;
-    }) {
-        super();
-        this.pitch = args.pitch;
-        this.height = args.height;
-    }
+	constructor(args: { pitch: number; height: number }) {
+		super();
+		this.pitch = args.pitch;
+		this.height = args.height;
+	}
 }
 
 /*
@@ -143,20 +140,31 @@ export class Pitch {
 }
 */
 
-export class Instrument extends Serializable{
-    channel: number;
-    name: String;
+export class Instrument extends Serializable {
+	channel: number;
+	name: String;
 
-    constructor (args: {
-        channel: number,
-        name: String,
-    }
-    ) {
-        super();
-        this.channel = args.channel;
-        this.name = args.name;
-    }
+	constructor(args: { channel: number; name: String }) {
+		super();
+		this.channel = args.channel;
+		this.name = args.name;
+	}
+
+	getChannel() {
+		return this.channel;
+	}
+	setChannel(channel: number) {
+		this.channel = channel;
+	}
+	getName() {
+		return this.name;
+	}
+	setTokenSourceMapRange(name: String) {
+		this.name = name;
+	}
+	setName(name: String) {
+		this.name = name;
+	}
 }
 
-
-export {}
+export {};

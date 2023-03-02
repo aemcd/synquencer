@@ -4,6 +4,7 @@ import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { GetNotes, GetSequence } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
+import Shortcuts from "@/components/Shortcuts";
 import { useRouter } from "next/router";
 
 type PageParams = {
@@ -20,7 +21,10 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	notes = notes.map((note) => {
 		return new Note(note);
 	});
-
+	if (typeof window !== "undefined") {
+		Shortcuts();
+		console.log("here");
+	}
 	return (
 		<>
 			<Head>

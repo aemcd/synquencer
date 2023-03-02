@@ -5,6 +5,7 @@ import { GetNotes, GetSequence } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
 import Shortcuts from "@/components/Shortcuts";
+import { useHotkeys } from "react-hotkeys-hook";
 import { useRouter } from "next/router";
 
 type PageParams = {
@@ -17,14 +18,80 @@ type ContentPageProps = {
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
+	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert(event.key + " created");
+	});
+	useHotkeys("up, down", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert("Move note" + event.key + "a semitone");
+	});
+	useHotkeys("ctrl + up, ctrl + down", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert("Move note" + event.key + "an octave");
+	});
+	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
+		switch (event.key) {
+			case "1":
+				alert("Note duration set to 1/16.");
+				break;
+			case "2":
+				alert("Note duration set to 1/8.");
+				break;
+			case "3":
+				alert("Note duration set to 1/4.");
+				break;
+			case "4":
+				alert("Note duration set to 1/2.");
+				break;
+			case "5":
+				alert("Note duration set to 1/1.");
+				break;
+			default:
+				alert(event);
+		}
+	});
+	useHotkeys("left, right, ctrl+left, ctrl+right", function (event, handler) {
+		switch (event.key) {
+			case "left":
+				alert("Moved cursor left.");
+				break;
+			case "right":
+				alert("moved right.");
+				break;
+			case "ctrl+left":
+				alert("Moved note left.");
+				break;
+			case "ctrl+right":
+				alert("moved note right.");
+				break;
+			default:
+				alert(event);
+		}
+	});
+	useHotkeys("ctrl+n, command+n", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert("Create a new sequence:");
+	});
+	useHotkeys("shift + up, shift + down", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert("changed velocity" + event.key);
+	});
+	useHotkeys("del", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		alert("Note deleted" + event.key);
+	});
+
 	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
 		return new Note(note);
 	});
-	if (typeof window !== "undefined") {
-		Shortcuts();
-		console.log("here");
-	}
 	return (
 		<>
 			<Head>

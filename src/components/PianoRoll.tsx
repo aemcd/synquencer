@@ -8,9 +8,17 @@ export default function PianoRoll() {
     let gridWidth = 24;
     let gridHeight = 24;
 
-    let isDragging = false;
+    const DRAG_STATES = {
+        NOT_DRAGGING: 0,
+        MOVING_NOTE: 1,
+        CHANGING_LENGTH: 2
+    } as const
+
+    let dragState : number = DRAG_STATES.NOT_DRAGGING;
     let startGridX = -1;
     let startGridY = -1;
+    let startNoteX = -1;
+    let startNoteLength = -1;
 
     const bgRef = useRef<HTMLCanvasElement | null>(null);
     const fgRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,7 +68,7 @@ export default function PianoRoll() {
         fgCtx.clearRect(0, 0, rollWidth, rollHeight);
 
         sequenceMap.forEach((value, key) => {
-            if (!(key === `${startGridX},${startGridY}`)) {
+            if (!(key === `${startNoteX},${startGridY}`)) {
                 let [x, y] = key.split(',').map(str => parseInt(str));
                 drawNote(x, y, value, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
             }
@@ -76,6 +84,8 @@ export default function PianoRoll() {
         fgCtx.strokeStyle = colorOutline;
         fgCtx.lineWidth = 2;
         fgCtx.strokeRect(gridX * gridWidth, gridY * gridHeight, gridWidth * length, gridHeight);
+        fgCtx.fillStyle = colorOutline;
+        fgCtx.fillRect((gridX + length) * gridWidth - 6, gridY * gridHeight + 4, 2, gridHeight - 8);
     }
 
     function getGridPos(e: MouseEvent) {
@@ -87,80 +97,110 @@ export default function PianoRoll() {
         let gridX = Math.floor(pixelX / gridWidth);
         let gridY = Math.floor(pixelY / gridHeight);
 
-        return {gridX, gridY};
+        let isRightHalf = pixelX % gridWidth > gridWidth / 2;
+
+        return {gridX, gridY, isRightHalf};
     }
     
     function handleMouseDown(e: MouseEvent) {
         e.preventDefault();
 
-        let {gridX, gridY} = getGridPos(e);
+        let {gridX, gridY, isRightHalf} = getGridPos(e);
 
-        if (e.button === 2) {
-            if (sequenceMap.has(`${gridX},${gridY}`)) {
-                sequenceMap.delete(`${gridX},${gridY}`);
-                drawFG();
-            }
-
-            return;
-        }
-
-        if (e.button !== 0) {
-            return;
-        }
-
-        if (!sequenceMap.has(`${gridX},${gridY}`)) {
-            sequenceMap.set(`${gridX},${gridY}`, 1);
-            drawFG();
-            return;
-        }
-
-        isDragging = true;
         startGridX = gridX;
         startGridY = gridY;
+
+        sequenceMap.forEach((value, key) => {
+            let [x, y] = key.split(',').map(str => parseInt(str));
+            if (gridY == y && gridX >= x && gridX < x + value) {
+                // Clicked cell lies within an existing note. Only take the last one, which will be on top because of the render order.
+                startNoteX = x;
+                startGridY = y;
+                startNoteLength = value;
+            }
+        }); 
+
+        if (e.button === 2) {
+            // right click - delete if note was found
+            if (startNoteLength != -1) {
+                sequenceMap.delete(`${startNoteX},${startGridY}`);
+                drawFG();
+            }
+        } else if (e.button == 0) {
+            // left click
+            if (startNoteLength != -1) {
+                // note found
+                if (gridX == startNoteX + startNoteLength - 1 && isRightHalf) {
+                    // end of the note was clicked - start changing length
+                    dragState = DRAG_STATES.CHANGING_LENGTH;
+                } else {
+                    // another part of the note was clicked - start moving
+                    dragState = DRAG_STATES.MOVING_NOTE;
+                }
+            } else {
+                // no note found; creating new note
+                startNoteLength = 1;
+                startNoteX = gridX;
+                dragState = DRAG_STATES.CHANGING_LENGTH;
+                drawFG();
+                drawNote(startNoteX, startGridY, 1, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+            }
+            return;
+        }
+
+        startGridX = -1;
+        startGridY = -1;
+        startNoteX = -1;
+        startNoteLength = -1;
+
+        return;
     }
 
     function handleMouseMove(e: MouseEvent) {
         e.preventDefault();
         
-        if (!isDragging) return;
-
-        if (!sequenceMap.has(`${startGridX},${startGridY}`)) {
-            isDragging = false;
-            startGridX = -1;
-            startGridY = -1;
-            drawFG();
-            return;
-        }
+        if (dragState == DRAG_STATES.NOT_DRAGGING) return;
 
         let {gridX, gridY} = getGridPos(e);
 
-        drawFG();
-        drawNote(gridX, gridY, sequenceMap.get(`${startGridX},${startGridY}`)!, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+        if (dragState == DRAG_STATES.MOVING_NOTE) {
+            // moving note
+            drawFG();
+            drawNote(startNoteX + gridX - startGridX, gridY, startNoteLength, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+        } else {
+            // changing note length
+            drawFG();
+            drawNote(startNoteX, startGridY, Math.max(1, gridX - startNoteX + 1), computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+        }
     }
 
     function handleMouseUp(e: MouseEvent) {
         e.preventDefault();
 
-        if (!isDragging) return;
-
-        if (!sequenceMap.has(`${startGridX},${startGridY}`)) {
-            isDragging = false;
-            startGridX = -1;
-            startGridY = -1;
-            drawFG();
-            return;
-        }
+        if (dragState == DRAG_STATES.NOT_DRAGGING) return;
 
         let {gridX, gridY} = getGridPos(e);
 
-        if (!(gridX == startGridX && gridY == startGridY)) {
-            sequenceMap.set(`${gridX},${gridY}`, sequenceMap.get(`${startGridX},${startGridY}`)!);
-            sequenceMap.delete(`${startGridX},${startGridY}`);
+        if (dragState == DRAG_STATES.MOVING_NOTE) {
+            // done moving note
+            if (!(gridX == startGridX && gridY == startGridY)) {
+                // check to make sure we're actually changing the note location
+                sequenceMap.set(`${startNoteX + gridX - startGridX},${gridY}`, startNoteLength);
+                sequenceMap.delete(`${startNoteX},${startGridY}`);
+            }
+        } else {
+            // done changing note length
+            if (!(gridX == startGridX && gridY == startGridY && sequenceMap.has(`${startGridX},${startGridY}`))) {
+                // check to make sure we're actually changing the length
+                sequenceMap.set(`${startNoteX},${startGridY}`, Math.max(1, gridX - startNoteX + 1));
+            }
         }
 
-        isDragging = false;
+        dragState = DRAG_STATES.NOT_DRAGGING;
         startGridX = -1;
         startGridY = -1;
+        startNoteX = -1;
+        startNoteLength = -1;
 
         drawFG();
     }
@@ -168,9 +208,12 @@ export default function PianoRoll() {
     function handleMouseOut(e: MouseEvent) {
         e.preventDefault();
 
-        isDragging = false;
+        dragState = DRAG_STATES.NOT_DRAGGING;
         startGridX = -1;
         startGridY = -1;
+        startNoteX = -1;
+        startNoteLength = -1;
+
         drawFG();
     }
 

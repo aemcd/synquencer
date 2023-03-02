@@ -1,4 +1,5 @@
 import { SequenceMetadata, Note } from "@/server/types";
+import { InsertOneResult } from "mongodb";
 
 const catchFunction = (e: unknown) => {
 	console.error(e);
@@ -9,10 +10,12 @@ const catchFunction = (e: unknown) => {
 	}
 };
 
-export const AddSequence = async (newSequence: SequenceMetadata) => {
+export const AddSequence = async (
+	newSequence: SequenceMetadata
+): Promise<InsertOneResult<Document> | undefined> => {
 	try {
 		let resp = await (
-			await fetch("/api/add_sequence", {
+			await fetch(`http://localhost:3000/api/add_sequence`, {
 				method: "POST",
 				body: JSON.stringify(newSequence),
 				headers: {
@@ -234,7 +237,7 @@ export const GetNote = async (
  * @param id ID of the sequence
  * @returns A promise for an array of notes. If no such sequence, an object in the form: {error: "message"} is returned.
  */
-export const GetNotes = async (id: String): Promise<Note[] | undefined> => {
+export const GetNotes = async (id: string): Promise<Note[] | undefined> => {
 	try {
 		let resp = await (
 			await fetch("http://localhost:3000/api/get_notes?id=" + id, {

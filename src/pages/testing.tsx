@@ -1,6 +1,6 @@
 import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
-import { Note, SequenceMetadata } from "@/server/types";
+import { Instrument, Note, SequenceMetadata } from "@/server/types";
 import {
 	AddNote,
 	AddNotes,
@@ -29,7 +29,7 @@ export default function Test() {
 	});
 
 	const defaultSequence2 = new SequenceMetadata(defaultSequence);
-	defaultSequence2.bpm = 23232;
+	defaultSequence2.bpm = 232;
 	defaultSequence2.length = 33;
 
 	const defaultNote = new Note({
@@ -37,12 +37,14 @@ export default function Test() {
 		velocity: 50,
 		duration: 4,
 		pitch: 50,
+		instrument: new Instrument({ channel: 0, name: "piano" }),
 	});
 	const defaultNote2 = new Note({
 		location: 999,
 		velocity: 0,
 		duration: 0,
 		pitch: 0,
+		instrument: new Instrument({ channel: 0, name: "piano" }),
 	});
 	return (
 		<>

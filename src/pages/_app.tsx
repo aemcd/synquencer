@@ -65,16 +65,6 @@ export function getMetadata(key: keyof SequenceMetadata) {
     return localMetadata[key];
 }
 
-//SEQUENCE CODE HERE -------------------------
-//Not sure how you want to handle loading notes into UI
-//so I'll just leave this slightly generic for right now
-
-sequenceContainer.on("valueChanged", sequenceUpdateCallback);
-
-//TODO: implement callback
-function sequenceUpdateCallback(changed: IValueChanged) {
-    return;
-}
 
 /*
 //serverside only
@@ -89,22 +79,6 @@ export async function loadSequence(id: any) {
     for (var notePattern of noteList as typeof noteList) {
         addNote(notePattern.note, notePattern.instrument);
     }
-}
-*/
-/*
-export async function addNote(note: Note, instrument: Instrument) {
-    const noteMap = await sequenceContainer.get(instrument.serialize()) as SharedMap;
-    noteMap.set(note.getPitchLocation().serialize(), note.serialize());
-}
-
-export async function removeNote(pitchLocation: PitchLocation, instrument: Instrument) {
-    const noteMap = await sequenceContainer.get(instrument.serialize()) as SharedMap;
-    noteMap.delete(pitchLocation.serialize());
-}
-
-export async function editNote(originalNote: Note, newNote: Note, instrument: Instrument) {
-    removeNote(originalNote.getPitchLocation(), instrument);
-    addNote(newNote, instrument);
 }
 */
 

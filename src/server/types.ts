@@ -52,7 +52,6 @@ export class Note extends Serializable {
 	duration: number;
 	pitch: number;
 	instrument: Instrument;
-	velocity: number;
 
 	constructor(args: {
 		location: number;

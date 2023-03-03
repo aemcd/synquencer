@@ -16,22 +16,16 @@ type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
 	stepLength: number;
+	sequenceMap: Map<string, Note>;
 };
 
 export default function PianoRoll({
 	sequence,
 	notes,
 	stepLength,
+	sequenceMap
 }: ContentPageProps) {
 	// TODO
-
-	const sequenceMap = useMemo(() => {
-		return new Map<string, Note>();
-	}, []);
-
-	notes.forEach((note) => {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
-	});
 
 	let rollWidth = 767;
 	let rollHeight = 864;

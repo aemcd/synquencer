@@ -33,6 +33,14 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [seqData, setSeq] = useState(sequence);
 	console.log(noteList);
 
+	const sequenceMap = useMemo(() => {
+		return new Map<string, Note>();
+	}, []);
+
+	notes.forEach((note) => {
+		sequenceMap.set(note.getPitchLocation().serialize(), note);
+	});
+
 	const [stepLength, setStepLength] = useState(1);
 
 	const maxPitch = 12 * 5;
@@ -218,6 +226,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				sequence={seqData}
 				notes={noteList}
 				stepLength={stepLength}
+				sequenceMap={sequenceMap}
 			/>
 		</>
 	);

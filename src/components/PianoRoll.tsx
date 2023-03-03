@@ -4,6 +4,8 @@ import React, {
 	useReducer,
 	MouseEvent,
 	useMemo,
+	UIEventHandler,
+	WheelEventHandler,
 } from "react";
 import {
 	Instrument,
@@ -175,6 +177,16 @@ export default function PianoRoll({
 				gridHeight + 4
 			);
 		}
+	}
+
+	function velocityAlert(velocity: number) {
+		if (!fgCtx || !selectedNote) return;
+
+		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
+		fgCtx.fillRect(0, 0, 200, 34);
+		fgCtx.font = "24px monospace";
+		fgCtx.fillStyle = computedStyle.getPropertyValue("--fg0");
+		fgCtx.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24);
 	}
 
 	function getGridPos(e: MouseEvent) {
@@ -388,6 +400,37 @@ export default function PianoRoll({
 		e.preventDefault();
 	}
 
+	function handleWheel(e: WheelEvent) {
+		if (!selectedNote) return;
+
+		if (e.deltaY > 0) {
+			if (!(selectedNote.velocity - 10 < 0)) {
+				let newNote = new Note({
+					location: selectedNote.location,
+					velocity: selectedNote.velocity - 10,
+					duration: selectedNote.duration,
+					pitch: selectedNote.pitch,
+					instrument: selectedNote.instrument,
+				});
+				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				selectedNote = newNote;
+			}
+		} else if (e.deltaY < 0) {
+			if (!(selectedNote.velocity + 10 > 100)) {
+				let newNote = new Note({
+					location: selectedNote.location,
+					velocity: selectedNote.velocity + 10,
+					duration: selectedNote.duration,
+					pitch: selectedNote.pitch,
+					instrument: selectedNote.instrument,
+				});
+				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				selectedNote = newNote;
+			}
+		}
+		velocityAlert(selectedNote.velocity);
+	}
+
 	return (
 		<div style={{ position: "relative" }}>
 			<canvas
@@ -412,6 +455,7 @@ export default function PianoRoll({
 				onMouseUp={handleMouseUp}
 				onMouseOut={handleMouseOut}
 				onContextMenu={handleContextMenu}
+				onWheel={handleWheel}
 				width={rollWidth}
 				height={rollHeight}
 				style={{

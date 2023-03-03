@@ -28,19 +28,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
-	notes.push(
-		new Note({
-			location: 0,
-			pitch: 12 * 4,
-			velocity: 50,
-			duration: 4,
-			instrument: new Instrument({
-				channel: 0,
-				name: "",
-			}),
-		})
-	);
-
 	const maxPitch = 12 * 5;
 	const minPitch = 12 * 3;
 
@@ -203,7 +190,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				/>
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<TopBar />
+			<TopBar sequence={sequence} notes={notes} />
 			<PianoRoll sequence={sequence} notes={notes} />
 		</>
 	);

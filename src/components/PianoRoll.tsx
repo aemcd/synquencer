@@ -151,7 +151,7 @@ export default function PianoRoll({
 		fgCtx.fillStyle = colorFill;
 		fgCtx.fillRect(
 			gridX * gridWidth,
-			gridY * gridHeight,
+			(71 - gridY) * gridHeight,
 			gridWidth * length,
 			gridHeight
 		);
@@ -159,14 +159,14 @@ export default function PianoRoll({
 		fgCtx.lineWidth = 2;
 		fgCtx.strokeRect(
 			gridX * gridWidth,
-			gridY * gridHeight,
+			(71 - gridY) * gridHeight,
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.fillStyle = colorOutline;
 		fgCtx.fillRect(
 			(gridX + length) * gridWidth - 6,
-			gridY * gridHeight + 4,
+			(71 - gridY) * gridHeight + 4,
 			2,
 			gridHeight - 8
 		);
@@ -175,7 +175,7 @@ export default function PianoRoll({
 			fgCtx.strokeStyle = computedStyle.getPropertyValue("--fg0");
 			fgCtx.strokeRect(
 				gridX * gridWidth - 2,
-				gridY * gridHeight - 2,
+				(71 - gridY) * gridHeight - 2,
 				gridWidth * length + 4,
 				gridHeight + 4
 			);
@@ -191,7 +191,7 @@ export default function PianoRoll({
 		let isRightHalf = pixelX % gridWidth > gridWidth / 2;
 
 		let gridX = stepLength * Math.floor(pixelX / gridWidth / stepLength);
-		let gridY = Math.floor(pixelY / gridHeight);
+		let gridY = 71 - Math.floor(pixelY / gridHeight);
 
 		return { gridX, gridY, isRightHalf };
 	}

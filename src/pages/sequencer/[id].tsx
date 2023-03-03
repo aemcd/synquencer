@@ -204,10 +204,12 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				sequence={seqData}
 				notes={noteList}
 				setStepLength={(newStepLength) => {
-					stepLength = newStepLength;
+					setStepLength(newStepLength);
 				}}
 				setBPM={(newBPM) => {
-					sequence.bpm = newBPM;
+					let newSeqData = new SequenceMetadata(seqData);
+					newSeqData.bpm = newBPM;
+					setSeq(newSeqData);
 				}}
 			/>
 			<PianoRoll

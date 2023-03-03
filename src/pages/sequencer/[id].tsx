@@ -6,13 +6,20 @@ import {
 	SequenceMetadata,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
-import { GetNotes, GetSequence } from "@/database/calls";
+import {
+	AddNotes,
+	ClearNotes,
+	EditSequence,
+	GetNotes,
+	GetSequence,
+} from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
 import Shortcuts from "@/components/Shortcuts";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
+import { WriteMidi } from "@/client/write_midi";
 
 type PageParams = {
 	id: string;
@@ -31,7 +38,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 
 	const [noteList, setNotes] = useState(notes);
 	const [seqData, setSeq] = useState(sequence);
-	console.log(noteList);
 
 	const sequenceMap = useMemo(() => {
 		return new Map<string, Note>();
@@ -40,6 +46,14 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	notes.forEach((note) => {
 		sequenceMap.set(note.getPitchLocation().serialize(), note);
 	});
+
+	function getArray() {
+		const noteArr = new Array<Note>();
+		sequenceMap.forEach((value) => {
+			noteArr.push(value);
+		});
+		return noteArr;
+	}
 
 	const [stepLength, setStepLength] = useState(1);
 
@@ -219,8 +233,20 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					newSeqData.bpm = newBPM;
 					setSeq(newSeqData);
 				}}
-				saveSequence={() => {}}
-				downloadSequence={() => {}}
+				saveSequence={() => {
+					const noteArr = getArray();
+					Promise.all([
+						EditSequence(seqData.id, seqData),
+						ClearNotes(seqData.id),
+						AddNotes(seqData.id, noteArr),
+					]).then((value) => {
+						alert("Saved Successfully");
+					});
+				}}
+				downloadSequence={() => {
+					const noteArr = getArray();
+					WriteMidi(seqData, noteArr);
+				}}
 			/>
 			<PianoRoll
 				sequence={seqData}

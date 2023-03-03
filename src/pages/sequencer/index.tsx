@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import TopBar from '@/components/TopBar'
 import PianoRoll from '@/components/PianoRoll'
+import Shortcuts from '@/components/Shortcuts'
 
 export default function Home() {
   return (

@@ -12,6 +12,7 @@ import TopBar from "@/components/TopBar";
 import Shortcuts from "@/components/Shortcuts";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useRouter } from "next/router";
+import { useState } from "react";
 
 type PageParams = {
 	id: string;
@@ -28,21 +29,27 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
+	const [noteList, setNotes] = useState(notes);
+	const [seqData, setSeq] = useState(sequence);
+	console.log(noteList);
+
 	let stepLength = 1;
 
 	const maxPitch = 12 * 5;
 	const minPitch = 12 * 3;
 
-	const cursorNote = new Note({
-		location: 0,
-		pitch: 12 * 4,
-		velocity: 50,
-		duration: 4,
-		instrument: new Instrument({
-			channel: 0,
-			name: "",
-		}),
-	});
+	const [cursorNote, setCursor] = useState(
+		new Note({
+			location: 0,
+			pitch: 12 * 4,
+			velocity: 50,
+			duration: 4,
+			instrument: new Instrument({
+				channel: 0,
+				name: "",
+			}),
+		})
+	);
 
 	let mod = 0;
 
@@ -74,8 +81,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				break;
 		}
 		newNote.pitch += mod + noteChange;
-		notes.push(newNote);
-		console.log(notes);
+		const newNotes = [...noteList, newNote];
+		setNotes(newNotes);
+		console.log(noteList);
 		alert(newNote.pitchName() + " created");
 	});
 	useHotkeys("up, down", function (event, handler) {
@@ -200,8 +208,13 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				}}
 				setBPM={(newBPM) => {
 					sequence.bpm = newBPM;
-				}}/>
-			<PianoRoll sequence={sequence} notes={notes} stepLength={{stepLength}} />
+				}}
+			/>
+			<PianoRoll
+				sequence={seqData}
+				notes={noteList}
+				stepLength={stepLength}
+			/>
 		</>
 	);
 }

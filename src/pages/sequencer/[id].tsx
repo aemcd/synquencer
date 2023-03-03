@@ -209,6 +209,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				setBPM={(newBPM) => {
 					sequence.bpm = newBPM;
 				}}
+				saveSequence={() => {}}
+				downloadSequence={() => {}}
 			/>
 			<PianoRoll
 				sequence={seqData}

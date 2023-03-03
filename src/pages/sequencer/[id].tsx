@@ -12,7 +12,7 @@ import TopBar from "@/components/TopBar";
 import Shortcuts from "@/components/Shortcuts";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type PageParams = {
 	id: string;
@@ -38,8 +38,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const maxPitch = 12 * 5;
 	const minPitch = 12 * 3;
 
-	const [cursorNote, setCursor] = useState(
-		new Note({
+	const cursorNote = useMemo(() => {
+		return new Note({
 			location: 0,
 			pitch: 12 * 4,
 			velocity: 50,
@@ -48,8 +48,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				channel: 0,
 				name: "",
 			}),
-		})
-	);
+		});
+	}, []);
 
 	let mod = 0;
 

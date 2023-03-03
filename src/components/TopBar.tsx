@@ -6,9 +6,9 @@ export default function TopBar() {
             <button className="top-button">▶</button>
             <button className="top-button">◼</button>
             <div className="settings">
-                <input className="settings-input" defaultValue="120" style={{width: "36px"}} maxLength={3}></input> BPM |
-                <input className="settings-input" defaultValue="4/4" style={{width: "56px"}}></input>|
-                <input className="settings-input" defaultValue="1/16" style={{width: "64px"}}></input>
+                BPM <input className="settings-input" defaultValue="120" style={{width: "36px"}} maxLength={3}></input> Time Signature |
+                <input  className="settings-input" defaultValue="4/4" style={{width: "56px"}}></input> Step Length|
+                <input className="settings-input" defaultValue="1/16" style={{width: "64px"}}></input> 
             </div>
             <button className="top-button" style={{transform: "scale(1,-1)"}}>
                 <svg width="18" height="18" viewBox="0 0 185.2 185.2">

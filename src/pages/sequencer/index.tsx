@@ -1,7 +1,6 @@
 import Head from "next/head";
 import TopBar from "@/components/TopBar";
 import PianoRoll from "@/components/PianoRoll";
-
 export default function Home() {
 	return (
 		<>

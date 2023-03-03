@@ -281,7 +281,10 @@ export default function PianoRoll({
 					pitch: startGridY,
 					instrument: new Instrument({ channel: 1, name: "Piano" }),
 				});
-				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				sequenceMap.set(
+					newNote.getPitchLocation().serialize(),
+					newNote
+				);
 				selectedNote = newNote;
 				copiedNote = newNote;
 				drawFG();
@@ -359,7 +362,12 @@ export default function PianoRoll({
 				!(
 					gridX == startGridX &&
 					gridY == startGridY &&
-					sequenceMap.has(new PitchLocation({pitch: startGridY, location: startGridX}).serialize())
+					sequenceMap.has(
+						new PitchLocation({
+							pitch: startGridY,
+							location: startGridX,
+						}).serialize()
+					)
 				)
 			) {
 				// check to make sure we're actually changing the length
@@ -400,7 +408,7 @@ export default function PianoRoll({
 		e.preventDefault();
 	}
 
-	function handleWheel(e: WheelEvent) {
+	function handleWheel(e: any) {
 		if (!selectedNote) return;
 
 		if (e.deltaY > 0) {
@@ -412,7 +420,10 @@ export default function PianoRoll({
 					pitch: selectedNote.pitch,
 					instrument: selectedNote.instrument,
 				});
-				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				sequenceMap.set(
+					newNote.getPitchLocation().serialize(),
+					newNote
+				);
 				selectedNote = newNote;
 			}
 		} else if (e.deltaY < 0) {
@@ -424,7 +435,10 @@ export default function PianoRoll({
 					pitch: selectedNote.pitch,
 					instrument: selectedNote.instrument,
 				});
-				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				sequenceMap.set(
+					newNote.getPitchLocation().serialize(),
+					newNote
+				);
 				selectedNote = newNote;
 			}
 		}

@@ -105,7 +105,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		newNote.pitch += mod + noteChange;
 		const newNotes = [...noteList, newNote];
 		setNotes(newNotes);
-		console.log(noteList);
 		alert(newNote.pitchName() + " created");
 	});
 	useHotkeys("up, down", function (event, handler) {
@@ -208,6 +207,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		event.preventDefault();
 		alert("Note deleted" + event.key);
 	});
+	useHotkeys("l", function (event, handler) {
+		// Prevent the default refresh event under WINDOWS system
+		event.preventDefault();
+		console.log(sequenceMap);
+	});
 	return (
 		<>
 			<Head>
@@ -284,7 +288,6 @@ export async function getServerSideProps({
 			},
 		};
 	} catch (e) {
-		console.error(e);
 		return {
 			notFound: true,
 		};

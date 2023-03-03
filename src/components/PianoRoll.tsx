@@ -69,8 +69,6 @@ export default function PianoRoll({
 	});
 
 	useEffect(() => {
-		console.log("here");
-
 		if (sequenceMap != null && drawFG != null) {
 			notes.forEach((note) => {
 				sequenceMap.set(note.getPitchLocation().serialize(), note);

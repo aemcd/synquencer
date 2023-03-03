@@ -28,6 +28,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
+	let stepLength = 1;
+
 	const maxPitch = 12 * 5;
 	const minPitch = 12 * 3;
 
@@ -190,8 +192,16 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				/>
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<TopBar sequence={sequence} notes={notes} />
-			<PianoRoll sequence={sequence} notes={notes} />
+			<TopBar
+				sequence={sequence}
+				notes={notes}
+				setStepLength={(newStepLength) => {
+					stepLength = newStepLength;
+				}}
+				setBPM={(newBPM) => {
+					sequence.bpm = newBPM;
+				}}/>
+			<PianoRoll sequence={sequence} notes={notes} stepLength={{stepLength}} />
 		</>
 	);
 }

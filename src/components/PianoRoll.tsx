@@ -25,7 +25,9 @@ export default function PianoRoll({
 }: ContentPageProps) {
 	// TODO
 
-	const sequenceMap = new Map<string, Note>();
+	const sequenceMap = useMemo(() => {
+		return new Map<string, Note>();
+	}, []);
 
 	notes.forEach((note) => {
 		sequenceMap.set(note.getPitchLocation().serialize(), note);
@@ -107,10 +109,6 @@ export default function PianoRoll({
 
 	function drawFG() {
 		if (!fgCtx) return;
-
-		console.log(sequenceMap);
-		console.log("selected note:", selectedNote);
-		console.log(dragState);
 
 		fgCtx.clearRect(0, 0, rollWidth, rollHeight);
 

@@ -33,7 +33,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [seqData, setSeq] = useState(sequence);
 	console.log(noteList);
 
-	let stepLength = 1;
+	const [stepLength, setStepLength] = useState(1);
 
 	const maxPitch = 12 * 5;
 	const minPitch = 12 * 3;
@@ -203,9 +203,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			<TopBar
 				sequence={sequence}
 				notes={notes}
-				setStepLength={(newStepLength) => {
-					stepLength = newStepLength;
-				}}
+				setStepLength={(newStepLength) => setStepLength(newStepLength)}
 				setBPM={(newBPM) => {
 					sequence.bpm = newBPM;
 				}}

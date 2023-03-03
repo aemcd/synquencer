@@ -29,6 +29,7 @@ export default function TopBar({ sequence, notes, setStepLength, setBPM }: Conte
 				<input
 					className="settings-input"
 					defaultValue="120"
+					onChange={(e) => setBPM(parseInt(e.target.value))}
 					style={{ width: "36px" }}
 					maxLength={3} /> BPM |
 				<input

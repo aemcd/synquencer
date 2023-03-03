@@ -23,7 +23,7 @@ export default function PianoRoll({
 	sequence,
 	notes,
 	stepLength,
-	sequenceMap
+	sequenceMap,
 }: ContentPageProps) {
 	// TODO
 

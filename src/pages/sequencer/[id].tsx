@@ -1,5 +1,10 @@
 import Head from "next/head";
-import { Note, SequenceMetadata } from "@/server/types";
+import {
+	Instrument,
+	Note,
+	PitchLocation,
+	SequenceMetadata,
+} from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { GetNotes, GetSequence } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
@@ -18,20 +23,92 @@ type ContentPageProps = {
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
+	sequence = new SequenceMetadata(sequence);
+	notes = notes.map((note) => {
+		return new Note(note);
+	});
+
+	const maxPitch = 12 * 5;
+	const minPitch = 12 * 3;
+
+	const cursorNote = new Note({
+		location: 0,
+		pitch: 12 * 4,
+		velocity: 50,
+		duration: 4,
+		instrument: new Instrument({
+			channel: 0,
+			name: "",
+		}),
+	});
+
+	let mod = 0;
+
 	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
-		alert(event.key + " created");
+		const newNote = new Note(cursorNote);
+		let noteChange = -3;
+		switch (event.key) {
+			case "a":
+				break;
+			case "b":
+				noteChange = -1;
+				break;
+			case "c":
+				noteChange = 0;
+				break;
+			case "d":
+				noteChange = 2;
+				break;
+			case "e":
+				noteChange = 4;
+				break;
+			case "f":
+				noteChange = 5;
+				break;
+			case "g":
+				noteChange = 7;
+				break;
+		}
+		newNote.pitch += mod + noteChange;
+		notes.push(newNote);
+		console.log(notes);
+		alert(newNote.pitchName() + " created");
 	});
 	useHotkeys("up, down", function (event, handler) {
-		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
-		alert("Move note" + event.key + "a semitone");
+		switch (event.key) {
+			case "ArrowUp":
+				if (mod < 1) {
+					mod++;
+				}
+				break;
+			case "ArrowDown":
+				if (mod > -1) {
+					mod--;
+				}
+				break;
+		}
+		// alert("Move note" + event.key + "a semitone");
 	});
-	useHotkeys("ctrl + up, ctrl + down", function (event, handler) {
+	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
-		alert("Move note" + event.key + "an octave");
+		switch (event.key) {
+			case "ArrowUp":
+				if (cursorNote.pitch + 12 <= maxPitch) {
+					cursorNote.pitch += 12;
+				}
+				break;
+			case "ArrowDown":
+				if (cursorNote.pitch - 12 >= minPitch) {
+					cursorNote.pitch -= 12;
+				}
+				break;
+		}
+
+		//alert("Move note" + event.key + "an octave");
 	});
 	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
 		switch (event.key) {
@@ -54,24 +131,36 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				alert(event);
 		}
 	});
-	useHotkeys("left, right, ctrl+left, ctrl+right", function (event, handler) {
-		switch (event.key) {
-			case "left":
-				alert("Moved cursor left.");
-				break;
-			case "right":
-				alert("moved right.");
-				break;
-			case "ctrl+left":
-				alert("Moved note left.");
-				break;
-			case "ctrl+right":
-				alert("moved note right.");
-				break;
-			default:
-				alert(event);
+	useHotkeys(
+		"ArrowLeft, ArrowRight, ctrl+ArrowLeft, ctrl+ArrowRight",
+		function (event, handler) {
+			switch (event.key) {
+				case "ArrowLeft":
+					if (handler.ctrl == true) {
+						alert("Move note left.");
+						break;
+					}
+					if (cursorNote.location - cursorNote.duration >= 0) {
+						cursorNote.location -= cursorNote.duration;
+					}
+					break;
+				case "ArrowRight":
+					if (handler.ctrl == true) {
+						alert("Moved note right.");
+						break;
+					}
+					if (
+						cursorNote.location + cursorNote.duration * 2 <=
+						sequence.length
+					) {
+						cursorNote.location += cursorNote.duration;
+					}
+					break;
+				default:
+					alert(event);
+			}
 		}
-	});
+	);
 	useHotkeys("ctrl+n, command+n", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
@@ -87,11 +176,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		event.preventDefault();
 		alert("Note deleted" + event.key);
 	});
-
-	sequence = new SequenceMetadata(sequence);
-	notes = notes.map((note) => {
-		return new Note(note);
-	});
 	return (
 		<>
 			<Head>
@@ -106,7 +190,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				/>
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<TopBar />
+			<TopBar sequence={sequence} notes={notes} />
 			<PianoRoll sequence={sequence} notes={notes} />
 		</>
 	);
@@ -143,4 +227,10 @@ export async function getServerSideProps({
 			notFound: true,
 		};
 	}
+}
+
+function getOctave(note: Note) {
+	const pitchNumber: number = note.pitch % 12;
+	const octaveNumber: number = (note.pitch - pitchNumber) / 12;
+	return octaveNumber;
 }

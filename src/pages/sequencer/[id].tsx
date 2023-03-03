@@ -201,9 +201,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 			<TopBar
-				sequence={sequence}
-				notes={notes}
-				setStepLength={(newStepLength) => setStepLength(newStepLength)}
+				sequence={seqData}
+				notes={noteList}
+				setStepLength={(newStepLength) => {
+					stepLength = newStepLength;
+				}}
 				setBPM={(newBPM) => {
 					sequence.bpm = newBPM;
 				}}

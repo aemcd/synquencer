@@ -56,6 +56,6 @@ hotkeys('del', function(event, handler){
     // Prevent the default refresh event under WINDOWS system
     event.preventDefault()
     alert('Note deleted' + handler.key);
-});                                     
+});                                             
 
 }       

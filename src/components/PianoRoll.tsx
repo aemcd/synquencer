@@ -4,9 +4,10 @@ import { Instrument, Note, PitchLocation, SequenceMetadata } from "@/server/type
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
+    stepLength: number;
 };
 
-export default function PianoRoll({ sequence, notes }: ContentPageProps) {
+export default function PianoRoll({ sequence, notes, stepLength }: ContentPageProps) {
 
     // TODO
     const sequenceMap = new Map<string, Note>();
@@ -67,8 +68,10 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
 
         // vertical grid lines
         for (let i = 0; i < rollWidth / gridWidth; i++) {
-            !((i + 1) % 4) ? bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3") : bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
-            bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
+            ((i + 1) % 4 == 0) ? bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3") : bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
+            if ((i + 1) % stepLength == 0) {
+                bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
+            }
         }
     }
 
@@ -115,11 +118,11 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
 
         let pixelX = e.clientX - rect.left - 2;
         let pixelY = e.clientY - rect.top - 2;
-        
-        let gridX = Math.floor(pixelX / gridWidth);
-        let gridY = Math.floor(pixelY / gridHeight);
 
         let isRightHalf = pixelX % gridWidth > gridWidth / 2;
+        
+        let gridX = stepLength * Math.floor((pixelX / gridWidth) / stepLength);
+        let gridY = Math.floor(pixelY / gridHeight);
 
         return {gridX, gridY, isRightHalf};
     }
@@ -154,7 +157,7 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
             if (selectedNote != null) {
                 // note found
                 // @ts-ignore
-                if (gridX == selectedNote.location + selectedNote.duration - 1 && isRightHalf) {
+                if (gridX == selectedNote.location + selectedNote.duration - stepLength && isRightHalf) {
                     // end of the note was clicked - start changing length
                     dragState = DRAG_STATES.CHANGING_LENGTH;
                 } else {
@@ -166,12 +169,12 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
                 selectedNote = new Note({
                     location: startGridX,
                     velocity: 100,
-                    duration: 1,
+                    duration: stepLength,
                     pitch: startGridY,
                     instrument: new Instrument({channel: 1, name: "Piano"})});
                 dragState = DRAG_STATES.CHANGING_LENGTH;
                 drawFG();
-                drawNote(startGridX, startGridY, 1, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"), false);
+                drawNote(startGridX, startGridY, selectedNote.duration, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"), false);
             }
         }
     }
@@ -192,7 +195,7 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
         } else {
             // changing note length
             drawFG();
-            drawNote(selectedNote.location, startGridY, Math.max(1, gridX - selectedNote.location + 1), computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"), false);
+            drawNote(selectedNote.location, startGridY, Math.max(stepLength, gridX - selectedNote.location + stepLength), computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"), false);
         }
     }
 
@@ -226,7 +229,7 @@ export default function PianoRoll({ sequence, notes }: ContentPageProps) {
                 let newNote = new Note({
                     location: selectedNote.location,
                     velocity: selectedNote.velocity,
-                    duration: Math.max(1, gridX - selectedNote.location + 1),
+                    duration: Math.max(stepLength, gridX - selectedNote.location + stepLength),
                     pitch: startGridY,
                     instrument: new Instrument({channel: 1, name: "Piano"})})
                 sequenceMap.set(selectedNote.getPitchLocation().serialize(), newNote);

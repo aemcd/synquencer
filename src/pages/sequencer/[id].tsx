@@ -28,7 +28,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		event.preventDefault();
 		alert("Move note" + event.key + "a semitone");
 	});
-	useHotkeys("ctrl + up, ctrl + down", function (event, handler) {
+	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
 		alert("Move note" + event.key + "an octave");
@@ -54,22 +54,24 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				alert(event);
 		}
 	});
-	useHotkeys("left, right, ctrl+left, ctrl+right", function (event, handler) {
+	useHotkeys("ArrowLeft, ArrowRight, ctrl+ArrowLeft, ctrl+ArrowRight", function (event, handler) {
 		switch (event.key) {
-			case "left":
-				alert("Moved cursor left.");
+			case "ArrowLeft":
+				if (handler.ctrl == true) {
+					alert("Move note left.");
 				break;
-			case "right":
+			}
+				alert("Moved left.");
+				break;
+			case "ArrowRight":
+				if (handler.ctrl == true) {
+				alert("Moved note right.");
+					break;
+				}
 				alert("moved right.");
 				break;
-			case "ctrl+left":
-				alert("Moved note left.");
-				break;
-			case "ctrl+right":
-				alert("moved note right.");
-				break;
 			default:
-				alert(event);
+		alert(event);		
 		}
 	});
 	useHotkeys("ctrl+n, command+n", function (event, handler) {

@@ -113,18 +113,18 @@ export class Note extends Serializable {
 	}
 
 	public getPitchLocation() {
-		return new PitchLocation({ pitch: this.pitch, height: this.location });
+		return new PitchLocation({ pitch: this.pitch, location: this.location });
 	}
 }
 
 export class PitchLocation extends Serializable {
 	pitch: number;
-	height: number;
+	location: number;
 
-	constructor(args: { pitch: number; height: number }) {
+	constructor(args: { pitch: number; location: number }) {
 		super();
 		this.pitch = args.pitch;
-		this.height = args.height;
+		this.location = args.location;
 	}
 }
 

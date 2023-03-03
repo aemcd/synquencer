@@ -1,10 +1,21 @@
 import React, {useEffect, useRef, useReducer, MouseEvent} from 'react';
+import { Instrument, Note, PitchLocation, SequenceMetadata } from "@/server/types";
 
-export default function PianoRoll() {
-    const sequenceMap = new Map<string, number>();
+type ContentPageProps = {
+	sequence: SequenceMetadata;
+	notes: Array<Note>;
+};
+
+export default function PianoRoll({ sequence, notes }: ContentPageProps) {
+
+    // TODO
+    const sequenceMap = new Map<string, Note>();
+    notes.forEach(note => {
+        sequenceMap.set(note.getPitchLocation().serialize(), note);
+    });
 
     let rollWidth = 767;
-    let rollHeight = 575;
+    let rollHeight = 864;
     let gridWidth = 24;
     let gridHeight = 24;
 
@@ -15,10 +26,9 @@ export default function PianoRoll() {
     } as const
 
     let dragState : number = DRAG_STATES.NOT_DRAGGING;
+    let startNote: Note | null = null;
     let startGridX = -1;
     let startGridY = -1;
-    let startNoteX = -1;
-    let startNoteLength = -1;
 
     const bgRef = useRef<HTMLCanvasElement | null>(null);
     const fgRef = useRef<HTMLCanvasElement | null>(null);
@@ -65,12 +75,13 @@ export default function PianoRoll() {
     function drawFG() {
         if (!fgCtx) return;
 
+        console.log(sequenceMap);
+
         fgCtx.clearRect(0, 0, rollWidth, rollHeight);
 
-        sequenceMap.forEach((value, key) => {
-            if (!(key === `${startNoteX},${startGridY}`)) {
-                let [x, y] = key.split(',').map(str => parseInt(str));
-                drawNote(x, y, value, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+        sequenceMap.forEach((value) => {
+            if (!(value === startNote)) {
+                drawNote(value.location, value.pitch, value.duration, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
             }
         });
     }
@@ -110,27 +121,25 @@ export default function PianoRoll() {
         startGridX = gridX;
         startGridY = gridY;
 
-        sequenceMap.forEach((value, key) => {
-            let [x, y] = key.split(',').map(str => parseInt(str));
-            if (gridY == y && gridX >= x && gridX < x + value) {
+        startNote == null;
+        sequenceMap.forEach((value) => {
+            if (gridY == value.pitch && gridX >= value.location && gridX < value.location + value.duration) {
                 // Clicked cell lies within an existing note. Only take the last one, which will be on top because of the render order.
-                startNoteX = x;
-                startGridY = y;
-                startNoteLength = value;
+                startNote = value;
             }
-        }); 
+        });
 
         if (e.button === 2) {
             // right click - delete if note was found
-            if (startNoteLength != -1) {
-                sequenceMap.delete(`${startNoteX},${startGridY}`);
+            if (startNote != null) {
+                sequenceMap.delete(startNote.getPitchLocation().serialize());
                 drawFG();
             }
         } else if (e.button == 0) {
             // left click
-            if (startNoteLength != -1) {
+            if (startNote != null) {
                 // note found
-                if (gridX == startNoteX + startNoteLength - 1 && isRightHalf) {
+                if (gridX == startNote.location + startNote.duration - 1 && isRightHalf) {
                     // end of the note was clicked - start changing length
                     dragState = DRAG_STATES.CHANGING_LENGTH;
                 } else {
@@ -139,19 +148,20 @@ export default function PianoRoll() {
                 }
             } else {
                 // no note found; creating new note
-                startNoteLength = 1;
-                startNoteX = gridX;
+                startNote = new Note({
+                    location: startGridX,
+                    velocity: 100,
+                    duration: 1,
+                    pitch: startGridY,
+                    instrument: new Instrument({channel: 1, name: "Piano"})});
                 dragState = DRAG_STATES.CHANGING_LENGTH;
                 drawFG();
-                drawNote(startNoteX, startGridY, 1, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+                drawNote(startGridX, startGridY, 1, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
             }
             return;
         }
 
-        startGridX = -1;
-        startGridY = -1;
-        startNoteX = -1;
-        startNoteLength = -1;
+        startNote = null;
 
         return;
     }
@@ -161,16 +171,18 @@ export default function PianoRoll() {
         
         if (dragState == DRAG_STATES.NOT_DRAGGING) return;
 
+        if (!startNote) return;
+
         let {gridX, gridY} = getGridPos(e);
 
         if (dragState == DRAG_STATES.MOVING_NOTE) {
             // moving note
             drawFG();
-            drawNote(startNoteX + gridX - startGridX, gridY, startNoteLength, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+            drawNote(startNote.location + gridX - startGridX, gridY, startNote.duration, computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
         } else {
             // changing note length
             drawFG();
-            drawNote(startNoteX, startGridY, Math.max(1, gridX - startNoteX + 1), computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
+            drawNote(startNote.location, startGridY, Math.max(1, gridX - startNote.location + 1), computedStyle.getPropertyValue("--yellow"), computedStyle.getPropertyValue("--yellow-accent"));
         }
     }
 
@@ -179,28 +191,36 @@ export default function PianoRoll() {
 
         if (dragState == DRAG_STATES.NOT_DRAGGING) return;
 
+        if (!startNote) return;
+
         let {gridX, gridY} = getGridPos(e);
 
         if (dragState == DRAG_STATES.MOVING_NOTE) {
             // done moving note
             if (!(gridX == startGridX && gridY == startGridY)) {
                 // check to make sure we're actually changing the note location
-                sequenceMap.set(`${startNoteX + gridX - startGridX},${gridY}`, startNoteLength);
-                sequenceMap.delete(`${startNoteX},${startGridY}`);
+                sequenceMap.set(new PitchLocation({pitch: gridY, location: startNote.location + gridX - startGridX}).serialize(), startNote);
+                sequenceMap.delete(startNote.getPitchLocation().serialize());
+                startNote.pitch = gridY;
+                startNote.location = startNote.location + gridX - startGridX;
             }
         } else {
             // done changing note length
             if (!(gridX == startGridX && gridY == startGridY && sequenceMap.has(`${startGridX},${startGridY}`))) {
                 // check to make sure we're actually changing the length
-                sequenceMap.set(`${startNoteX},${startGridY}`, Math.max(1, gridX - startNoteX + 1));
+                sequenceMap.set(new PitchLocation({pitch: startNote.pitch, location: startNote.location}).serialize(),
+                    new Note({
+                        location: startNote.location,
+                        velocity: startNote.velocity,
+                        duration: Math.max(1, gridX - startNote.location + 1),
+                        pitch: startGridY,
+                        instrument: new Instrument({channel: 1, name: "Piano"})})
+                )
             }
         }
 
         dragState = DRAG_STATES.NOT_DRAGGING;
-        startGridX = -1;
-        startGridY = -1;
-        startNoteX = -1;
-        startNoteLength = -1;
+        startNote = null;
 
         drawFG();
     }
@@ -209,10 +229,7 @@ export default function PianoRoll() {
         e.preventDefault();
 
         dragState = DRAG_STATES.NOT_DRAGGING;
-        startGridX = -1;
-        startGridY = -1;
-        startNoteX = -1;
-        startNoteLength = -1;
+        startNote = null;
 
         drawFG();
     }

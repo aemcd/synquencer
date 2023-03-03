@@ -6,14 +6,20 @@ import Link from "next/link";
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
-    setStepLength: (stepLength: number) => void;
-    setBPM: (stepLength: number) => void;
-    saveSequence: () => void;
-    downloadSequence: () => void;
+	setStepLength: (stepLength: number) => void;
+	setBPM: (stepLength: number) => void;
+	saveSequence: () => void;
+	downloadSequence: () => void;
 };
 
-export default function TopBar({ sequence, notes, setStepLength, setBPM, saveSequence, downloadSequence}: ContentPageProps) {
-
+export default function TopBar({
+	sequence,
+	notes,
+	setStepLength,
+	setBPM,
+	saveSequence,
+	downloadSequence,
+}: ContentPageProps) {
 	return (
 		<div className="top-bar">
 			<button className="top-button">▶</button>
@@ -21,18 +27,23 @@ export default function TopBar({ sequence, notes, setStepLength, setBPM, saveSeq
 			<div className="settings">
 				<input
 					className="settings-input"
-					defaultValue={sequence.bpm}
+					defaultValue={sequence.bpm ? sequence.bpm : "120"}
 					onChange={(e) => setBPM(parseInt(e.target.value))}
 					style={{ width: "36px" }}
-					maxLength={3} /> BPM |
+					maxLength={3}
+				/>{" "}
+				BPM |
 				<input
 					className="settings-input"
 					defaultValue="4/4"
-					style={{ width: "56px" }} />|
+					style={{ width: "56px" }}
+				/>
+				|
 				<select
 					className="settings-input"
 					style={{ width: "76px" }}
-					onChange={(e) => setStepLength(parseInt(e.target.value))}>
+					onChange={(e) => setStepLength(parseInt(e.target.value))}
+				>
 					<option value="1">1/16</option>
 					<option value="2">1/8</option>
 					<option value="4">1/4</option>
@@ -43,7 +54,8 @@ export default function TopBar({ sequence, notes, setStepLength, setBPM, saveSeq
 			<button
 				className="top-button"
 				style={{ transform: "scale(1,-1)" }}
-				onClick={saveSequence}>
+				onClick={saveSequence}
+			>
 				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
 					<path
 						fill="var(--fg2)"

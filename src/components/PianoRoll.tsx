@@ -40,6 +40,7 @@ export default function PianoRoll({
 
 	let dragState: number = DRAG_STATES.NOT_DRAGGING;
 	let selectedNote: Note | null = null;
+	let copiedNote: Note | null = null;
 	let startGridX = -1;
 	let startGridY = -1;
 
@@ -257,6 +258,22 @@ export default function PianoRoll({
 					false
 				);
 			}
+		} else if (e.button == 1) {
+			if (selectedNote) {
+				copiedNote = selectedNote;
+			} else if (copiedNote) {
+				let newNote = new Note({
+					location: startGridX,
+					velocity: copiedNote.velocity,
+					duration: copiedNote.duration,
+					pitch: startGridY,
+					instrument: new Instrument({ channel: 1, name: "Piano" }),
+				});
+				sequenceMap.set(newNote.getPitchLocation().serialize(), newNote);
+				selectedNote = newNote;
+				copiedNote = newNote;
+				drawFG();
+			}
 		}
 	}
 
@@ -330,7 +347,7 @@ export default function PianoRoll({
 				!(
 					gridX == startGridX &&
 					gridY == startGridY &&
-					sequenceMap.has(`${startGridX},${startGridY}`)
+					sequenceMap.has(new PitchLocation({pitch: startGridY, location: startGridX}).serialize())
 				)
 			) {
 				// check to make sure we're actually changing the length

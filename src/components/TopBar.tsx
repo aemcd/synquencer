@@ -10,6 +10,12 @@ export default function TopBar() {
                 <input  className="settings-input" defaultValue="4/4" style={{width: "56px"}}></input> Step Length|
                 <input className="settings-input" defaultValue="1/16" style={{width: "64px"}}></input> 
             </div>
+            <button className="top-button" style={{transform: "scale(1,-1)"}}>
+                <svg width="18" height="18" viewBox="0 0 185.2 185.2">
+                    <path fill="var(--fg2)" d="M26.5 529.2h185.2v-79.4h-26.5v53H53v-53H26.5z" transform="translate(-26.5 -344)"/>
+                    <path fill="var(--fg2)" d="M119 476.3 53 410h39.6V344h53V410h39.6z" transform="translate(-26.5 -344)"/>
+                </svg>
+            </button>
             <button className="top-button">
                 <svg width="18" height="18" viewBox="0 0 185.2 185.2">
                     <path fill="var(--fg2)" d="M26.5 529.2h185.2v-79.4h-26.5v53H53v-53H26.5z" transform="translate(-26.5 -344)"/>

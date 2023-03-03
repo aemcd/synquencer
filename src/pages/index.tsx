@@ -22,7 +22,7 @@ export default function Home() {
         }}>
           <h1 style={{margin: "0 0 24px 0"}}>Synquencer</h1>
           <Link href="/sequencer/new" className="home-menu-button">New Sequence</Link>
-          <button className="home-menu-button">About</button>
+          <Link href="/about" className="home-menu-button">About</Link>
         </div>
       </div>
     </>

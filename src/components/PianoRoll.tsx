@@ -233,8 +233,8 @@ export default function PianoRoll({
 				// note found
 				// @ts-ignore
 				if (
-					gridX ==
-						selectedNote.location +
+					gridX == // @ts-ignore
+						selectedNote.location + // @ts-ignore
 							selectedNote.duration -
 							stepLength &&
 					isRightHalf

@@ -8,18 +8,11 @@ type ContentPageProps = {
 	notes: Array<Note>;
     setStepLength: (stepLength: number) => void;
     setBPM: (stepLength: number) => void;
+    saveSequence: () => void;
+    downloadSequence: () => void;
 };
 
-export default function TopBar({ sequence, notes, setStepLength, setBPM }: ContentPageProps) {
-	function saveSequence() {
-		EditSequence(sequence.id, sequence);
-		ClearNotes(sequence.id);
-		AddNotes(sequence.id, notes);
-	}
-
-	function downloadSequence() {
-		WriteMidi(sequence, notes);
-	}
+export default function TopBar({ sequence, notes, setStepLength, setBPM, saveSequence, downloadSequence}: ContentPageProps) {
 
 	return (
 		<div className="top-bar">

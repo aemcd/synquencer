@@ -242,9 +242,10 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					Promise.all([
 						EditSequence(seqData.id, seqData),
 						ClearNotes(seqData.id),
-						AddNotes(seqData.id, noteArr),
 					]).then((value) => {
-						alert("Saved Successfully");
+						AddNotes(seqData.id, noteArr).then((value) =>
+							alert("Saved Successfully")
+						);
 					});
 				}}
 				downloadSequence={() => {

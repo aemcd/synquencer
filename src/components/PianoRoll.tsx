@@ -34,6 +34,8 @@ export default function PianoRoll({
 	let gridWidth = 24;
 	let gridHeight = 24;
 
+	let keyColors: boolean[] = [true, false, true, false, true, true, false, true, false, true, false, true];
+
 	const DRAG_STATES = {
 		NOT_DRAGGING: 0,
 		MOVING_NOTE: 1,
@@ -81,12 +83,21 @@ export default function PianoRoll({
 	function drawBG() {
 		if (!bgCtx) return;
 
+		// clear bg
 		bgCtx.clearRect(0, 0, rollWidth, rollHeight);
+
+		// color rows to match keys
+		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
+		for (let i = 0; i < rollHeight / gridHeight; i++) {
+			if (keyColors[i % 12]) {
+				bgCtx.fillRect(0, rollHeight - gridHeight - (i * gridHeight), rollWidth, gridHeight);
+			}
+		}
 
 		bgCtx.lineWidth = 2;
 
 		// horizontal grid lines
-		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
+		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			bgCtx.fillRect(0, gridHeight * (i + 1) - 1, rollWidth, 2);
 		}
@@ -95,7 +106,7 @@ export default function PianoRoll({
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			(i + 1) % 4 == 0
 				? (bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3"))
-				: (bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1"));
+				: (bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0"));
 			if ((i + 1) % stepLength == 0) {
 				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
 			}

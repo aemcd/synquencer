@@ -1,14 +1,15 @@
 import { Note, SequenceMetadata } from "@/server/types";
 import MW from "midi-writer-js";
+import MP from "midi-player-js";
 
 /**
- * Builds a MIDI file from a sequence and notes and downloads it
+ * Builds a MIDI file from a sequence and notes
  *
  * @param sequence The sequence
  * @param notes The notes of the sequence
  * @returns A midi file as Uint8Array
  */
-export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
+function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	const track = new MW.Track();
 
 	track.setTimeSignature(sequence.numerator, sequence.denominator);
@@ -28,9 +29,21 @@ export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
 	track.addEvent(events);
 
 	const writer = new MW.Writer(track);
+	return writer.buildFile();
+}
 
+/**
+ * Builds a MIDI file from a sequence and notes and downloads it
+ *
+ * @param sequence The sequence
+ * @param notes The notes of the sequence
+ */
+export function WriteMidi(
+	sequence: SequenceMetadata,
+	notes: Array<Note>
+): void {
 	// Create a blob with the data we want to download as a file
-	const midi = new Blob([writer.buildFile()], { type: "audio/midi" });
+	const midi = new Blob([GetMidi(sequence, notes)], { type: "audio/midi" });
 	const filename = "MIDI_Sequence.midi";
 
 	// IE, new browsers second works

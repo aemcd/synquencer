@@ -30,7 +30,12 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hotkeys-hook": "^4.3.7",
+    "soundfont-player": "^0.12.0",
     "typescript": "4.9.5",
-    "use-keyboard-shortcut": "github:arthurtyukayev/use-keyboard-shortcut"
+    "use-keyboard-shortcut": "github:arthurtyukayev/use-keyboard-shortcut",
+    "webaudiofont": "^3.0.4"
+  },
+  "devDependencies": {
+    "@panacea123/midiplayer-ts": "^1.5.3"
   }
 }

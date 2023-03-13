@@ -1,6 +1,7 @@
 import { Note, SequenceMetadata } from "@/server/types";
 import MW from "midi-writer-js";
 import MP from "midi-player-js";
+import Soundfont from "soundfont-player";
 
 /**
  * Builds a MIDI file from a sequence and notes
@@ -33,11 +34,29 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 }
 
 export function PlayMidi(sequence: SequenceMetadata, notes: Array<Note>) {
-	const player = new MP.Player((event: any) => {
-		console.log(event);
+	const audioContext = new AudioContext();
+	console.log("here");
+
+	Soundfont.instrument(audioContext, "accordion").then((piano) => {
+		notes.forEach((note) => {
+			console.log("here");
+			piano.play("C4");
+			piano.schedule(
+				audioContext.currentTime +
+					toSec(sequence.bpm, sequence.denominator, note.location),
+				[
+					{
+						gain: note.velocity / 100,
+						duration: toSec(
+							sequence.bpm,
+							sequence.denominator,
+							note.duration
+						),
+					},
+				]
+			);
+		});
 	});
-	player.loadArrayBuffer(GetMidi(sequence, notes));
-	player.play();
 }
 
 /**
@@ -76,4 +95,8 @@ export function WriteMidi(
 
 function toTick(time: number) {
 	return time * 32;
+}
+
+function toSec(bpm: number, denominator: number, time: number) {
+	return (time * denominator) / (bpm * 60);
 }

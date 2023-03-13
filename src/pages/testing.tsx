@@ -14,7 +14,7 @@ import {
 	GetNotes,
 	GetSequence,
 } from "@/database/calls";
-import { WriteMidi } from "@/client/write_midi";
+import { PlayMidi, WriteMidi } from "@/client/write_midi";
 
 const inter = Inter({ subsets: ["latin"] });
 let noteLoc = -1;
@@ -195,6 +195,19 @@ export default function Test() {
 						}}
 					>
 						Download Sequence
+					</button>
+					<button
+						onClick={(e: any) => {
+							const notes = Array<Note>();
+							for (let i = 0; i < 16; i++) {
+								notes.push(new Note(defaultNote));
+								defaultNote.location = defaultNote.location + 4;
+							}
+							console.log(notes);
+							PlayMidi(defaultSequence, notes);
+						}}
+					>
+						Play Sequence
 					</button>
 				</div>
 			</main>

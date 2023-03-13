@@ -32,6 +32,14 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	return writer.buildFile();
 }
 
+export function PlayMidi(sequence: SequenceMetadata, notes: Array<Note>) {
+	const player = new MP.Player((event: any) => {
+		console.log(event);
+	});
+	player.loadArrayBuffer(GetMidi(sequence, notes));
+	player.play();
+}
+
 /**
  * Builds a MIDI file from a sequence and notes and downloads it
  *

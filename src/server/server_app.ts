@@ -1,6 +1,7 @@
 import { GetNotes, GetSequence } from "@/database/calls";
 import { SharedMap } from "fluid-framework";
 import express from "express";
+import Home from "@/pages/index";
 
 //TODO implement web server in express beyond just hello world
 
@@ -10,8 +11,10 @@ const port = 7200;
 type sequenceEntry = {metadata: SharedMap, sequence: SharedMap};
 let allSequences: Map<string, sequenceEntry> = new Map();
 
-app.get("/", (req, res) => {
-    res.send("Wazzup Beijing");
+
+
+app.get("*", (req, res) => {
+    res.send(Home());
 });
 
 app.listen(port, () => {

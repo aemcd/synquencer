@@ -14,7 +14,7 @@ import {
 	GetNotes,
 	GetSequence,
 } from "@/database/calls";
-import { PlayMidi, WriteMidi } from "@/client/write_midi";
+import { PlaySequence, WriteMidi } from "@/client/write_midi";
 
 const inter = Inter({ subsets: ["latin"] });
 let noteLoc = -1;
@@ -37,14 +37,14 @@ export default function Test() {
 		velocity: 50,
 		duration: 4,
 		pitch: 50,
-		instrument: new Instrument({ channel: 0, name: "piano" }),
+		instrument: new Instrument({ channel: 0, name: "Piano" }),
 	});
 	const defaultNote2 = new Note({
 		location: 999,
 		velocity: 0,
 		duration: 0,
 		pitch: 0,
-		instrument: new Instrument({ channel: 0, name: "piano" }),
+		instrument: new Instrument({ channel: 0, name: "Piano" }),
 	});
 	return (
 		<>
@@ -204,7 +204,7 @@ export default function Test() {
 								defaultNote.location = defaultNote.location + 4;
 							}
 							console.log(notes);
-							PlayMidi(defaultSequence, notes);
+							PlaySequence(defaultSequence, notes);
 						}}
 					>
 						Play Sequence

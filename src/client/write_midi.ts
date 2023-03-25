@@ -1,7 +1,66 @@
-import { Note, SequenceMetadata } from "@/server/types";
+import { Note, PitchLocation, SequenceMetadata } from "@/server/types";
+import { Arsenal } from "@next/font/google";
 import MW from "midi-writer-js";
-import MP from "midi-player-js";
 import Soundfont from "soundfont-player";
+import { parseIsolatedEntityName } from "typescript";
+
+function setIntervalWrapper(
+	callback: any,
+	time: number,
+	...arg: any
+): NodeJS.Timer {
+	const args = Array.prototype.slice.call(arguments, 1);
+	args[0] = setInterval(function () {
+		callback.apply(null, args as []);
+	}, time);
+	return args[0];
+}
+
+function PlayTick(
+	intervalID: NodeJS.Timer,
+	sequence: SequenceMetadata,
+	notes: Map<string, Note>,
+	instruments: Map<string, Soundfont.Player>,
+	curr_tick: { tick: number }
+): any {
+	console.log(arguments);
+	if (curr_tick.tick > sequence.length) {
+		clearInterval(intervalID);
+	} else {
+		console.log(`tick: ${curr_tick.tick}`);
+		const notesToPlay: Note[] = new Array<Note>();
+		notes.forEach((mapNote) => {
+			if (mapNote.location === curr_tick.tick) {
+				notesToPlay.push(mapNote);
+			}
+		});
+		console.log(notesToPlay);
+
+		notesToPlay.forEach((note) => {
+			const instrument = instruments.get(note.instrument.name as string);
+			if (instrument != undefined) {
+				console.log(
+					`gain: ${note.velocity / 100}, duration: ${toSec(
+						sequence.bpm,
+						sequence.denominator,
+						note.duration
+					)}`
+				);
+				//instrument.connect(new AudioContext().destination);
+
+				instrument.play(note.pitchName(), undefined, {
+					gain: note.velocity / 100,
+					duration: toSec(
+						sequence.bpm,
+						sequence.denominator,
+						note.duration
+					),
+				});
+			}
+		});
+	}
+	curr_tick.tick++;
+}
 
 /**
  * Builds a MIDI file from a sequence and notes
@@ -33,30 +92,37 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	return writer.buildFile();
 }
 
-export function PlayMidi(sequence: SequenceMetadata, notes: Array<Note>) {
-	const audioContext = new AudioContext();
-	console.log("here");
+export async function PlaySequence(
+	sequence: SequenceMetadata,
+	notes: Array<Note>
+) {
+	const instrumentIDs: Soundfont.InstrumentName[] = ["acoustic_grand_piano"];
+	const instrumentNames: string[] = ["Piano"];
 
-	Soundfont.instrument(audioContext, "accordion").then((piano) => {
-		notes.forEach((note) => {
-			console.log("here");
-			piano.play("C4");
-			piano.schedule(
-				audioContext.currentTime +
-					toSec(sequence.bpm, sequence.denominator, note.location),
-				[
-					{
-						gain: note.velocity / 100,
-						duration: toSec(
-							sequence.bpm,
-							sequence.denominator,
-							note.duration
-						),
-					},
-				]
-			);
-		});
+	const playerInstruments = await Promise.all(
+		instrumentIDs.map((id) => {
+			const ac = new AudioContext();
+			ac.destination.channelCount = 2;
+			return Soundfont.instrument(ac, id);
+		})
+	);
+	const instruments: Map<string, Soundfont.Player> = new Map<
+		string,
+		Soundfont.Player
+	>();
+	playerInstruments.forEach((player, index) => {
+		instruments.set(instrumentNames[index], player);
 	});
+	const curr_tick = { tick: 0 };
+	const intervalID = setIntervalWrapper(
+		PlayTick,
+		toSec(sequence.bpm, sequence.denominator, 1) * 1000,
+		sequence,
+		notes,
+		instruments,
+		curr_tick
+	);
+	return { intervalID, curr_tick };
 }
 
 /**
@@ -98,5 +164,5 @@ function toTick(time: number) {
 }
 
 function toSec(bpm: number, denominator: number, time: number) {
-	return (time * denominator) / (bpm * 60);
+	return (time * 60) / (bpm * denominator);
 }

@@ -27,12 +27,18 @@ export default function PianoRoll({
 	stepLength,
 	sequenceMap,
 }: ContentPageProps) {
-	// TODO
-
+	
 	let rollWidth = 767;
 	let rollHeight = 864;
+	
 	let gridWidth = 24;
 	let gridHeight = 24;
+
+	// viewPos and viewPitch represent the note location
+	// of the bottom-left of this canvas
+	let viewLoc = 0;
+	// 24 is C1
+	let viewPitch = 24;
 
 	let keyColors: boolean[] = [true, false, true, false, true, true, false, true, false, true, false, true];
 
@@ -89,8 +95,8 @@ export default function PianoRoll({
 		// color rows to match keys
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if (keyColors[i % 12]) {
-				bgCtx.fillRect(0, rollHeight - gridHeight - (i * gridHeight), rollWidth, gridHeight);
+			if (keyColors[(i + viewPitch) % 12]) {
+				bgCtx.fillRect(0, rollHeight - (i * gridHeight + gridHeight), rollWidth, gridHeight);
 			}
 		}
 
@@ -144,8 +150,8 @@ export default function PianoRoll({
 	}
 
 	function drawNote(
-		gridX: number,
-		gridY: number,
+		location: number,
+		pitch: number,
 		length: number,
 		colorFill: string,
 		colorOutline: string,
@@ -156,23 +162,23 @@ export default function PianoRoll({
 
 		fgCtx.fillStyle = colorFill;
 		fgCtx.fillRect(
-			gridX * gridWidth,
-			(71 - gridY) * gridHeight,
+			(location - viewLoc) * gridWidth,
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight),
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.strokeStyle = colorOutline;
 		fgCtx.lineWidth = 2;
 		fgCtx.strokeRect(
-			gridX * gridWidth,
-			(71 - gridY) * gridHeight,
+			(location - viewLoc) * gridWidth,
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight),
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.fillStyle = colorOutline;
 		fgCtx.fillRect(
-			(gridX + length) * gridWidth - 6,
-			(71 - gridY) * gridHeight + 4,
+			(location - viewLoc + length) * gridWidth - 6,
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) + 4,
 			2,
 			gridHeight - 8
 		);
@@ -180,8 +186,8 @@ export default function PianoRoll({
 		if (highlighted) {
 			fgCtx.strokeStyle = computedStyle.getPropertyValue("--fg0");
 			fgCtx.strokeRect(
-				gridX * gridWidth - 2,
-				(71 - gridY) * gridHeight - 2,
+				(location - viewLoc) * gridWidth - 2,
+				rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) - 2,
 				gridWidth * length + 4,
 				gridHeight + 4
 			);
@@ -206,27 +212,27 @@ export default function PianoRoll({
 
 		let isRightHalf = pixelX % gridWidth > gridWidth / 2;
 
-		let gridX = stepLength * Math.floor(pixelX / gridWidth / stepLength);
-		let gridY = 71 - Math.floor(pixelY / gridHeight);
+		let location = viewLoc + Math.floor(pixelX / gridWidth);
+		let pitch = viewPitch + Math.floor((rollHeight - pixelY) / gridHeight);
 
-		return { gridX, gridY, isRightHalf };
+		return { location, pitch, isRightHalf };
 	}
 
 	function handleMouseDown(e: MouseEvent) {
 		e.preventDefault();
 
-		let { gridX, gridY, isRightHalf } = getGridPos(e);
+		let { location, pitch, isRightHalf } = getGridPos(e);
 
-		startGridX = gridX;
-		startGridY = gridY;
+		startGridX = location;
+		startGridY = pitch;
 
 		selectedNote = null;
 
 		sequenceMap.forEach((value) => {
 			if (
-				gridY == value.pitch &&
-				gridX >= value.location &&
-				gridX < value.location + value.duration
+				pitch == value.pitch &&
+				location >= value.location &&
+				location < value.location + value.duration
 			) {
 				// Clicked cell lies within an existing note. Only take the last one, which will be on top because of the render order.
 				selectedNote = value;
@@ -247,7 +253,7 @@ export default function PianoRoll({
 				// note found
 				// @ts-ignore
 				if (
-					gridX == // @ts-ignore
+					location == // @ts-ignore
 						selectedNote.location + // @ts-ignore
 							selectedNote.duration -
 							stepLength &&
@@ -308,14 +314,14 @@ export default function PianoRoll({
 
 		if (!selectedNote) return;
 
-		let { gridX, gridY } = getGridPos(e);
+		let { location, pitch } = getGridPos(e);
 
 		if (dragState == DRAG_STATES.MOVING_NOTE) {
 			// moving note
 			drawFG();
 			drawNote(
-				selectedNote.location + gridX - startGridX,
-				gridY,
+				selectedNote.location + location - startGridX,
+				pitch,
 				selectedNote.duration,
 				computedStyle.getPropertyValue("--yellow"),
 				computedStyle.getPropertyValue("--yellow-accent"),
@@ -329,7 +335,7 @@ export default function PianoRoll({
 				startGridY,
 				Math.max(
 					stepLength,
-					gridX - selectedNote.location + stepLength
+					location - selectedNote.location + stepLength
 				),
 				computedStyle.getPropertyValue("--yellow"),
 				computedStyle.getPropertyValue("--yellow-accent"),
@@ -345,17 +351,17 @@ export default function PianoRoll({
 
 		if (!selectedNote) return;
 
-		let { gridX, gridY } = getGridPos(e);
+		let { location, pitch } = getGridPos(e);
 
 		if (dragState == DRAG_STATES.MOVING_NOTE) {
 			// done moving note
-			if (!(gridX == startGridX && gridY == startGridY)) {
+			if (!(location == startGridX && pitch == startGridY)) {
 				// check to make sure we're actually changing the note location
 				let newNote = new Note({
-					location: selectedNote.location + gridX - startGridX,
+					location: selectedNote.location + location - startGridX,
 					velocity: selectedNote.velocity,
 					duration: selectedNote.duration,
-					pitch: gridY,
+					pitch: pitch,
 					instrument: selectedNote.instrument,
 				});
 				sequenceMap.set(
@@ -369,8 +375,8 @@ export default function PianoRoll({
 			// done changing note length
 			if (
 				!(
-					gridX == startGridX &&
-					gridY == startGridY &&
+					location == startGridX &&
+					pitch == startGridY &&
 					sequenceMap.has(
 						new PitchLocation({
 							pitch: startGridY,
@@ -385,7 +391,7 @@ export default function PianoRoll({
 					velocity: selectedNote.velocity,
 					duration: Math.max(
 						stepLength,
-						gridX - selectedNote.location + stepLength
+						location - selectedNote.location + stepLength
 					),
 					pitch: startGridY,
 					instrument: new Instrument({ channel: 1, name: "Piano" }),
@@ -417,7 +423,7 @@ export default function PianoRoll({
 		e.preventDefault();
 	}
 
-	function handleWheel(e: any) {
+	/* function handleWheel(e: any) {
 		if (!selectedNote) return;
 
 		if (e.deltaY > 0) {
@@ -452,6 +458,24 @@ export default function PianoRoll({
 			}
 		}
 		velocityAlert(selectedNote.velocity);
+	} */
+
+	function handleWheel(e: any) {
+		if (e.deltaY > 0) {
+			// scroll down
+			if (!(viewPitch - 4 < 0)) {
+				viewPitch -= 4;
+				drawBG();
+				drawFG();
+			}
+		} else if (e.deltaY < 0) {
+			// scroll up
+			if (!(viewPitch + 4 > 128 - (rollHeight / gridHeight))) {
+				viewPitch += 4;
+				drawBG();
+				drawFG();
+			}
+		}
 	}
 
 	return (

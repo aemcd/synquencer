@@ -50,8 +50,8 @@ export default function TopBar({
 					maxLength={3}
 				/>{" "}
 
-				<span>|</span>
-				
+				<span aria-hidden="true">|</span>
+
 				<input
 					className="settings-input"
 					aria-label = "Time Signature"
@@ -59,7 +59,7 @@ export default function TopBar({
 					style={{ width: "56px" }}
 				/>
 
-				<span>|</span>
+				<span aria-hidden="true">|</span>
 				
 				<select
 					className="settings-input"

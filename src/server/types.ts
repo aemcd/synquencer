@@ -145,9 +145,9 @@ export class Pitch {
 
 export class Instrument extends Serializable {
 	channel: number;
-	name: String;
+	name: string;
 
-	constructor(args: { channel: number; name: String }) {
+	constructor(args: { channel: number; name: string }) {
 		super();
 		this.channel = args.channel;
 		this.name = args.name;
@@ -162,7 +162,7 @@ export class Instrument extends Serializable {
 	getName() {
 		return this.name;
 	}
-	setName(name: String) {
+	setName(name: string) {
 		this.name = name;
 	}
 }

@@ -1,14 +1,91 @@
-import { Note, SequenceMetadata } from "@/server/types";
+import { Note, PitchLocation, SequenceMetadata } from "@/server/types";
+import { Arsenal } from "@next/font/google";
 import MW from "midi-writer-js";
+import Soundfont from "soundfont-player";
+import { parseIsolatedEntityName } from "typescript";
+
+let currentTick: number;
+let currentInterval: NodeJS.Timer;
+let isPlaying: boolean = false;
+
+export function getTick() {
+	return currentTick;
+}
+
+export function StopSequence() {
+	clearInterval(currentInterval);
+	currentTick = 0;
+	isPlaying = false;
+}
+
+function setIntervalWrapper(
+	callback: any,
+	time: number,
+	...arg: any
+): NodeJS.Timer {
+	const args = Array.prototype.slice.call(arguments, 1);
+	args[0] = undefined;
+	callback.apply(null, args as []);
+	args[0] = setInterval(function () {
+		callback.apply(null, args as []);
+	}, time);
+	return args[0];
+}
+
+function PlayTick(
+	intervalID: NodeJS.Timer | undefined,
+	sequence: SequenceMetadata,
+	notes: Map<string, Note>,
+	instruments: Map<string, Soundfont.Player>
+): any {
+	console.log(arguments);
+	if (currentTick > sequence.length) {
+		clearInterval(intervalID);
+		currentTick = 0;
+		isPlaying = false;
+	} else {
+		const notesToPlay: Note[] = new Array<Note>();
+		notes.forEach((mapNote) => {
+			console.log(mapNote);
+			if (mapNote.location === currentTick) {
+				notesToPlay.push(mapNote);
+			}
+		});
+
+		notesToPlay.forEach((note) => {
+			const instrument = instruments.get(note.instrument.name as string);
+			if (instrument != undefined) {
+				console.log(
+					`gain: ${note.velocity / 100}, duration: ${toSec(
+						sequence.bpm,
+						sequence.denominator,
+						note.duration
+					)}`
+				);
+				//instrument.connect(new AudioContext().destination);
+
+				instrument.play(note.pitchName(), undefined, {
+					gain: note.velocity / 100,
+					duration: toSec(
+						sequence.bpm,
+						sequence.denominator,
+						note.duration
+					),
+				});
+			}
+		});
+	}
+	currentTick++;
+}
 
 /**
- * Builds a MIDI file from a sequence and notes and downloads it
+ * Builds a MIDI file from a sequence and notes
  *
  * @param sequence The sequence
  * @param notes The notes of the sequence
  * @returns A midi file as Uint8Array
  */
-export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
+function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	const track = new MW.Track();
 
 	track.setTimeSignature(sequence.numerator, sequence.denominator);
@@ -28,9 +105,57 @@ export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
 	track.addEvent(events);
 
 	const writer = new MW.Writer(track);
+	return writer.buildFile();
+}
 
+export function PlaySequence(
+	sequence: SequenceMetadata,
+	notes: Map<string, Note>
+) {
+	if (currentInterval != null) {
+		clearInterval(currentInterval);
+	}
+	const instrumentIDs: Soundfont.InstrumentName[] = ["bright_acoustic_piano"];
+	const instrumentNames: string[] = ["Piano"];
+
+	Promise.all(
+		instrumentIDs.map((id) => {
+			const ac = new AudioContext();
+			ac.destination.channelCount = 2;
+			return Soundfont.instrument(ac, id);
+		})
+	).then((playerInstruments) => {
+		const instruments: Map<string, Soundfont.Player> = new Map<
+			string,
+			Soundfont.Player
+		>();
+		playerInstruments.forEach((player, index) => {
+			instruments.set(instrumentNames[index], player);
+		});
+		isPlaying = true;
+		currentTick = 0;
+		currentInterval = setIntervalWrapper(
+			PlayTick,
+			toSec(sequence.bpm, sequence.denominator, 1) * 1000,
+			sequence,
+			notes,
+			instruments
+		);
+	});
+}
+
+/**
+ * Builds a MIDI file from a sequence and notes and downloads it
+ *
+ * @param sequence The sequence
+ * @param notes The notes of the sequence
+ */
+export function WriteMidi(
+	sequence: SequenceMetadata,
+	notes: Array<Note>
+): void {
 	// Create a blob with the data we want to download as a file
-	const midi = new Blob([writer.buildFile()], { type: "audio/midi" });
+	const midi = new Blob([GetMidi(sequence, notes)], { type: "audio/midi" });
 	const filename = "MIDI_Sequence.midi";
 
 	// IE, new browsers second works
@@ -55,4 +180,8 @@ export function WriteMidi(sequence: SequenceMetadata, notes: Array<Note>) {
 
 function toTick(time: number) {
 	return time * 32;
+}
+
+function toSec(bpm: number, denominator: number, time: number) {
+	return (time * 60) / (bpm * denominator);
 }

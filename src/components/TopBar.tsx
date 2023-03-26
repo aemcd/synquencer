@@ -10,6 +10,8 @@ type ContentPageProps = {
 	setBPM: (stepLength: number) => void;
 	saveSequence: () => void;
 	downloadSequence: () => void;
+	playSequence: () => void;
+	stopSequence: () => void;
 };
 
 export default function TopBar({
@@ -19,11 +21,25 @@ export default function TopBar({
 	setBPM,
 	saveSequence,
 	downloadSequence,
+	playSequence,
+	stopSequence,
 }: ContentPageProps) {
 	return (
 		<div className="top-bar">
-			<button className="top-button">▶</button>
-			<button className="top-button">◼</button>
+			<button
+				className="top-button"
+				aria-label="Play"
+				onClick={playSequence}
+			>
+				▶
+			</button>
+			<button
+				className="top-button"
+				aria-label="Stop"
+				onClick={stopSequence}
+			>
+				◼
+			</button>
 			<div className="settings">
 				<input
 					className="settings-input"

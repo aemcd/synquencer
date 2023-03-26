@@ -19,7 +19,7 @@ import Shortcuts from "@/components/Shortcuts";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
-import { WriteMidi } from "@/client/write_midi";
+import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
 
 type PageParams = {
 	id: string;
@@ -251,6 +251,12 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				downloadSequence={() => {
 					const noteArr = getArray();
 					WriteMidi(seqData, noteArr);
+				}}
+				playSequence={() => {
+					PlaySequence(seqData, sequenceMap);
+				}}
+				stopSequence={() => {
+					StopSequence();
 				}}
 			/>
 			<PianoRoll

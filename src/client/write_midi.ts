@@ -4,12 +4,28 @@ import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
 import { parseIsolatedEntityName } from "typescript";
 
+let currentTick: number;
+let currentInterval: NodeJS.Timer;
+let isPlaying: boolean = false;
+
+export function getTick() {
+	return currentTick;
+}
+
+export function StopSequence() {
+	clearInterval(currentInterval);
+	currentTick = 0;
+	isPlaying = false;
+}
+
 function setIntervalWrapper(
 	callback: any,
 	time: number,
 	...arg: any
 ): NodeJS.Timer {
 	const args = Array.prototype.slice.call(arguments, 1);
+	args[0] = undefined;
+	callback.apply(null, args as []);
 	args[0] = setInterval(function () {
 		callback.apply(null, args as []);
 	}, time);
@@ -17,24 +33,24 @@ function setIntervalWrapper(
 }
 
 function PlayTick(
-	intervalID: NodeJS.Timer,
+	intervalID: NodeJS.Timer | undefined,
 	sequence: SequenceMetadata,
 	notes: Map<string, Note>,
-	instruments: Map<string, Soundfont.Player>,
-	curr_tick: { tick: number }
+	instruments: Map<string, Soundfont.Player>
 ): any {
 	console.log(arguments);
-	if (curr_tick.tick > sequence.length) {
+	if (currentTick > sequence.length) {
 		clearInterval(intervalID);
+		currentTick = 0;
+		isPlaying = false;
 	} else {
-		console.log(`tick: ${curr_tick.tick}`);
 		const notesToPlay: Note[] = new Array<Note>();
 		notes.forEach((mapNote) => {
-			if (mapNote.location === curr_tick.tick) {
+			console.log(mapNote);
+			if (mapNote.location === currentTick) {
 				notesToPlay.push(mapNote);
 			}
 		});
-		console.log(notesToPlay);
 
 		notesToPlay.forEach((note) => {
 			const instrument = instruments.get(note.instrument.name as string);
@@ -59,7 +75,7 @@ function PlayTick(
 			}
 		});
 	}
-	curr_tick.tick++;
+	currentTick++;
 }
 
 /**
@@ -92,37 +108,40 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	return writer.buildFile();
 }
 
-export async function PlaySequence(
+export function PlaySequence(
 	sequence: SequenceMetadata,
-	notes: Array<Note>
+	notes: Map<string, Note>
 ) {
-	const instrumentIDs: Soundfont.InstrumentName[] = ["acoustic_grand_piano"];
+	if (currentInterval != null) {
+		clearInterval(currentInterval);
+	}
+	const instrumentIDs: Soundfont.InstrumentName[] = ["bright_acoustic_piano"];
 	const instrumentNames: string[] = ["Piano"];
 
-	const playerInstruments = await Promise.all(
+	Promise.all(
 		instrumentIDs.map((id) => {
 			const ac = new AudioContext();
 			ac.destination.channelCount = 2;
 			return Soundfont.instrument(ac, id);
 		})
-	);
-	const instruments: Map<string, Soundfont.Player> = new Map<
-		string,
-		Soundfont.Player
-	>();
-	playerInstruments.forEach((player, index) => {
-		instruments.set(instrumentNames[index], player);
+	).then((playerInstruments) => {
+		const instruments: Map<string, Soundfont.Player> = new Map<
+			string,
+			Soundfont.Player
+		>();
+		playerInstruments.forEach((player, index) => {
+			instruments.set(instrumentNames[index], player);
+		});
+		isPlaying = true;
+		currentTick = 0;
+		currentInterval = setIntervalWrapper(
+			PlayTick,
+			toSec(sequence.bpm, sequence.denominator, 1) * 1000,
+			sequence,
+			notes,
+			instruments
+		);
 	});
-	const curr_tick = { tick: 0 };
-	const intervalID = setIntervalWrapper(
-		PlayTick,
-		toSec(sequence.bpm, sequence.denominator, 1) * 1000,
-		sequence,
-		notes,
-		instruments,
-		curr_tick
-	);
-	return { intervalID, curr_tick };
 }
 
 /**

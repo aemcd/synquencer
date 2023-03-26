@@ -14,7 +14,7 @@ import {
 	GetNotes,
 	GetSequence,
 } from "@/database/calls";
-import { PlaySequence, WriteMidi } from "@/client/write_midi";
+import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
 
 const inter = Inter({ subsets: ["latin"] });
 let noteLoc = -1;
@@ -204,10 +204,24 @@ export default function Test() {
 								defaultNote.location = defaultNote.location + 4;
 							}
 							console.log(notes);
-							PlaySequence(defaultSequence, notes);
+							const noteMap = new Map<string, Note>();
+							notes.forEach((note) =>
+								noteMap.set(
+									note.getPitchLocation().serialize(),
+									note
+								)
+							);
+							PlaySequence(defaultSequence, noteMap);
 						}}
 					>
 						Play Sequence
+					</button>
+					<button
+						onClick={(e: any) => {
+							StopSequence();
+						}}
+					>
+						Stop Sequence
 					</button>
 				</div>
 			</main>

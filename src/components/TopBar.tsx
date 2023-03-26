@@ -49,13 +49,17 @@ export default function TopBar({
 					style={{ width: "36px" }}
 					maxLength={3}
 				/>{" "}
-			 
+
+				<span>|</span>
+				
 				<input
 					className="settings-input"
 					aria-label = "Time Signature"
 					defaultValue="4/4"
 					style={{ width: "56px" }}
 				/>
+
+				<span>|</span>
 				
 				<select
 					className="settings-input"

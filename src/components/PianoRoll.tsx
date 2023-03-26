@@ -29,7 +29,7 @@ export default function PianoRoll({
 }: ContentPageProps) {
 	
 	let rollWidth = 767;
-	let rollHeight = 864;
+	let rollHeight = 575;
 	
 	let gridWidth = 24;
 	let gridHeight = 24;
@@ -54,15 +54,21 @@ export default function PianoRoll({
 	let startGridX = -1;
 	let startGridY = -1;
 
+	const pianoRef = useRef<HTMLCanvasElement | null>(null);
 	const bgRef = useRef<HTMLCanvasElement | null>(null);
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
 	let computedStyle: CSSStyleDeclaration;
+	let pianoCtx: CanvasRenderingContext2D | null;
 	let bgCtx: CanvasRenderingContext2D | null;
 	let fgCtx: CanvasRenderingContext2D | null;
 
 	useEffect(() => {
 		computedStyle = getComputedStyle(document.body);
+
+		if (pianoRef.current) {
+			pianoCtx = pianoRef.current.getContext("2d");
+		}
 
 		if (bgRef.current) {
 			bgCtx = bgRef.current.getContext("2d");
@@ -74,6 +80,7 @@ export default function PianoRoll({
 
 		drawBG();
 		drawFG();
+		drawPiano();
 	});
 
 	useEffect(() => {
@@ -85,6 +92,41 @@ export default function PianoRoll({
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [notes]);
+
+	function drawPiano() {
+		if (!pianoCtx) return;
+
+		pianoCtx.clearRect(0, 0, 64, rollHeight);
+
+		// draw white keys
+		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-white");
+		for (let i = 0; i < rollHeight / gridHeight; i++) {
+			if (keyColors[(i + viewPitch) % 12]) {
+				pianoCtx.fillRect(0, rollHeight - (i * gridHeight + gridHeight), 64, gridHeight);
+			}
+		}
+
+		// draw key lines
+		pianoCtx.fillStyle = computedStyle.getPropertyValue("--bg3");
+		for (let i = 0; i < rollHeight / gridHeight; i++) {
+			pianoCtx.fillRect(0, gridHeight * (i + 1) - 1, 64, 2);
+		}
+
+		// draw C labels
+		pianoCtx.font = "24px monospace";
+		for (let i = 0; i < rollHeight / gridHeight; i++) {
+			if  ((i + viewPitch) % 12 == 0) {
+				let cLabel = `C${Math.floor((i + viewPitch) / 12) - 1}`;
+				pianoCtx.fillText(cLabel, 2, rollHeight - (i * gridHeight + 3));
+			}
+		}
+
+		/* fgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
+		fgCtx.fillRect(0, 0, 200, 34);
+		fgCtx.font = "24px monospace";
+		fgCtx.fillStyle = computedStyle.getPropertyValue("--fg0");
+		fgCtx.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24); */
+	}
 
 	function drawBG() {
 		if (!bgCtx) return;
@@ -163,7 +205,7 @@ export default function PianoRoll({
 		fgCtx.fillStyle = colorFill;
 		fgCtx.fillRect(
 			(location - viewLoc) * gridWidth,
-			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight),
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) + 1,
 			gridWidth * length,
 			gridHeight
 		);
@@ -171,14 +213,14 @@ export default function PianoRoll({
 		fgCtx.lineWidth = 2;
 		fgCtx.strokeRect(
 			(location - viewLoc) * gridWidth,
-			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight),
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) + 1,
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.fillStyle = colorOutline;
 		fgCtx.fillRect(
 			(location - viewLoc + length) * gridWidth - 6,
-			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) + 4,
+			rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) + 5,
 			2,
 			gridHeight - 8
 		);
@@ -187,7 +229,7 @@ export default function PianoRoll({
 			fgCtx.strokeStyle = computedStyle.getPropertyValue("--fg0");
 			fgCtx.strokeRect(
 				(location - viewLoc) * gridWidth - 2,
-				rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) - 2,
+				rollHeight - ((pitch - viewPitch) * gridHeight + gridHeight) - 1,
 				gridWidth * length + 4,
 				gridHeight + 4
 			);
@@ -465,6 +507,7 @@ export default function PianoRoll({
 			// scroll down
 			if (!(viewPitch - 4 < 0)) {
 				viewPitch -= 4;
+				drawPiano();
 				drawBG();
 				drawFG();
 			}
@@ -472,6 +515,7 @@ export default function PianoRoll({
 			// scroll up
 			if (!(viewPitch + 4 > 128 - (rollHeight / gridHeight))) {
 				viewPitch += 4;
+				drawPiano();
 				drawBG();
 				drawFG();
 			}
@@ -481,17 +525,32 @@ export default function PianoRoll({
 	return (
 		<div style={{ position: "relative" }}>
 			<canvas
-				ref={bgRef}
-				width={rollWidth}
+				ref={pianoRef}
+				width={"62px"}
 				height={rollHeight}
 				style={{
 					position: "absolute",
 					left: "0",
 					top: "0",
+					imageRendering: "pixelated",
+					border: "solid",
+					borderColor: "var(--bg3)",
+					borderWidth: "2px",
+					backgroundColor: "var(--black)"
+				}}
+			/>
+			<canvas
+				ref={bgRef}
+				width={rollWidth}
+				height={rollHeight}
+				style={{
+					position: "absolute",
+					left: "64px",
+					top: "0",
 					zIndex: "0",
 					imageRendering: "pixelated",
 					border: "solid",
-					borderColor: "var(--bg4)",
+					borderColor: "var(--bg3)",
 					borderWidth: "2px",
 				}}
 			/>
@@ -507,7 +566,7 @@ export default function PianoRoll({
 				height={rollHeight}
 				style={{
 					position: "absolute",
-					left: "0",
+					left: "64px",
 					top: "0",
 					zIndex: "1",
 					imageRendering: "pixelated",

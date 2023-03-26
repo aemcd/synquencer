@@ -13,7 +13,7 @@ import {
 import { SharedString } from "@fluidframework/sequence";
 import { IFluidContainer, IValueChanged, SharedMap } from "fluid-framework";
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
-import { AddNotes, AddSequence, GetNotes, GetSequence } from "../database/calls.js";
+import { AddNotes, AddSequence, GetNotes, GetSequence } from "../database/calls";
 import * as React from "react";
 import { type } from "os";
 

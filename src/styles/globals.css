@@ -29,6 +29,9 @@
   --purple-accent: #d3869b;
   --cyan-accent: #8ec07c;
   --white-accent: #ebdbb2;
+
+  --piano-black: #202020;
+  --piano-white: #DFDFDF;
 }
 
 body {

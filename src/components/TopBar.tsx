@@ -43,20 +43,23 @@ export default function TopBar({
 			<div className="settings">
 				<input
 					className="settings-input"
+					aria-label = "BPM"
 					defaultValue={sequence.bpm ? sequence.bpm : "120"}
 					onChange={(e) => setBPM(parseInt(e.target.value))}
 					style={{ width: "36px" }}
 					maxLength={3}
 				/>{" "}
-				BPM |
+			 
 				<input
 					className="settings-input"
+					aria-label = "Time Signature"
 					defaultValue="4/4"
 					style={{ width: "56px" }}
 				/>
-				|
+				
 				<select
 					className="settings-input"
+					aria-label = "Step Length"
 					style={{ width: "76px" }}
 					onChange={(e) => setStepLength(parseInt(e.target.value))}
 				>
@@ -69,6 +72,7 @@ export default function TopBar({
 			</div>
 			<button
 				className="top-button"
+				aria-label = "Save"
 				style={{ transform: "scale(1,-1)" }}
 				onClick={saveSequence}
 			>
@@ -85,7 +89,7 @@ export default function TopBar({
 					/>
 				</svg>
 			</button>
-			<button className="top-button" onClick={downloadSequence}>
+			<button className="top-button" aria-label = "Download" onClick={downloadSequence}>
 				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
 					<path
 						fill="var(--fg2)"

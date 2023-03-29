@@ -2,7 +2,8 @@ import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import { Note, SequenceMetadata } from "@/server/types";
 import Link from "next/link";
-
+import {announce} from "@react-aria/live-announcer";
+import {useState} from "react";
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
@@ -24,8 +25,10 @@ export default function TopBar({
 	playSequence,
 	stopSequence,
 }: ContentPageProps) {
+	const [message, setMessage] = useState("");
 	return (
 		<div className="top-bar">
+			 
 			<button
 				className="top-button"
 				aria-label="Play"
@@ -78,7 +81,10 @@ export default function TopBar({
 				className="top-button"
 				aria-label = "Save"
 				style={{ transform: "scale(1,-1)" }}
-				onClick={saveSequence}
+				onClick={() => {
+					saveSequence;
+					announce("Sequence saved", "assertive", 50);
+				}}
 			>
 				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
 					<path

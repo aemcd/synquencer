@@ -579,9 +579,7 @@ export default function PianoRoll({
 				}}
 			/>
 			<canvas
-				aria-role="application"
 				aria-label="PianoRoll"
-				aria-activedescendant="true"
 				ref={fgRef}
 				onMouseDown={handleMouseDown}
 				onMouseMove={handleMouseMove}

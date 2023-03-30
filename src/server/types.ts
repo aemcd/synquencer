@@ -69,7 +69,7 @@ export class Note extends Serializable {
 	}
 	public pitchName() {
 		let pitchnumber: number = this.pitch % 12;
-		let octavenumber: number = (this.pitch - pitchnumber) / 12;
+		let octavenumber: number = (this.pitch - pitchnumber) / 12 - 1;
 		let pitchName: string = "";
 		switch (pitchnumber) {
 			case 0:
@@ -113,7 +113,10 @@ export class Note extends Serializable {
 	}
 
 	public getPitchLocation() {
-		return new PitchLocation({ pitch: this.pitch, location: this.location });
+		return new PitchLocation({
+			pitch: this.pitch,
+			location: this.location,
+		});
 	}
 }
 

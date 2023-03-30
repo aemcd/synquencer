@@ -55,7 +55,7 @@ export default function Cursor({ addNote, sequence }: Props) {
 				break;
 		}
 		newNote.pitch += mod + noteChange;
-		const newNotes = addNote(newNote);
+		addNote(newNote);
 		announce(newNote.pitchName() + " added at ", "assertive", 50);
 	});
 	useHotkeys("up, down", function (event, handler) {

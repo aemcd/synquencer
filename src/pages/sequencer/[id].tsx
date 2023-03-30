@@ -21,7 +21,6 @@ import Cursor from "@/components/cursor";
 type PageParams = {
 	id: string;
 };
-import LiveAnnouncer from "@react-aria/live-announcer";
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;

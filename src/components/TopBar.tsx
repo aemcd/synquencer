@@ -2,7 +2,7 @@ import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import { Note, SequenceMetadata } from "@/server/types";
 import Link from "next/link";
-import { announce } from "@react-aria/live-announcer";
+import { announce, clearAnnouncer} from "@react-aria/live-announcer";
 import { useState } from "react";
 type ContentPageProps = {
 	sequence: SequenceMetadata;
@@ -78,6 +78,7 @@ export default function TopBar({
 				style={{ transform: "scale(1,-1)" }}
 				onClick={() => {
 					saveSequence();
+					clearAnnouncer("assertive");
 					announce("Sequence saved", "assertive", 50);
 				}}
 			>

@@ -56,11 +56,11 @@ export default function Cursor({ addNote, sequence }: Props) {
 		newNote.pitch += noteChange - (mod % 12);
 		addNote(newNote);
 		clearAnnouncer("assertive");
-					announce(newNote.pitchName() + " added at ", "assertive");
+					announce(newNote.pitchName() + " added at ", "assertive", 7000);
 	});
 	useHotkeys("up, down", function (event, handler) {
 		event.preventDefault();
-		announce("");
+	
 
 		switch (event.key) {
 			case "ArrowUp":
@@ -73,11 +73,11 @@ export default function Cursor({ addNote, sequence }: Props) {
 				break;
 		}
 		clearAnnouncer("assertive");
-					announce("Note at " + cursorNote.pitchName());
+					announce("Note at " + cursorNote.pitchName(), "assertive", 7000);
 	});
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
-		announce("");
+	
 
 		event.preventDefault();
 		switch (event.key) {
@@ -88,38 +88,41 @@ export default function Cursor({ addNote, sequence }: Props) {
 				cursorNote.pitch -= 12;
 				break;
 		}
-		announce("Note at " + cursorNote.pitchName());
 		clearAnnouncer("assertive");
+		announce("Note at " + cursorNote.pitchName(), "assertive", 7000);
 					//alert("Move note" + event.key + "an octave");
 	});
 	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
-		announce("");
+		
 
 		switch (event.key) {
 			case "1":
-				announce("Note duration set to 1/16.");
 				clearAnnouncer("assertive");
+								announce("Note duration set to 1/16.");
 					cursorNote.duration = 1;
 				break;
 			case "2":
-				announce("Note duration set to 1/8.");
 				clearAnnouncer("assertive");
+				
+				announce("Note duration set to 1/8.");
 					cursorNote.duration = 2;
 				break;
 			case "3":
-				announce("Note duration set to 1/4.");
 				clearAnnouncer("assertive");
+				
+				announce("Note duration set to 1/4.");
 					cursorNote.duration = 4;
 				break;
 			case "4":
-				announce("Note duration set to 1/2.");
 				clearAnnouncer("assertive");
+				
+				announce("Note duration set to 1/2.");
 					cursorNote.duration = 8;
 				break;
 			case "5":
-				announce("Note duration set to 1/1.");
 				clearAnnouncer("assertive");
-					
+				
+				announce("Note duration set to 1/1.");
 				cursorNote.duration = 16;
 				break;
 			
@@ -129,20 +132,21 @@ export default function Cursor({ addNote, sequence }: Props) {
 	useHotkeys(
 		"ArrowLeft, ArrowRight, ctrl+ArrowLeft, ctrl+ArrowRight",
 		function (event, handler) {
-			announce("");
-
+			
 			switch (event.key) {
 				case "ArrowLeft":
 					if (handler.ctrl == true) {
-						announce("Move note left.");
+						
 						clearAnnouncer("assertive");
+						announce("Move note left.");
 						break;
 					}
 					if (cursorNote.location - cursorNote.duration >= 0) {
 						cursorNote.location -= cursorNote.duration;
 					}
-					announce("Moved left");
 					clearAnnouncer("assertive");
+					
+					announce("Moved left");
 					break;
 				case "ArrowRight":
 					if (handler.ctrl == true) {
@@ -154,7 +158,8 @@ export default function Cursor({ addNote, sequence }: Props) {
 						sequence.length
 					) {
 						cursorNote.location += cursorNote.duration;
-					}
+					clearAnnouncer("assertive");
+				}
 					announce("move right");
 					break;
 				default:
@@ -179,6 +184,6 @@ export default function Cursor({ addNote, sequence }: Props) {
 	});
 
 	return (
-		<div aria-label="Cursor" aria-atomic="true" aria-live="assertive"></div>
+		<div>  </div>
 	);
 }

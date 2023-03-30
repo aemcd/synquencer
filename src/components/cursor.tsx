@@ -72,7 +72,7 @@ export default function Cursor({ addNote, sequence }: Props) {
 				}
 				break;
 		}
-		announce("Note at" + cursorNote.pitchName);
+		announce("Note at" + cursorNote.pitchName());
 	});
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system

@@ -19,6 +19,7 @@ import Example from "@/components/Example";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
+import Cursor from "@/components/cursor";
 
 type PageParams = {
 	id: string;
@@ -55,24 +56,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}
 
 	const [stepLength, setStepLength] = useState(1);
-
-	const maxPitch = 12 * 5;
-	const minPitch = 12 * 3;
-
-	const cursorNote = useMemo(() => {
-		return new Note({
-			location: 0,
-			pitch: 12 * 4,
-			velocity: 50,
-			duration: 4,
-			instrument: new Instrument({
-				channel: 0,
-				name: "",
-			}),
-		});
-	}, []);
-
-	let mod = 0;
 
 	return (
 		<>
@@ -126,6 +109,13 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				notes={noteList}
 				stepLength={stepLength}
 				sequenceMap={sequenceMap}
+			/>
+			<Cursor
+				addNote={(note: Note) => {
+					const newNotes = [...noteList, note];
+					setNotes(newNotes);
+				}}
+				sequence={seqData}
 			/>
 		</>
 	);

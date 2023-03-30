@@ -580,6 +580,7 @@ export default function PianoRoll({
 			/>
 			<canvas
 				aria-label="PianoRoll"
+				tabIndex={0}
 				ref={fgRef}
 				onMouseDown={handleMouseDown}
 				onMouseMove={handleMouseMove}

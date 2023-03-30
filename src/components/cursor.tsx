@@ -157,11 +157,6 @@ export default function Cursor({ addNote, sequence }: Props) {
 	});
 
 	return (
-		<div
-			aria-label="Cursor"
-			aria-atomic="true"
-			aria-live="assertive"
-			tabIndex={0}
-		></div>
+		<div aria-label="Cursor" aria-atomic="true" aria-live="assertive"></div>
 	);
 }

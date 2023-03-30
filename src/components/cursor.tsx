@@ -54,7 +54,7 @@ export default function Cursor({ addNote, sequence }: Props) {
 				noteChange = 7;
 				break;
 		}
-		newNote.pitch += mod + noteChange;
+		newNote.pitch += noteChange;
 		addNote(newNote);
 		announce(newNote.pitchName() + " added at ", "assertive", 50);
 	});
@@ -63,11 +63,13 @@ export default function Cursor({ addNote, sequence }: Props) {
 		switch (event.key) {
 			case "ArrowUp":
 				if (mod < 1) {
+					cursorNote.pitch++;
 					mod++;
 				}
 				break;
 			case "ArrowDown":
 				if (mod > -1) {
+					cursorNote.pitch--;
 					mod--;
 				}
 				break;

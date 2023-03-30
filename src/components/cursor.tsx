@@ -55,7 +55,6 @@ export default function Cursor({ addNote, sequence }: Props) {
 				break;
 		}
 		newNote.pitch += noteChange - (mod % 12);
-		alert(`mod % 12: ${mod % 12} mod: ${mod}`);
 		addNote(newNote);
 		announce(newNote.pitchName() + " added at ", "assertive", 50);
 	});

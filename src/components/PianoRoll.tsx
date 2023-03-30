@@ -107,7 +107,7 @@ export default function PianoRoll({
 		}
 
 		// draw key lines
-		pianoCtx.fillStyle = computedStyle.getPropertyValue("--bg3");
+		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-black");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			pianoCtx.fillRect(0, gridHeight * (i + 1) - 1, 64, 2);
 		}

@@ -7,13 +7,7 @@ import {
 	SequenceMetadata,
 } from "@/server/types";
 import { useHotkeys } from "react-hotkeys-hook";
-import {
-	AddNotes,
-	ClearNotes,
-	EditSequence,
-	GetNotes,
-	GetSequence,
-} from "@/database/calls";
+
 type Props = {
 	addNote: (note: Note) => void;
 	sequence: SequenceMetadata;
@@ -162,5 +156,12 @@ export default function Cursor({ addNote, sequence }: Props) {
 		alert("Note deleted" + event.key);
 	});
 
-	return null;
+	return (
+		<div
+			aria-label="Cursor"
+			aria-atomic="true"
+			aria-live="assertive"
+			tabIndex={0}
+		></div>
+	);
 }

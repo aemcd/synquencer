@@ -1,4 +1,9 @@
-import { Note, PitchLocation, SequenceMetadata } from "@/server/types";
+import {
+	instrumentList,
+	Note,
+	PitchLocation,
+	SequenceMetadata,
+} from "@/server/types";
 import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
 
@@ -53,17 +58,8 @@ function PlayTick(
 		notesToPlay.forEach((note) => {
 			const instrument = instruments.get(note.instrument.name as string);
 			if (instrument != undefined) {
-				console.log(
-					`gain: ${note.velocity / 100}, duration: ${toSec(
-						sequence.bpm,
-						sequence.denominator,
-						note.duration
-					)}`
-				);
-				//instrument.connect(new AudioContext().destination);
-
 				instrument.play(note.pitchName(), undefined, {
-					gain: note.velocity / 100,
+					gain: note.velocity / 50,
 					duration: toSec(
 						sequence.bpm,
 						sequence.denominator,
@@ -116,9 +112,18 @@ export function PlaySequence(
 	}
 	const instrumentIDs: Soundfont.InstrumentName[] = [
 		"acoustic_grand_piano",
+		"acoustic_guitar_nylon",
 		"acoustic_bass",
+		"trumpet",
+		"synth_drum",
 	];
-	const instrumentNames: string[] = ["Piano", "Bass"];
+	const instrumentNames: string[] = [
+		instrumentList.Piano.name,
+		instrumentList.Guitar.name,
+		instrumentList.Bass.name,
+		instrumentList.Trumpet.name,
+		instrumentList.Synth_Drum.name,
+	];
 
 	Promise.all(
 		instrumentIDs.map((id) => {

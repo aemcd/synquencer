@@ -17,7 +17,7 @@ import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
 import { useMemo, useState } from "react";
 import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
-import Cursor from "@/components/cursor";
+import Cursor from "@/components/Cursor";
 type PageParams = {
 	id: string;
 };

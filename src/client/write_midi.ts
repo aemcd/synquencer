@@ -58,17 +58,8 @@ function PlayTick(
 		notesToPlay.forEach((note) => {
 			const instrument = instruments.get(note.instrument.name as string);
 			if (instrument != undefined) {
-				console.log(
-					`gain: ${note.velocity / 100}, duration: ${toSec(
-						sequence.bpm,
-						sequence.denominator,
-						note.duration
-					)}`
-				);
-				//instrument.connect(new AudioContext().destination);
-
 				instrument.play(note.pitchName(), undefined, {
-					gain: note.velocity / 100,
+					gain: note.velocity / 50,
 					duration: toSec(
 						sequence.bpm,
 						sequence.denominator,

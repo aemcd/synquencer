@@ -171,7 +171,7 @@ export class Instrument extends Serializable {
 }
 
 export const instrumentList = {
-	Piano: new Instrument({ channel: 0, name: "Piano" }),
+	Piano: new Instrument({ channel: 1, name: "Piano" }),
 	Guitar: new Instrument({ channel: 25, name: "Guitar" }),
 	Bass: new Instrument({ channel: 33, name: "Bass" }),
 	Trumpet: new Instrument({ channel: 57, name: "Trumpet" }),

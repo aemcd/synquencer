@@ -15,8 +15,6 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import Example from "@/components/Example";
-import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
 import Cursor from "@/components/cursor";

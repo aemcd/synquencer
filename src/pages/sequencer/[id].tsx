@@ -15,7 +15,7 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import Example  from "@/components/Example";
+import Example from "@/components/Example";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
@@ -75,8 +75,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	let mod = 0;
 
 	return (
-	<>
-	<Example /> 
+		<>
 			<Head>
 				<title>Sequencer</title>
 				<meta

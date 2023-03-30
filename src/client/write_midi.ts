@@ -1,8 +1,6 @@
 import { Note, PitchLocation, SequenceMetadata } from "@/server/types";
-import { Arsenal } from "@next/font/google";
 import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
-import { parseIsolatedEntityName } from "typescript";
 
 let currentTick: number;
 let currentInterval: NodeJS.Timer;
@@ -91,7 +89,7 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	track.setTimeSignature(sequence.numerator, sequence.denominator);
 	track.setTempo(sequence.bpm, 0);
 
-	const events = new Array<MW.NoteEvent>();
+	const events = new Array<MW.Event>();
 	notes.forEach((note) => {
 		events.push(
 			new MW.NoteEvent({
@@ -99,6 +97,7 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 				duration: `T${toTick(note.duration)}`,
 				velocity: note.velocity,
 				startTick: toTick(note.location),
+				channel: note.instrument.channel,
 			})
 		);
 	});

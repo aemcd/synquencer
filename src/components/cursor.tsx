@@ -18,14 +18,14 @@ export default function Cursor({ addNote, sequence }: Props) {
 			location: 0,
 			pitch: 12 * 4,
 			velocity: 50,
-			duration: 4,
+			duration: 1,
 			instrument: new Instrument({
 				channel: 0,
 				name: "Piano",
 			}),
 		});
 	}, []);
-	let mod = 0;
+	const [mod, setMod] = React.useState(0);
 	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
@@ -54,7 +54,8 @@ export default function Cursor({ addNote, sequence }: Props) {
 				noteChange = 7;
 				break;
 		}
-		newNote.pitch += noteChange;
+		newNote.pitch += noteChange - (mod % 12);
+		alert(`mod % 12: ${mod % 12} mod: ${mod}`);
 		addNote(newNote);
 		announce(newNote.pitchName() + " added at ", "assertive", 50);
 	});
@@ -62,19 +63,15 @@ export default function Cursor({ addNote, sequence }: Props) {
 		event.preventDefault();
 		switch (event.key) {
 			case "ArrowUp":
-				if (mod < 1) {
-					cursorNote.pitch++;
-					mod++;
-				}
+				cursorNote.pitch++;
+				setMod(mod + 1);
 				break;
 			case "ArrowDown":
-				if (mod > -1) {
-					cursorNote.pitch--;
-					mod--;
-				}
+				cursorNote.pitch--;
+				setMod(mod - 1);
 				break;
 		}
-		announce("Note at" + cursorNote.pitchName());
+		announce("Note at " + cursorNote.pitchName());
 	});
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
@@ -85,28 +82,32 @@ export default function Cursor({ addNote, sequence }: Props) {
 				break;
 			case "ArrowDown":
 				cursorNote.pitch -= 12;
-
 				break;
 		}
-
+		announce("Note at " + cursorNote.pitchName());
 		//alert("Move note" + event.key + "an octave");
 	});
 	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
 		switch (event.key) {
 			case "1":
-				alert("Note duration set to 1/16.");
+				announce("Note duration set to 1/16.");
+				cursorNote.duration = 1;
 				break;
 			case "2":
-				alert("Note duration set to 1/8.");
+				announce("Note duration set to 1/8.");
+				cursorNote.duration = 2;
 				break;
 			case "3":
-				alert("Note duration set to 1/4.");
+				announce("Note duration set to 1/4.");
+				cursorNote.duration = 4;
 				break;
 			case "4":
-				alert("Note duration set to 1/2.");
+				announce("Note duration set to 1/2.");
+				cursorNote.duration = 8;
 				break;
 			case "5":
-				alert("Note duration set to 1/1.");
+				announce("Note duration set to 1/1.");
+				cursorNote.duration = 16;
 				break;
 			default:
 				alert(event);

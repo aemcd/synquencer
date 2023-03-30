@@ -114,8 +114,11 @@ export function PlaySequence(
 	if (currentInterval != null) {
 		clearInterval(currentInterval);
 	}
-	const instrumentIDs: Soundfont.InstrumentName[] = ["bright_acoustic_piano"];
-	const instrumentNames: string[] = ["Piano"];
+	const instrumentIDs: Soundfont.InstrumentName[] = [
+		"acoustic_grand_piano",
+		"acoustic_bass",
+	];
+	const instrumentNames: string[] = ["Piano", "Bass"];
 
 	Promise.all(
 		instrumentIDs.map((id) => {

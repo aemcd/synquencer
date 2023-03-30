@@ -21,7 +21,7 @@ export default function Cursor({ addNote, sequence }: Props) {
 			duration: 4,
 			instrument: new Instrument({
 				channel: 0,
-				name: "",
+				name: "Piano",
 			}),
 		});
 	}, []);

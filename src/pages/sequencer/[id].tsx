@@ -15,8 +15,13 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import { useMemo, useState } from "react";
-import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
+import { useEffect, useMemo, useState } from "react";
+import {
+	getInstruments,
+	PlaySequence,
+	StopSequence,
+	WriteMidi,
+} from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
 type PageParams = {
 	id: string;
@@ -52,7 +57,12 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}
 
 	const [stepLength, setStepLength] = useState(1);
-	
+
+	useEffect(() => {
+		// Render Instruments
+		getInstruments();
+	}, []);
+
 	return (
 		<>
 			<Head>

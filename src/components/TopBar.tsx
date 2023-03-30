@@ -2,7 +2,8 @@ import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import { Note, SequenceMetadata } from "@/server/types";
 import Link from "next/link";
-
+import { announce, clearAnnouncer} from "@react-aria/live-announcer";
+import { useState } from "react";
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
@@ -24,6 +25,7 @@ export default function TopBar({
 	playSequence,
 	stopSequence,
 }: ContentPageProps) {
+	const [message, setMessage] = useState("");
 	return (
 		<div className="top-bar">
 			<button
@@ -43,27 +45,23 @@ export default function TopBar({
 			<div className="settings">
 				<input
 					className="settings-input"
-					aria-label = "BPM"
+					aria-label="BPM"
 					defaultValue={sequence.bpm ? sequence.bpm : "120"}
 					onChange={(e) => setBPM(parseInt(e.target.value))}
 					style={{ width: "36px" }}
 					maxLength={3}
 				/>{" "}
-
 				<span aria-hidden="true">|</span>
-
 				<input
 					className="settings-input"
-					aria-label = "Time Signature"
+					aria-label="Time Signature"
 					defaultValue="4/4"
 					style={{ width: "56px" }}
 				/>
-
 				<span aria-hidden="true">|</span>
-				
 				<select
 					className="settings-input"
-					aria-label = "Step Length"
+					aria-label="Step Length"
 					style={{ width: "76px" }}
 					onChange={(e) => setStepLength(parseInt(e.target.value))}
 				>
@@ -76,9 +74,13 @@ export default function TopBar({
 			</div>
 			<button
 				className="top-button"
-				aria-label = "Save"
+				aria-label="Save"
 				style={{ transform: "scale(1,-1)" }}
-				onClick={saveSequence}
+				onClick={() => {
+					saveSequence();
+					clearAnnouncer("assertive");
+					announce("Sequence saved", "assertive", 50);
+				}}
 			>
 				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
 					<path
@@ -93,7 +95,11 @@ export default function TopBar({
 					/>
 				</svg>
 			</button>
-			<button className="top-button" aria-label = "Download" onClick={downloadSequence}>
+			<button
+				className="top-button"
+				aria-label="Download"
+				onClick={downloadSequence}
+			>
 				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
 					<path
 						fill="var(--fg2)"
@@ -107,16 +113,18 @@ export default function TopBar({
 					/>
 				</svg>
 			</button>
-			<Link href="/">
-				<button className="top-button">
-					<svg width="20" height="20" viewBox="0 0 238.1 198.4">
-						<path
-							fill="var(--fg2)"
-							d="M119 0 0 119h39.7v79.4h52.9v-52.9h53v53h52.8V119h39.7z"
-						/>
-					</svg>
-				</button>
-			</Link>
+			<button
+				className="top-button"
+				aria-label="Home"
+				onClick={() => (window.location.href = "/")}
+			>
+				<svg width="20" height="20" viewBox="0 0 238.1 198.4">
+					<path
+						fill="var(--fg2)"
+						d="M119 0 0 119h39.7v79.4h52.9v-52.9h53v53h52.8V119h39.7z"
+					/>
+				</svg>
+			</button>
 		</div>
 	);
 }

@@ -69,7 +69,7 @@ export class Note extends Serializable {
 	}
 	public pitchName() {
 		let pitchnumber: number = this.pitch % 12;
-		let octavenumber: number = (this.pitch - pitchnumber) / 12;
+		let octavenumber: number = (this.pitch - pitchnumber) / 12 - 1;
 		let pitchName: string = "";
 		switch (pitchnumber) {
 			case 0:
@@ -113,7 +113,10 @@ export class Note extends Serializable {
 	}
 
 	public getPitchLocation() {
-		return new PitchLocation({ pitch: this.pitch, location: this.location });
+		return new PitchLocation({
+			pitch: this.pitch,
+			location: this.location,
+		});
 	}
 }
 
@@ -166,5 +169,13 @@ export class Instrument extends Serializable {
 		this.name = name;
 	}
 }
+
+export const instrumentList = {
+	Piano: new Instrument({ channel: 1, name: "Piano" }),
+	Guitar: new Instrument({ channel: 25, name: "Guitar" }),
+	Bass: new Instrument({ channel: 33, name: "Bass" }),
+	Trumpet: new Instrument({ channel: 57, name: "Trumpet" }),
+	Synth_Drum: new Instrument({ channel: 119, name: "Synth Drum" }),
+};
 
 export {};

@@ -1,8 +1,11 @@
-import { Note, PitchLocation, SequenceMetadata } from "@/server/types";
-import { Arsenal } from "@next/font/google";
+import {
+	instrumentList,
+	Note,
+	PitchLocation,
+	SequenceMetadata,
+} from "@/server/types";
 import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
-import { parseIsolatedEntityName } from "typescript";
 
 let currentTick: number;
 let currentInterval: NodeJS.Timer;
@@ -55,17 +58,8 @@ function PlayTick(
 		notesToPlay.forEach((note) => {
 			const instrument = instruments.get(note.instrument.name as string);
 			if (instrument != undefined) {
-				console.log(
-					`gain: ${note.velocity / 100}, duration: ${toSec(
-						sequence.bpm,
-						sequence.denominator,
-						note.duration
-					)}`
-				);
-				//instrument.connect(new AudioContext().destination);
-
 				instrument.play(note.pitchName(), undefined, {
-					gain: note.velocity / 100,
+					gain: note.velocity / 50,
 					duration: toSec(
 						sequence.bpm,
 						sequence.denominator,
@@ -91,7 +85,7 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 	track.setTimeSignature(sequence.numerator, sequence.denominator);
 	track.setTempo(sequence.bpm, 0);
 
-	const events = new Array<MW.NoteEvent>();
+	const events = new Array<MW.Event>();
 	notes.forEach((note) => {
 		events.push(
 			new MW.NoteEvent({
@@ -99,6 +93,7 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 				duration: `T${toTick(note.duration)}`,
 				velocity: note.velocity,
 				startTick: toTick(note.location),
+				channel: note.instrument.channel,
 			})
 		);
 	});
@@ -115,8 +110,20 @@ export function PlaySequence(
 	if (currentInterval != null) {
 		clearInterval(currentInterval);
 	}
-	const instrumentIDs: Soundfont.InstrumentName[] = ["bright_acoustic_piano"];
-	const instrumentNames: string[] = ["Piano"];
+	const instrumentIDs: Soundfont.InstrumentName[] = [
+		"acoustic_grand_piano",
+		"acoustic_guitar_nylon",
+		"acoustic_bass",
+		"trumpet",
+		"synth_drum",
+	];
+	const instrumentNames: string[] = [
+		instrumentList.Piano.name,
+		instrumentList.Guitar.name,
+		instrumentList.Bass.name,
+		instrumentList.Trumpet.name,
+		instrumentList.Synth_Drum.name,
+	];
 
 	Promise.all(
 		instrumentIDs.map((id) => {

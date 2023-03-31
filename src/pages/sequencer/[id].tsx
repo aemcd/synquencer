@@ -16,7 +16,7 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	getInstruments,
 	PlaySequence,
@@ -41,6 +41,10 @@ type ContentPageProps = {
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
+	const thisInterval = useRef<NodeJS.Timer>();
+	const doReload = useRef<boolean>(true);
+	const [update, setUpdate] = useState<number>(0);
+
 	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
 		return new Note(note);
@@ -72,23 +76,55 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [stepLength, setStepLength] = useState(1);
 
 	useEffect(() => {
-		/*notes.forEach((note) => {
-			sequenceMap.set(note.getPitchLocation().serialize(), note);
-		});*/
-		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
-	}, [sequenceMap]);
+		doReload.current = false;
+		const noteArr = getArray();
+		Promise.all([
+			EditSequence(seqData.id, seqData),
+			ClearNotes(seqData.id),
+		]).then((value) => {
+			AddNotes(seqData.id, noteArr).then((value) => {
+				doReload.current = true;
+			});
+		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [update]);
 
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
+		reload();
 	}, []);
 
 	function addNote(note: Note) {
 		sequenceMap.set(note.getPitchLocation().serialize(), note);
+		setUpdate(update + 1);
 	}
 
 	function removeNote(note: Note) {
 		sequenceMap.delete(note.getPitchLocation().serialize());
+		setUpdate(update + 1);
+	}
+
+	function reload() {
+		if (doReload) {
+			clearInterval(thisInterval.current);
+			Promise.all([GetSequence(seqData.id), GetNotes(seqData.id)]).then(
+				(value) => {
+					setSeq(value[0] as SequenceMetadata);
+					setNotes(
+						new Map<string, Note>(
+							(value[1] as Array<Note>).map((note) => {
+								return [
+									note.getPitchLocation().serialize(),
+									note,
+								];
+							})
+						)
+					);
+					thisInterval.current = setInterval(reload, 2000);
+				}
+			);
+		}
 	}
 
 	return (
@@ -181,6 +217,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				stepLength={stepLength}
 				sequenceMap={sequenceMap}
 				currentInstrument={currentInstrument}
+				addNote={addNote}
+				removeNote={removeNote}
 			/>
 			<Cursor
 				addNote={addNote}
@@ -198,11 +236,8 @@ export async function getServerSideProps({
 	GetServerSidePropsResult<ContentPageProps>
 > {
 	try {
-		//const databaseSequence = await GetSequence((params as PageParams).id);
-		//const databaseNotes = await GetNotes((params as PageParams).id);
-		const loadedData = await loadSequence((params as PageParams).id);
-		const databaseSequence = loadedData.promisedSequence;
-		const databaseNotes = loadedData.promisedNotes;
+		const databaseSequence = await GetSequence((params as PageParams).id);
+		const databaseNotes = await GetNotes((params as PageParams).id);
 		if (
 			!(
 				databaseNotes instanceof Array<Note> &&

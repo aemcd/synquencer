@@ -20,17 +20,21 @@ type ContentPageProps = {
 	stepLength: number;
 	sequenceMap: Map<string, Note>;
 	currentInstrument: {
-		instrument: Instrument,
-		primary: string,
-		accent: string
+		instrument: Instrument;
+		primary: string;
+		accent: string;
 	};
+	addNote: (note: Note) => void;
+	removeNote: (note: Note) => void;
 };
 
 export default function PianoRoll({
 	sequence,
 	stepLength,
 	sequenceMap,
-	currentInstrument	
+	currentInstrument,
+	addNote,
+	removeNote,
 }: ContentPageProps) {
 	let rollWidth = 767;
 	let rollHeight = 575;
@@ -75,8 +79,8 @@ export default function PianoRoll({
 	const bgRef = useRef<HTMLCanvasElement | null>(null);
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
-	const view = useRef({loc: 0, pitch: 24});
-	const timeSig = useRef({num: 6, den: 8});
+	const view = useRef({ loc: 0, pitch: 24 });
+	const timeSig = useRef({ num: 6, den: 8 });
 	const seqLen = 4;
 
 	let computedStyle: CSSStyleDeclaration;
@@ -139,7 +143,9 @@ export default function PianoRoll({
 		pianoCtx.font = "24px monospace";
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			if ((i + view.current.pitch) % 12 == 0) {
-				let cLabel = `C${Math.floor((i + view.current.pitch) / 12) - 1}`;
+				let cLabel = `C${
+					Math.floor((i + view.current.pitch) / 12) - 1
+				}`;
 				pianoCtx.fillText(cLabel, 2, rollHeight - (i * gridHeight + 3));
 			}
 		}
@@ -180,12 +186,19 @@ export default function PianoRoll({
 
 		// vertical grid lines
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
-			if ((view.current.loc + i + 1) % (timeSig.current.num * 16 / timeSig.current.den) == 0) {
-				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4"));
-			} else if ((view.current.loc + i + 1) % (16 / timeSig.current.den) == 0) {
-				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2"));
+			if (
+				(view.current.loc + i + 1) %
+					((timeSig.current.num * 16) / timeSig.current.den) ==
+				0
+			) {
+				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
+			} else if (
+				(view.current.loc + i + 1) % (16 / timeSig.current.den) ==
+				0
+			) {
+				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2");
 			} else {
-				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0"));
+				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
 			}
 			if ((view.current.loc + i + 1) % stepLength == 0) {
 				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
@@ -195,7 +208,14 @@ export default function PianoRoll({
 		// darken past the end of the sequence
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg");
 		bgCtx.fillRect(
-			Math.max(0, 1 + gridWidth * (seqLen * 16 * timeSig.current.num / timeSig.current.den - view.current.loc)),
+			Math.max(
+				0,
+				1 +
+					gridWidth *
+						((seqLen * 16 * timeSig.current.num) /
+							timeSig.current.den -
+							view.current.loc)
+			),
 			0,
 			rollWidth,
 			rollHeight
@@ -235,8 +255,19 @@ export default function PianoRoll({
 		fgCtx.font = "24px monospace";
 		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
-			if ((view.current.loc + i) % (timeSig.current.num * 16 / timeSig.current.den) == 0) {
-				fgCtx.fillText(`${(view.current.loc + i) / (timeSig.current.num * 16 / timeSig.current.den)}`, i * gridWidth + 5, 20);
+			if (
+				(view.current.loc + i) %
+					((timeSig.current.num * 16) / timeSig.current.den) ==
+				0
+			) {
+				fgCtx.fillText(
+					`${
+						(view.current.loc + i) /
+						((timeSig.current.num * 16) / timeSig.current.den)
+					}`,
+					i * gridWidth + 5,
+					20
+				);
 			}
 		}
 	}
@@ -255,7 +286,9 @@ export default function PianoRoll({
 		fgCtx.fillStyle = colorFill;
 		fgCtx.fillRect(
 			(location - view.current.loc) * gridWidth,
-			rollHeight - ((pitch - view.current.pitch) * gridHeight + gridHeight) + 1,
+			rollHeight -
+				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				1,
 			gridWidth * length,
 			gridHeight
 		);
@@ -263,14 +296,18 @@ export default function PianoRoll({
 		fgCtx.lineWidth = 2;
 		fgCtx.strokeRect(
 			(location - view.current.loc) * gridWidth,
-			rollHeight - ((pitch - view.current.pitch) * gridHeight + gridHeight) + 1,
+			rollHeight -
+				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				1,
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.fillStyle = colorOutline;
 		fgCtx.fillRect(
 			(location - view.current.loc + length) * gridWidth - 6,
-			rollHeight - ((pitch - view.current.pitch) * gridHeight + gridHeight) + 5,
+			rollHeight -
+				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				5,
 			2,
 			gridHeight - 8
 		);
@@ -307,7 +344,8 @@ export default function PianoRoll({
 		let isRightHalf = pixelX % gridWidth > gridWidth / 2;
 
 		let location = view.current.loc + Math.floor(pixelX / gridWidth);
-		let pitch = view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
+		let pitch =
+			view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
 
 		return { location, pitch, isRightHalf };
 	}
@@ -337,7 +375,8 @@ export default function PianoRoll({
 			// right click - delete if note was found
 			if (selectedNote != null) {
 				// @ts-ignore
-				sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				removeNote(selectedNote);
+				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
 			}
 			selectedNote = null;
 			drawFG();
@@ -390,10 +429,8 @@ export default function PianoRoll({
 					pitch: startGridY,
 					instrument: new Instrument({ channel: 1, name: "Piano" }),
 				});
-				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
-					newNote
-				);
+				addNote(newNote);
+				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
 				selectedNote = newNote;
 				copiedNote = newNote;
 				drawFG();
@@ -460,11 +497,10 @@ export default function PianoRoll({
 					pitch: pitch,
 					instrument: selectedNote.instrument,
 				});
-				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
-					newNote
-				);
-				sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				addNote(newNote);
+				removeNote(selectedNote);
+				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
+				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
 				selectedNote = newNote;
 			}
 		} else {
@@ -492,10 +528,8 @@ export default function PianoRoll({
 					pitch: startGridY,
 					instrument: new Instrument({ channel: 1, name: "Piano" }),
 				});
-				sequenceMap.set(
-					selectedNote.getPitchLocation().serialize(),
-					newNote
-				);
+				addNote(newNote);
+				// sequenceMap.set(selectedNote.getPitchLocation().serialize(),newNote);
 				selectedNote = newNote;
 			}
 		}
@@ -582,15 +616,18 @@ export default function PianoRoll({
 
 		let pixelY = e.clientY - rect.top - 2;
 
-		let pitch = view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
+		let pitch =
+			view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
 
-		playNoteDefault(new Note({
-			location: 0,
-			velocity: selectedNote ? selectedNote.velocity : 100,
-			duration: 0,
-			pitch: pitch,
-			instrument: currentInstrument.instrument,
-		}));
+		playNoteDefault(
+			new Note({
+				location: 0,
+				velocity: selectedNote ? selectedNote.velocity : 100,
+				duration: 0,
+				pitch: pitch,
+				instrument: currentInstrument.instrument,
+			})
+		);
 	}
 
 	function handlePianoScroll(e: any) {

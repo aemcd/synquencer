@@ -17,7 +17,7 @@ import { AddNotes, AddSequence, GetNotes, GetSequence } from "../database/calls"
 import * as React from "react";
 import { type } from "os";
 
-const getFluidData = async () => {
+export const getFluidData = async () => {
 	const client: TinyliciousClient = new TinyliciousClient();
 	const schema = {
 		initialObjects: {
@@ -32,6 +32,10 @@ const getFluidData = async () => {
 		({ container } = await client.createContainer(schema));
 		const id = await container.attach();
 		location.hash = id;
+		if (!(container != null)) {
+			console.log("null container");
+			
+		}
 	} else {
 		({ container } = await client.getContainer(containerId, schema));
 	}
@@ -102,21 +106,29 @@ export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 
 export default function App({ Component, pageProps }: AppProps) {
 	//TODO: fully implement fluid framework structures with React
-	const [fluidMetadata, setMetadata] = React.useState<any | null>(null);
-	const [fluidSequence, setSequence] = React.useState<any | null>(null);
+	const [fluidMetadata, setMetadata] = React.useState<SharedMap | null>(null);
+	const [fluidSequence, setSequence] = React.useState<SharedMap | null>(null);
 
 	React.useEffect(() => {
-		if (fluidMetadata) {
-			const { metadataContainer } = fluidMetadata;
+		getFluidData().then((data) => {
+			setMetadata(data.initialObjects.metadata as SharedMap);
+			setSequence(data.initialObjects.sequence as SharedMap);
+		});
+	}, []);
+
+	React.useEffect(() => {
+		if (fluidMetadata !== null) {
 			const updateLocalMetadata = () => {
-				const args = Object.fromEntries(metadataContainer.entries());
-				const clazz = SequenceMetadata as new (arg: any) => any;
-				localMetadata = new clazz(args);
+				if (fluidMetadata != null) {
+					const args = Object.fromEntries(fluidMetadata.entries());
+					const clazz = SequenceMetadata as new (arg: any) => any;
+					localMetadata = new clazz(args);
+				}
 			};
 			updateLocalMetadata();
-			metadataContainer.on("valueChanged", updateLocalMetadata);
+			fluidMetadata.on("valueChanged", updateLocalMetadata);
 			return () => {
-				metadataContainer.off("valueChanged", updateLocalMetadata);
+//				metadataContainer.off("valueChanged", updateLocalMetadata);
 			};
 		} else {
 			return;
@@ -124,27 +136,21 @@ export default function App({ Component, pageProps }: AppProps) {
 	}, [fluidMetadata]);
 
 	React.useEffect(() => {
-		if (fluidSequence) {
-			const sequenceContainer = fluidSequence as SharedMap;
+		if (fluidSequence !== null) {
 			const updateLocalSequence = () => {
-				localSequence = sequenceContainer;
+				localSequence = fluidSequence;
 			};
 			updateLocalSequence();
-			sequenceContainer.on("valueChanged", updateLocalSequence);
+			fluidSequence.on("valueChanged", updateLocalSequence);
 			return () => {
-				sequenceContainer.off("valueChanged", updateLocalSequence);
+				fluidSequence.off("valueChanged", updateLocalSequence);
 			};
 		} else {
 			return;
 		}
 	}, [fluidSequence]);
 
-	React.useEffect(() => {
-		getFluidData().then((data) => {
-			setMetadata(data.initialObjects.metadata);
-			setSequence(data.initialObjects.sequence);
-		});
-	}, []);
+	
 
 	return <Component {...pageProps} />;
 }

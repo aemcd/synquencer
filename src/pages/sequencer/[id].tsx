@@ -25,64 +25,70 @@ import {
 import Cursor from "@/components/Cursor";
 import {
 	loadSequence,
-	getContainer,
+	getFluidData,
 	sequenceSharedMapToDatabase,
 	sequenceDatabaseToSharedMap,
 } from "../_app";
-import { SharedMap } from "fluid-framework";
+import { SharedMap, IFluidContainer } from "fluid-framework";
 
 type PageParams = {
 	id: string;
 };
 type ContentPageProps = {
-	sequence: SequenceMetadata;
-	notes: Array<Note>;
+	sequence: SharedMap;
+	notes: SharedMap;
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
-	sequence = new SequenceMetadata(sequence);
-	notes = notes.map((note) => {
+	//sequence = new SequenceMetadata(sequence);
+	/*notes = notes.map((note) => {
 		return new Note(note);
 	});
+*/
+	let map = new Map<string, Note>();
+	let data = new SequenceMetadata();
 
-	const [sequenceMap, setNotes] = useState<Map<string, Note>>(
-		new Map<string, Note>(
-			notes.map((note) => {
-				return [note.getPitchLocation().serialize(), note];
-			})
-		)
-	);
-	const [seqData, setSeq] = useState(sequence);
+	const [sequenceMap, setNotes] = useState(map);
+	const [seqData, setSeq] = useState(data);
+	const [sequenceSharedMap, setSharedNotes] = useState(notes);
+	const [seqSharedData, setSharedSeq] = useState(sequence);
 
-	// const sequenceMap = useMemo(() => {
-	// 	return getContainer().initialObjects.sequence as SharedMap;
-	// }, []);
+
+	/*const sequenceMap = useMemo(() => {
+		return getContainer().initialObjects.sequence as SharedMap;
+	}, []);*/
 
 	function getArray() {
-		return Array.from(sequenceMap.values());
-		//return sequenceSharedMapToDatabase(sequenceMap);
+		//return Array.from(sequenceMap.values());
+		return sequenceSharedMapToDatabase(sequenceSharedMap);
 	}
 
 	const [stepLength, setStepLength] = useState(1);
 
+	/*
 	useEffect(() => {
 		/*notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
-		});*/
-		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+		});
+		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
 	}, [sequenceMap]);
+	*/
 
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
+		//(getFluidData().then((v) => {setNotes(v.initialObjects.sequence as SharedMap)}));
+
 	}, []);
 
 	function addNote(note: Note) {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
+		const submap: SharedMap = sequenceSharedMap.get(note.instrument.serialize()) as SharedMap;
+		submap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		sequenceMap.delete(note.getPitchLocation().serialize());
+		const submap: SharedMap = sequenceSharedMap.get(note.instrument.serialize()) as SharedMap;
+		submap.delete(note.getPitchLocation().serialize());
 	}
 
 	return (
@@ -154,13 +160,13 @@ export async function getServerSideProps({
 	try {
 		//const databaseSequence = await GetSequence((params as PageParams).id);
 		//const databaseNotes = await GetNotes((params as PageParams).id);
-		const loadedData = await loadSequence((params as PageParams).id);
-		const databaseSequence = loadedData.promisedSequence;
-		const databaseNotes = loadedData.promisedNotes;
+		const container = await getFluidData();
+		const fluidSequence = container.initialObjects.sequence;
+		const fluidNotes = container.initialObjects.metadata;
 		if (
 			!(
-				databaseNotes instanceof Array<Note> &&
-				databaseSequence instanceof SequenceMetadata
+				fluidNotes instanceof SharedMap &&
+				fluidSequence instanceof SharedMap
 			)
 		) {
 			throw new Error("Notes or Sequence not found");
@@ -169,8 +175,8 @@ export async function getServerSideProps({
 		return {
 			// Passed to the page component as props
 			props: {
-				sequence: JSON.parse(JSON.stringify(databaseSequence)),
-				notes: JSON.parse(JSON.stringify(databaseNotes)),
+				sequence: fluidSequence,
+				notes: fluidNotes,
 			},
 		};
 	} catch (e) {
@@ -184,4 +190,11 @@ function getOctave(note: Note) {
 	const pitchNumber: number = note.pitch % 12;
 	const octaveNumber: number = (note.pitch - pitchNumber) / 12;
 	return octaveNumber;
+}
+
+const mapToSeqData = (map: SharedMap) => {
+	const seqData = new SequenceMetadata();
+	/*seqData.id = map.get("id");
+	seqData.bpm = map.get("bpm");*/
+
 }

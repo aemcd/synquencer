@@ -7,7 +7,7 @@ import {
 import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
 
-export let currentTick: number = 0;
+export let currentTick: number = -1;
 let currentInterval: NodeJS.Timer;
 const instruments: Map<string, Soundfont.Player> = new Map<
 	string,
@@ -37,7 +37,7 @@ export function getTick() {
 
 export function StopSequence() {
 	clearInterval(currentInterval);
-	currentTick = 0;
+	currentTick = -1;
 	isPlaying = false;
 }
 
@@ -96,7 +96,7 @@ function PlayTick(
 ): any {
 	if (currentTick > sequence.length) {
 		clearInterval(intervalID);
-		currentTick = 0;
+		currentTick = -1;
 		isPlaying = false;
 	} else {
 		const notesToPlay: Note[] = new Array<Note>();

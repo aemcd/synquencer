@@ -46,7 +46,6 @@ type ContentPageProps = {
 export default function Home({ sequence, notes }: ContentPageProps) {
 	const thisInterval = useRef<NodeJS.Timer>();
 	const doReload = useRef<boolean>(true);
-	const doReload2 = useRef<boolean>(true);
 	const [update, setUpdate] = useState<number>(0);
 
 	sequence = new SequenceMetadata(sequence);
@@ -109,36 +108,34 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, []);
 
 	function addNote(note: Note) {
-		doReload2.current = false;
 		clearUpdate();
-		setUpdate(update + 1);
 		if (sequenceMap.has(note.getPitchLocation().serialize())) {
 			EditNote(
 				seqData.id,
 				sequenceMap.get(note.getPitchLocation().serialize()) as Note,
 				note
 			).then((value) => {
-				doReload2.current = true;
+				doReload.current = true;
 			});
 		} else {
 			AddNote(seqData.id, note).then((value) => {
-				doReload2.current = true;
+				doReload.current = true;
 			});
 		}
+		setUpdate(update + 1);
 		sequenceMap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		doReload2.current = false;
 		sequenceMap.delete(note.getPitchLocation().serialize());
 		DeleteNote(seqData.id, note).then((value) => {
-			doReload2.current = true;
+			doReload.current = true;
 		});
 		setUpdate(update - 1);
 	}
 
 	function reload() {
-		if (doReload && doReload2) {
+		if (doReload /*&& doReload2.current*/) {
 			clearInterval(thisInterval.current);
 			doReload.current = false;
 			Promise.all([GetSequence(seqData.id), GetNotes(seqData.id)]).then(

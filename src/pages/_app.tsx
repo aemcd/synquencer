@@ -134,7 +134,10 @@ export default function App({ Component, pageProps }: AppProps) {
 	}, [fluidSequence]);
 
 	React.useEffect(() => {
-		getFluidData().then((data) => setMetadata(data));
+		getFluidData().then((data) => {
+			setMetadata(data);
+			setSequence(data);
+		});
 	}, []);
 
 	return <Component {...pageProps} />;

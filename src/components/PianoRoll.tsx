@@ -76,7 +76,7 @@ export default function PianoRoll({
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
 	const view = useRef({loc: 0, pitch: 24});
-	const timeSig = useRef({num: 6, den: 8});
+	const timeSig = useRef({num: 4, den: 4});
 	const seqLen = 4;
 
 	let computedStyle: CSSStyleDeclaration;
@@ -114,7 +114,7 @@ export default function PianoRoll({
 	function drawPiano() {
 		if (!pianoCtx) return;
 
-		pianoCtx.clearRect(0, 0, 64, rollHeight);
+		pianoCtx.clearRect(0, 0, 72, rollHeight);
 
 		// draw white keys
 		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-white");
@@ -123,7 +123,7 @@ export default function PianoRoll({
 				pianoCtx.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
-					64,
+					72,
 					gridHeight
 				);
 			}
@@ -132,7 +132,7 @@ export default function PianoRoll({
 		// draw key lines
 		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-black");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			pianoCtx.fillRect(0, gridHeight * (i + 1) - 1, 64, 2);
+			pianoCtx.fillRect(0, gridHeight * (i + 1) - 1, 72, 2);
 		}
 
 		// draw C labels
@@ -617,7 +617,7 @@ export default function PianoRoll({
 		<div aria-label="Piano Roll" style={{ position: "relative" }}>
 			<canvas
 				ref={pianoRef}
-				width={"62px"}
+				width={"70px"}
 				height={rollHeight}
 				onMouseDown={handlePianoClick}
 				onWheel={handlePianoScroll}
@@ -639,7 +639,7 @@ export default function PianoRoll({
 				height={rollHeight}
 				style={{
 					position: "absolute",
-					left: "64px",
+					left: "72px",
 					top: "0",
 					zIndex: "0",
 					imageRendering: "pixelated",
@@ -662,7 +662,7 @@ export default function PianoRoll({
 				height={rollHeight}
 				style={{
 					position: "absolute",
-					left: "64px",
+					left: "72px",
 					top: "0",
 					zIndex: "1",
 					imageRendering: "pixelated",

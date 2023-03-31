@@ -41,6 +41,10 @@ const getFluidData = async () => {
 
 let container: IFluidContainer;
 
+export const getContainer = () => {
+	return container;
+}
+
 //METADATA CODE HERE ----------------------------------
 
 let localMetadata: SequenceMetadata; //local copy of properties for clients
@@ -70,7 +74,7 @@ const saveSequence = (arg: {metadata: SequenceMetadata, sequence: Note[]}) => {/
 	AddNotes(arg.metadata.id, arg.sequence);
 }
 
-const sequenceDatabaseToSharedMap = async (list: Note[]) => {
+export const sequenceDatabaseToSharedMap = async (list: Note[]) => {
 	let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
 	for (let note of list) {
 		const instrument = note.instrument.serialize();
@@ -80,12 +84,13 @@ const sequenceDatabaseToSharedMap = async (list: Note[]) => {
 		}
 		(sequence.get(instrument) as SharedMap).set(note.getPitchLocation().serialize(), note);
 	}
+	container.initialObjects.sequence = sequence;
 	return sequence;
 }
 
-const sequenceSharedMapToDatabase = () => {
+export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 	let list: Note[] = [];
-	let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
+	//let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
 	for (let value of Array.from(sequence.values())) {
 		const submap = value as SharedMap;
 		for (let note of Array.from(submap.values())) {

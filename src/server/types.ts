@@ -185,5 +185,3 @@ export const instrumentColors = {
 	Trumpet: {primary: "--red", accent: "--red-accent"},
 	Synth_Drum: {primary: "--purple", accent: "--purple-accent"} 
 }
-
-export {};

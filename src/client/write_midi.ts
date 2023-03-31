@@ -15,6 +15,21 @@ const instruments: Map<string, Soundfont.Player> = new Map<
 >();
 export let isPlaying: boolean = false;
 
+export function playNoteDefault(note: Note) {
+	note.duration = 2;
+	playNote(120, 4, note);
+}
+
+export function playNote(bpm: number, denominator: number, note: Note) {
+	const instrument = instruments.get(note.instrument.name as string);
+	if (instrument != undefined) {
+		instrument.play(note.pitchName(), undefined, {
+			gain: note.velocity / 50,
+			duration: toSec(bpm, denominator, note.duration),
+		});
+	}
+}
+
 export function getTick() {
 	return currentTick;
 }
@@ -25,7 +40,7 @@ export function StopSequence() {
 	isPlaying = false;
 }
 
-function getInstruments() {
+export function getInstruments() {
 	const instrumentIDs: Soundfont.InstrumentName[] = [
 		"acoustic_grand_piano",
 		"acoustic_guitar_nylon",
@@ -78,7 +93,6 @@ function PlayTick(
 	notes: Map<string, Note>,
 	instruments: Map<string, Soundfont.Player>
 ): any {
-	console.log(arguments);
 	if (currentTick > sequence.length) {
 		clearInterval(intervalID);
 		currentTick = 0;
@@ -86,7 +100,6 @@ function PlayTick(
 	} else {
 		const notesToPlay: Note[] = new Array<Note>();
 		notes.forEach((mapNote) => {
-			console.log(mapNote);
 			if (mapNote.location === currentTick) {
 				notesToPlay.push(mapNote);
 			}
@@ -144,9 +157,8 @@ export function PlaySequence(
 	sequence: SequenceMetadata,
 	notes: Map<string, Note>
 ) {
-	if (currentInterval != null) {
-		clearInterval(currentInterval);
-	}
+	clearInterval(currentInterval);
+	currentTick = 0;
 	currentInterval = setIntervalWrapper(
 		PlayTick,
 		toSec(sequence.bpm, sequence.denominator, 1) * 1000,

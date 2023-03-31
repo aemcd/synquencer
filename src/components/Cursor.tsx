@@ -15,7 +15,7 @@ type Props = {
 	sequence: SequenceMetadata;
 };
 export default function Cursor({ addNote, sequence}: Props) {
-	const cursorNote = React.useMemo(() => {
+		const cursorNote = React.useMemo(() => {
 		return new Note({
 			location: 0,
 			pitch: 12 * 4,

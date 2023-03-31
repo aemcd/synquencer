@@ -15,8 +15,13 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import { useMemo, useState } from "react";
-import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
+import { useEffect, useMemo, useState } from "react";
+import {
+	getInstruments,
+	PlaySequence,
+	StopSequence,
+	WriteMidi,
+} from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
 import { loadSequence } from "../_app";
 
@@ -41,10 +46,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Map<string, Note>();
 	}, []);
 
-	notes.forEach((note) => {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
-	});
-
 	function getArray() {
 		const noteArr = new Array<Note>();
 		sequenceMap.forEach((value) => {
@@ -54,7 +55,18 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}
 
 	const [stepLength, setStepLength] = useState(1);
-	
+
+	useEffect(() => {
+		notes.forEach((note) => {
+			sequenceMap.set(note.getPitchLocation().serialize(), note);
+		});
+	}, [notes, sequenceMap]);
+
+	useEffect(() => {
+		// Render Instruments
+		getInstruments();
+	}, []);
+
 	return (
 		<>
 			<Head>

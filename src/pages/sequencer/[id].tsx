@@ -205,6 +205,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.bpm = newBPM;
 					setSeq(newSeqData);
+					setUpdate(update + 1);
 				}}
 				saveSequence={() => {
 					const noteArr = getArray();

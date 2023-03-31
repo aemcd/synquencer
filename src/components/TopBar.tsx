@@ -156,7 +156,7 @@ export default function TopBar({
 				<option value="Trumpet">Trumpet</option>
 				<option value="Synth Drum">Synth Drum</option>
 			</select>
-			<div className="settings">
+			{/* <div className="settings">
 				<span aria-hidden="true">Vel:</span>
 				<input
 					className="settings-input"
@@ -182,7 +182,7 @@ export default function TopBar({
 					}}
 					maxLength={3}
 				/>
-			</div>
+			</div> */}
 			<button
 				className="top-button"
 				aria-label="Save"

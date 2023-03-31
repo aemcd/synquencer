@@ -8,8 +8,11 @@ import {
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import {
+	AddNote,
 	AddNotes,
 	ClearNotes,
+	DeleteNote,
+	EditNote,
 	EditSequence,
 	GetNotes,
 	GetSequence,
@@ -90,14 +93,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 
 	useEffect(() => {
 		clearUpdate();
-		clearInterval(thisInterval.current);
 		const noteArr = getArray();
-		Promise.all([
-			EditSequence(seqData.id, seqData),
-			ClearNotes(seqData.id),
-		]).then((value) => {
-			AddNotes(seqData.id, noteArr).then((value) => {});
-		});
+		Promise.all([EditSequence(seqData.id, seqData)]);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [update]);
 
@@ -108,12 +105,31 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, []);
 
 	function addNote(note: Note) {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
+		doReload.current = false;
+		clearUpdate();
 		setUpdate(update + 1);
+		if (sequenceMap.has(note.getPitchLocation().serialize())) {
+			EditNote(
+				seqData.id,
+				sequenceMap.get(note.getPitchLocation().serialize()) as Note,
+				note
+			).then((value) => {
+				doReload.current = true;
+			});
+		} else {
+			AddNote(seqData.id, note).then((value) => {
+				doReload.current = true;
+			});
+		}
+		sequenceMap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
+		doReload.current = false;
 		sequenceMap.delete(note.getPitchLocation().serialize());
+		DeleteNote(seqData.id, note).then((value) => {
+			doReload.current = true;
+		});
 		setUpdate(update - 1);
 	}
 
@@ -123,30 +139,40 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			Promise.all([GetSequence(seqData.id), GetNotes(seqData.id)]).then(
 				(value) => {
 					setSeq(value[0] as SequenceMetadata);
-					(value[1] as Array<Note>).forEach((note) => {
-						if (
-							!sequenceMap.has(
-								note.getPitchLocation().serialize()
-							)
-						) {
-							sequenceMap.set(
-								note.getPitchLocation().serialize(),
-								note
-							);
-						}
-					});
-					const value2 = new Map<string, Note>(
-						(value[1] as Array<Note>).map((note) => {
-							return [note.getPitchLocation().serialize(), note];
-						})
+					// (value[1] as Array<Note>).forEach((note) => {
+					// 	if (
+					// 		!sequenceMap.has(
+					// 			note.getPitchLocation().serialize()
+					// 		)
+					// 	) {
+					// 		sequenceMap.set(
+					// 			note.getPitchLocation().serialize(),
+					// 			note
+					// 		);
+					// 	}
+					// });
+					// const value2 = new Map<string, Note>(
+					// 	(value[1] as Array<Note>).map((note) => {
+					// 		return [note.getPitchLocation().serialize(), note];
+					// 	})
+					// );
+					// sequenceMap.forEach((note) => {
+					// 	if (!value2.has(note.getPitchLocation().serialize())) {
+					// 		sequenceMap.delete(
+					// 			note.getPitchLocation().serialize()
+					// 		);
+					// 	}
+					// });
+					setNotes(
+						new Map<string, Note>(
+							(value[1] as Array<Note>).map((note) => {
+								return [
+									note.getPitchLocation().serialize(),
+									note,
+								];
+							})
+						)
 					);
-					sequenceMap.forEach((note) => {
-						if (!value2.has(note.getPitchLocation().serialize())) {
-							sequenceMap.delete(
-								note.getPitchLocation().serialize()
-							);
-						}
-					});
 					thisInterval.current = setInterval(reload, 5000);
 				}
 			);
@@ -238,7 +264,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					}
 				}}
 				setTimeSig={(timeSig) => {
-					let [num, den] = timeSig.split('/');
+					let [num, den] = timeSig.split("/");
 					parseInt(num);
 					parseInt(den);
 					let newSeqData = new SequenceMetadata(seqData);

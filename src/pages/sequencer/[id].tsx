@@ -69,8 +69,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		/*notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
 		});*/
-		sequenceDatabaseToSharedMap(notes);
-	}, [notes, sequenceMap]);
+		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+	}, [sequenceMap]);
 
 	useEffect(() => {
 		// Render Instruments

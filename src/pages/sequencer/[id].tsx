@@ -211,6 +211,20 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 							break;
 					}
 				}}
+				setTimeSig={(timeSig) => {
+					let [num, den] = timeSig.split('/');
+					parseInt(num);
+					parseInt(den);
+					let newSeqData = new SequenceMetadata(seqData);
+					newSeqData.numerator = parseInt(num);
+					newSeqData.denominator = parseInt(den);
+					setSeq(newSeqData);
+				}}
+				setLength={(length) => {
+					let newSeqData = new SequenceMetadata(seqData);
+					newSeqData.length = parseInt(length);
+					setSeq(newSeqData);
+				}}
 			/>
 			<PianoRoll
 				sequence={seqData}

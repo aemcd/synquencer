@@ -80,8 +80,6 @@ export default function PianoRoll({
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
 	const view = useRef({ loc: 0, pitch: 24 });
-	const timeSig = useRef({ num: 4, den: 4 });
-	const seqLen = 4;
 
 	let computedStyle: CSSStyleDeclaration;
 	let pianoCtx: CanvasRenderingContext2D | null;
@@ -188,12 +186,12 @@ export default function PianoRoll({
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			if (
 				(view.current.loc + i + 1) %
-					((timeSig.current.num * 16) / timeSig.current.den) ==
+					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
 				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
 			} else if (
-				(view.current.loc + i + 1) % (16 / timeSig.current.den) ==
+				(view.current.loc + i + 1) % (16 / sequence.denominator) ==
 				0
 			) {
 				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2");
@@ -212,8 +210,8 @@ export default function PianoRoll({
 				0,
 				1 +
 					gridWidth *
-						((seqLen * 16 * timeSig.current.num) /
-							timeSig.current.den -
+						((sequence.length * 16 * sequence.numerator) /
+							sequence.denominator -
 							view.current.loc)
 			),
 			0,
@@ -257,13 +255,13 @@ export default function PianoRoll({
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			if (
 				(view.current.loc + i) %
-					((timeSig.current.num * 16) / timeSig.current.den) ==
+					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
 				fgCtx.fillText(
 					`${
 						(view.current.loc + i) /
-						((timeSig.current.num * 16) / timeSig.current.den)
+						((sequence.numerator * 16) / sequence.denominator)
 					}`,
 					i * gridWidth + 5,
 					20
@@ -604,7 +602,6 @@ export default function PianoRoll({
 				drawFG();
 			}
 		}
-		console.log(view.current.loc);
 	}
 
 	function handlePianoClick(e: MouseEvent) {

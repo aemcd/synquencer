@@ -14,6 +14,8 @@ type ContentPageProps = {
 	playSequence: () => void;
 	stopSequence: () => void;
 	setInstrument: (instrument: string) => void;
+	setLength: (length: string) => void;
+	setTimeSig: (timeSig: string) => void;
 };
 
 export default function TopBar({
@@ -24,7 +26,9 @@ export default function TopBar({
 	downloadSequence,
 	playSequence,
 	stopSequence,
-	setInstrument
+	setInstrument,
+	setLength,
+	setTimeSig
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	return (
@@ -68,7 +72,7 @@ export default function TopBar({
 					aria-label="Time Signature"
 					style={{ width: "64px", marginLeft: "4px", marginRight: "-2px"}}
 					onChange={(e) => {
-						return;
+						setTimeSig(e.target.value);
 					}}
 				>
 					<option value="4/4">4/4</option>
@@ -95,14 +99,15 @@ export default function TopBar({
 					aria-label="Length"
 					type="number"
 					min="1"
-					max="999"
-					defaultValue={sequence.bpm ? sequence.bpm : "120"}
+					max="99"
+					defaultValue={sequence.length ? sequence.length : "1"}
 					onChange={(e) => {
 						if (e.target.value === "" || parseInt(e.target.value) < 0) {
 							e.target.value = "1";
-						} else if (parseInt(e.target.value) > 999) {
-							e.target.value = "999"
+						} else if (parseInt(e.target.value) > 99) {
+							e.target.value = "99";
 						}
+						setLength(e.target.value);
 					}}
 					style={{ width: "38px", marginRight: "-6px", marginLeft: "6px" }}
 					maxLength={3}

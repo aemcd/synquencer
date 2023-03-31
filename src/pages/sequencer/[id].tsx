@@ -59,7 +59,8 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	// }, []);
 
 	function getArray() {
-		return sequenceSharedMapToDatabase(sequenceMap);
+		return Array.from(sequenceMap.values());
+		//return sequenceSharedMapToDatabase(sequenceMap);
 	}
 
 	const [stepLength, setStepLength] = useState(1);

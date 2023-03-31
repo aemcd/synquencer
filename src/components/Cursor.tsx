@@ -275,8 +275,6 @@ export default function Cursor({
 								!sameLoc
 							) {
 								setSelectedNote(note);
-								cursorNote.location = note.location;
-								cursorNote.pitch = note.pitch;
 							}
 						});
 						if (selectedNote == null) {
@@ -287,7 +285,9 @@ export default function Cursor({
 								7000
 							);
 						} else {
-							clearAnnouncer("assertive");
+							cursorNote.location = selectedNote.location;
+							cursorNote.pitch = selectedNote.pitch;
+clearAnnouncer("assertive");
 							announce(
 								"Note at " +
 									selectedNote?.pitchName() +
@@ -352,8 +352,6 @@ export default function Cursor({
 								!sameLoc
 							) {
 								setSelectedNote(note);
-								cursorNote.location = note.location;
-								cursorNote.pitch = note.pitch;
 							}
 						});
 
@@ -365,6 +363,9 @@ export default function Cursor({
 								7000
 							);
 						} else {
+							
+							cursorNote.location = selectedNote.location;
+							cursorNote.pitch = selectedNote.pitch;
 							clearAnnouncer("assertive");
 							announce(
 								"Note at " +

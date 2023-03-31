@@ -208,8 +208,8 @@ export async function getServerSideProps({
 		//const databaseSequence = await GetSequence((params as PageParams).id);
 		//const databaseNotes = await GetNotes((params as PageParams).id);
 		const container = await getFluidData();
-		const fluidSequence = container.initialObjects.sequence;
-		const fluidNotes = container.initialObjects.metadata;
+		const fluidSequence: SharedMap = container.initialObjects.sequence as SharedMap;
+		const fluidNotes: SharedMap = container.initialObjects.metadata as SharedMap;
 		if (
 			!(
 				fluidNotes instanceof SharedMap &&

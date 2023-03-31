@@ -87,14 +87,17 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					clearInterval(thisInterval.current);
 					thisInterval.current = setInterval(reload, 5000);
 				}
-			}, 12000)
+			}, 13000)
 		);
 	}
 
 	useEffect(() => {
+		doReload.current = false;
 		clearUpdate();
 		const noteArr = getArray();
-		Promise.all([EditSequence(seqData.id, seqData)]);
+		Promise.all([EditSequence(seqData.id, seqData)]).then((value) => {
+			doReload.current = true;
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [update]);
 
@@ -271,11 +274,13 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					newSeqData.numerator = parseInt(num);
 					newSeqData.denominator = parseInt(den);
 					setSeq(newSeqData);
+					setUpdate(update + 1);
 				}}
 				setLength={(length) => {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.length = parseInt(length);
 					setSeq(newSeqData);
+					setUpdate(update + 1);
 				}}
 			/>
 			<PianoRoll

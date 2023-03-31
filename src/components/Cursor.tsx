@@ -30,13 +30,19 @@ export default function Cursor({
 			instrument: instrumentList.Piano,
 		});
 	}, []);
-	const [mod, setMod] = React.useState<number>(0);
+	let mod = React.useMemo<number>(() => {
+		return 0;
+	}, []);
 	let selectedNote = React.useMemo<Note | null>(() => {
 		return null;
 	}, []);
 
 	function setSelectedNote(note: Note | null) {
 		selectedNote = note;
+	}
+
+	function setMod(n: number) {
+		mod = n;
 	}
 
 	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
@@ -236,7 +242,7 @@ export default function Cursor({
 							announce(
 								"Move" +
 									newNote.pitchName() +
-									"to" +
+									" to " +
 									newNote.location,
 								"assertive",
 								7000
@@ -246,10 +252,12 @@ export default function Cursor({
 					}
 					if (cursorNote.location - cursorNote.duration >= 0) {
 						cursorNote.location -= cursorNote.duration;
-						const prevNote = selectedNote;
+						let prevNote = selectedNote;
+						let sameLoc = false;
 						setSelectedNote(null);
 						console.log(selectedNote);
 						noteMap.forEach((note) => {
+							cursorNote.location += cursorNote.duration;
 							if (
 								cursorNote.location == note.location &&
 								(prevNote == null ||
@@ -257,6 +265,18 @@ export default function Cursor({
 									prevNote.pitch > cursorNote.pitch)
 							) {
 								setSelectedNote(note);
+								sameLoc = true;
+								cursorNote.location = note.location;
+								cursorNote.pitch = note.pitch;
+							}
+							cursorNote.location -= cursorNote.duration;
+							if (
+								cursorNote.location == note.location &&
+								!sameLoc
+							) {
+								setSelectedNote(note);
+								cursorNote.location = note.location;
+								cursorNote.pitch = note.pitch;
 							}
 						});
 						if (selectedNote == null) {
@@ -312,7 +332,9 @@ export default function Cursor({
 						const prevNote = selectedNote;
 						setSelectedNote(null);
 						console.log(selectedNote);
+						let sameLoc = false;
 						noteMap.forEach((note) => {
+							cursorNote.location -= cursorNote.duration;
 							if (
 								cursorNote.location === note.location &&
 								(prevNote == null ||
@@ -320,6 +342,18 @@ export default function Cursor({
 									prevNote.pitch < cursorNote.pitch)
 							) {
 								setSelectedNote(note);
+								sameLoc = true;
+								cursorNote.location = note.location;
+								cursorNote.pitch = note.pitch;
+							}
+							cursorNote.location += cursorNote.duration;
+							if (
+								cursorNote.location === note.location &&
+								!sameLoc
+							) {
+								setSelectedNote(note);
+								cursorNote.location = note.location;
+								cursorNote.pitch = note.pitch;
 							}
 						});
 

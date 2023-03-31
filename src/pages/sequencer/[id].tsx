@@ -5,7 +5,7 @@ import {
 	PitchLocation,
 	SequenceMetadata,
 	instrumentList,
-	instrumentColors
+	instrumentColors,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import {
@@ -27,39 +27,41 @@ import {
 import Cursor from "@/components/Cursor";
 import {
 	loadSequence,
-	getContainer,
+	getFluidData,
 	sequenceSharedMapToDatabase,
 	sequenceDatabaseToSharedMap,
 } from "../_app";
-import { SharedMap } from "fluid-framework";
+import { SharedMap, IFluidContainer } from "fluid-framework";
 
 type PageParams = {
 	id: string;
 };
 type ContentPageProps = {
-	sequence: SequenceMetadata;
-	notes: Array<Note>;
+	sequence: SharedMap;
+	notes: SharedMap;
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
-	sequence = new SequenceMetadata(sequence);
-	notes = notes.map((note) => {
+	//sequence = new SequenceMetadata(sequence);
+	/*notes = notes.map((note) => {
 		return new Note(note);
 	});
+*/
+	let map = new Map<string, Note>();
+	let data = new SequenceMetadata();
 
-	const [sequenceMap, setNotes] = useState<Map<string, Note>>(
-		new Map<string, Note>(
-			notes.map((note) => {
-				return [note.getPitchLocation().serialize(), note];
-			})
-		)
-	);
-	const [seqData, setSeq] = useState(sequence);
+	const [sequenceSharedMap, setSharedNotes] = useState(notes);
+	const [seqSharedData, setSharedSeq] = useState(sequence);
+	const [sequenceMap, setNotes] = useState(map);
+	const [seqData, setSeq] = useState(mapToSeqData(sequence));
+
+	console.error(notes);
+	console.error(sequence);
 
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
 		primary: "--yellow",
-		accent: "--yellow-accent"
+		accent: "--yellow-accent",
 	});
 
 	// const sequenceMap = useMemo(() => {
@@ -67,30 +69,49 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	// }, []);
 
 	function getArray() {
-		return Array.from(sequenceMap.values());
-		//return sequenceSharedMapToDatabase(sequenceMap);
+		//return Array.from(sequenceMap.values());
+		return sequenceSharedMapToDatabase(sequenceSharedMap);
 	}
 
 	const [stepLength, setStepLength] = useState(1);
 
 	useEffect(() => {
-		/*notes.forEach((note) => {
-			sequenceMap.set(note.getPitchLocation().serialize(), note);
-		});*/
-		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+		//setSeq(mapToSeqData(sequenceSharedMap));
+	}, [sequenceSharedMap]);
+
+	useEffect(() => {
+		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
 	}, [sequenceMap]);
+
+	useEffect(() => {
+		setSeq(mapToSeqData(seqSharedData));
+	}, [seqSharedData]);
+
+	useEffect(() => {
+		notes.forEach((note) => {
+			sequenceMap.set(note.getPitchLocation().serialize(), note);
+		});
+		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+	}, [seqData]);
 
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
+		//(getFluidData().then((v) => {setNotes(v.initialObjects.sequence as SharedMap)}));
 	}, []);
 
 	function addNote(note: Note) {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
+		const submap: SharedMap = sequenceSharedMap.get(
+			note.instrument.serialize()
+		) as SharedMap;
+		submap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		sequenceMap.delete(note.getPitchLocation().serialize());
+		const submap: SharedMap = sequenceSharedMap.get(
+			note.instrument.serialize()
+		) as SharedMap;
+		submap.delete(note.getPitchLocation().serialize());
 	}
 
 	return (
@@ -139,40 +160,40 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					StopSequence();
 				}}
 				setInstrument={(instrument) => {
-					switch(instrument) {
+					switch (instrument) {
 						case "Piano":
 							setCurrentInstrument({
 								instrument: instrumentList.Piano,
 								primary: "--yellow",
-								accent: "--yellow-accent"
+								accent: "--yellow-accent",
 							});
 							break;
 						case "Guitar":
 							setCurrentInstrument({
 								instrument: instrumentList.Guitar,
 								primary: "--green",
-								accent: "--green-accent"
+								accent: "--green-accent",
 							});
 							break;
 						case "Bass":
 							setCurrentInstrument({
 								instrument: instrumentList.Bass,
 								primary: "--blue",
-								accent: "--blue-accent"
+								accent: "--blue-accent",
 							});
 							break;
 						case "Trumpet":
 							setCurrentInstrument({
 								instrument: instrumentList.Trumpet,
 								primary: "--red",
-								accent: "--red-accent"
+								accent: "--red-accent",
 							});
 							break;
 						case "Synth Drum":
 							setCurrentInstrument({
 								instrument: instrumentList.Synth_Drum,
 								primary: "--purple",
-								accent: "--purple-accent"
+								accent: "--purple-accent",
 							});
 							break;
 					}
@@ -194,7 +215,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	);
 }
 
-export async function getServerSideProps({
+export async function getInitialProps({
 	params,
 }: GetServerSidePropsContext<PageParams>): Promise<
 	GetServerSidePropsResult<ContentPageProps>
@@ -202,28 +223,22 @@ export async function getServerSideProps({
 	try {
 		//const databaseSequence = await GetSequence((params as PageParams).id);
 		//const databaseNotes = await GetNotes((params as PageParams).id);
-		const loadedData = await loadSequence((params as PageParams).id);
-		const databaseSequence = loadedData.promisedSequence;
-		const databaseNotes = loadedData.promisedNotes;
-		if (
-			!(
-				databaseNotes instanceof Array<Note> &&
-				databaseSequence instanceof SequenceMetadata
-			)
-		) {
-			throw new Error("Notes or Sequence not found");
-		}
+		const container = await getFluidData();
+		const fluidSequence: SharedMap = container.initialObjects
+			.sequence as SharedMap;
+		const fluidNotes: SharedMap = container.initialObjects
+			.metadata as SharedMap;
 
 		return {
 			// Passed to the page component as props
 			props: {
-				sequence: JSON.parse(JSON.stringify(databaseSequence)),
-				notes: JSON.parse(JSON.stringify(databaseNotes)),
+				sequence: fluidSequence,
+				notes: fluidNotes,
 			},
 		};
 	} catch (e) {
 		return {
-			notFound: true,
+			redirect: { destination: `/${e}`, permanent: false },
 		};
 	}
 }
@@ -232,4 +247,15 @@ function getOctave(note: Note) {
 	const pitchNumber: number = note.pitch % 12;
 	const octaveNumber: number = (note.pitch - pitchNumber) / 12;
 	return octaveNumber;
+}
+
+function mapToSeqData(map: SharedMap): SequenceMetadata {
+	console.error(map);
+	return new SequenceMetadata({
+		id: map.get("id") as string,
+		length: map.get("length") as number,
+		bpm: map.get("bpm") as number,
+		numerator: map.get("numerator") as number,
+		denominator: map.get("denominator") as number,
+	});
 }

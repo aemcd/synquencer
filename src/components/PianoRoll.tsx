@@ -227,7 +227,7 @@ export default function PianoRoll({
 
 		sequenceMap.forEach((value) => {
 			if (value != selectedNote &&
-				value.instrument === currentInstrument.instrument
+				value.instrument.name == currentInstrument.instrument.name
 			) {
 				drawNote(
 					value.location,
@@ -242,7 +242,7 @@ export default function PianoRoll({
 
 		if (selectedNote &&
 			dragState == DRAG_STATES.NOT_DRAGGING &&
-			selectedNote.instrument == currentInstrument.instrument) {
+			selectedNote.instrument.name == currentInstrument.instrument.name) {
 			drawNote(
 				selectedNote.location,
 				selectedNote.pitch,

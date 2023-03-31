@@ -178,4 +178,12 @@ export const instrumentList = {
 	Synth_Drum: new Instrument({ channel: 119, name: "Synth Drum" }),
 };
 
+export const instrumentColors = {
+	Piano: {primary: "--yellow", accent: "--yellow-accent"},
+	Guitar: {primary: "--green", accent: "--green-accent"},
+	Bass: {primary: "--blue", accent: "--blue-accent"},
+	Trumpet: {primary: "--red", accent: "--red-accent"},
+	Synth_Drum: {primary: "--purple", accent: "--purple-accent"} 
+}
+
 export {};

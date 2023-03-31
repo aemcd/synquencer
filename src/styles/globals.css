@@ -115,10 +115,29 @@ h1 {
   border-radius: 4px;
 }
 
+.settings-input option {
+  background-color: var(--bg);
+}
+
 .settings-input:hover {
   background-color: var(--bg1);
 }
 
 .settings-input:focus {
   background: none;
+}
+
+.instrument-selection {
+  font-family: monospace;
+  font-size: 1.25rem;
+  line-height: 0px;
+  height: 40px;
+  width: 145px;
+  margin: 6px 0px 6px 6px;
+  padding: 0px 0px 0px 6px;
+  color: var(--fg2);
+  background-color: var(--bg2);
+  border-style: none;
+  border-radius: 6px;
+  vertical-align: top;
 }

@@ -1,10 +1,10 @@
-		
-		import { WriteMidi } from "@/client/write_midi";
+import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
-import { Note, SequenceMetadata } from "@/server/types";
+import { Note, SequenceMetadata, instrumentList, instrumentColors } from "@/server/types";
 import Link from "next/link";
 import { announce, clearAnnouncer} from "@react-aria/live-announcer";
 import { useState } from "react";
+
 type ContentPageProps = {
 	sequence: SequenceMetadata;
 	notes: Array<Note>;
@@ -73,6 +73,16 @@ export default function TopBar({
 					<option value="16">1/1</option>
 				</select>
 			</div>
+			<select 
+				aria-label="Instrument"
+				className="instrument-selection"
+			>
+				<option value="Piano">Piano</option>
+				<option value="Guitar">Guitar</option>
+				<option value="Bass">Bass</option>
+				<option value="Trumpet">Trumpet</option>
+				<option value="Synth_Drum">Synth Drum</option>	
+			</select>
 			<button
 				className="top-button"
 				aria-label="Save"

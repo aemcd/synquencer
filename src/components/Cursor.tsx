@@ -30,13 +30,19 @@ export default function Cursor({
 			instrument: instrumentList.Piano,
 		});
 	}, []);
-	const [mod, setMod] = React.useState<number>(0);
+	let mod = React.useMemo<number>(() => {
+		return 0;
+	}, []);
 	let selectedNote = React.useMemo<Note | null>(() => {
 		return null;
 	}, []);
 
 	function setSelectedNote(note: Note | null) {
 		selectedNote = note;
+	}
+
+	function setMod(n: number) {
+		mod = n;
 	}
 
 	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {

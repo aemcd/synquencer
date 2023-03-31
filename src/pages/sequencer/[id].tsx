@@ -1,11 +1,10 @@
 import Head from "next/head";
 import {
 	Instrument,
+	instrumentList,
 	Note,
 	PitchLocation,
 	SequenceMetadata,
-	instrumentList,
-	instrumentColors
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import {
@@ -55,11 +54,10 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		)
 	);
 	const [seqData, setSeq] = useState(sequence);
-
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
 		primary: "--yellow",
-		accent: "--yellow-accent"
+		accent: "--yellow-accent",
 	});
 
 	// const sequenceMap = useMemo(() => {
@@ -139,40 +137,40 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					StopSequence();
 				}}
 				setInstrument={(instrument) => {
-					switch(instrument) {
+					switch (instrument) {
 						case "Piano":
 							setCurrentInstrument({
 								instrument: instrumentList.Piano,
 								primary: "--yellow",
-								accent: "--yellow-accent"
+								accent: "--yellow-accent",
 							});
 							break;
 						case "Guitar":
 							setCurrentInstrument({
 								instrument: instrumentList.Guitar,
 								primary: "--green",
-								accent: "--green-accent"
+								accent: "--green-accent",
 							});
 							break;
 						case "Bass":
 							setCurrentInstrument({
 								instrument: instrumentList.Bass,
 								primary: "--blue",
-								accent: "--blue-accent"
+								accent: "--blue-accent",
 							});
 							break;
 						case "Trumpet":
 							setCurrentInstrument({
 								instrument: instrumentList.Trumpet,
 								primary: "--red",
-								accent: "--red-accent"
+								accent: "--red-accent",
 							});
 							break;
 						case "Synth Drum":
 							setCurrentInstrument({
 								instrument: instrumentList.Synth_Drum,
 								primary: "--purple",
-								accent: "--purple-accent"
+								accent: "--purple-accent",
 							});
 							break;
 					}

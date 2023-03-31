@@ -50,10 +50,13 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	let map = new Map<string, Note>();
 	let data = new SequenceMetadata();
 
-	const [sequenceMap, setNotes] = useState(map);
-	const [seqData, setSeq] = useState(data);
 	const [sequenceSharedMap, setSharedNotes] = useState(notes);
 	const [seqSharedData, setSharedSeq] = useState(sequence);
+	const [sequenceMap, setNotes] = useState(map);
+	const [seqData, setSeq] = useState(mapToSeqData(sequence));
+
+	console.error(notes);
+	console.error(sequence);
 
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
@@ -72,14 +75,24 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 
 	const [stepLength, setStepLength] = useState(1);
 
-	/*
 	useEffect(() => {
-		/*notes.forEach((note) => {
+		//setSeq(mapToSeqData(sequenceSharedMap));
+	}, [sequenceSharedMap]);
+
+	useEffect(() => {
+		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+	}, [sequenceMap]);
+
+	useEffect(() => {
+		setSeq(mapToSeqData(seqSharedData));
+	}, [seqSharedData]);
+
+	useEffect(() => {
+		notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
 		});
 		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
-	}, [sequenceMap]);
-	*/
+	}, [seqData]);
 
 	useEffect(() => {
 		// Render Instruments
@@ -236,8 +249,13 @@ function getOctave(note: Note) {
 	return octaveNumber;
 }
 
-const mapToSeqData = (map: SharedMap) => {
-	const seqData = new SequenceMetadata();
-	/*seqData.id = map.get("id");
-	seqData.bpm = map.get("bpm");*/
-};
+function mapToSeqData(map: SharedMap): SequenceMetadata {
+	console.error(map);
+	return new SequenceMetadata({
+		id: map.get("id") as string,
+		length: map.get("length") as number,
+		bpm: map.get("bpm") as number,
+		numerator: map.get("numerator") as number,
+		denominator: map.get("denominator") as number,
+	});
+}

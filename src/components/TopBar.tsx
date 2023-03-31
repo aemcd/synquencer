@@ -1,9 +1,15 @@
 import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
-import { Note, SequenceMetadata, instrumentList, instrumentColors, Instrument } from "@/server/types";
+import {
+	Note,
+	SequenceMetadata,
+	instrumentList,
+	instrumentColors,
+	Instrument,
+} from "@/server/types";
 import Link from "next/link";
 import { announce, clearAnnouncer } from "@react-aria/live-announcer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ContentPageProps = {
 	sequence: SequenceMetadata;
@@ -28,7 +34,7 @@ export default function TopBar({
 	stopSequence,
 	setInstrument,
 	setLength,
-	setTimeSig
+	setTimeSig,
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	return (
@@ -56,12 +62,15 @@ export default function TopBar({
 					max="999"
 					defaultValue={sequence.bpm ? sequence.bpm : "120"}
 					onChange={(e) => {
-						if (e.target.value === "" || parseInt(e.target.value) < 0) {
+						if (
+							e.target.value === "" ||
+							parseInt(e.target.value) < 0
+						) {
 							e.target.value = "1";
 						} else if (parseInt(e.target.value) > 999) {
-							e.target.value = "999"
+							e.target.value = "999";
 						}
-						setBPM(parseInt(e.target.value))
+						setBPM(parseInt(e.target.value));
 					}}
 					style={{ width: "48px", marginRight: "-6px" }}
 					maxLength={3}
@@ -70,10 +79,19 @@ export default function TopBar({
 				<select
 					className="settings-input dropdown"
 					aria-label="Time Signature"
-					style={{ width: "64px", marginLeft: "4px", marginRight: "-2px"}}
+					style={{
+						width: "64px",
+						marginLeft: "4px",
+						marginRight: "-2px",
+					}}
 					onChange={(e) => {
 						setTimeSig(e.target.value);
 					}}
+					defaultValue={
+						sequence.denominator
+							? `${sequence.numerator}/${sequence.denominator}`
+							: "4/4"
+					}
 				>
 					<option value="4/4">4/4</option>
 					<option value="3/4">3/4</option>
@@ -84,7 +102,11 @@ export default function TopBar({
 				<select
 					className="settings-input dropdown"
 					aria-label="Step Length"
-					style={{ width: "76px", marginLeft: "4px", marginRight: "-2px"}}
+					style={{
+						width: "76px",
+						marginLeft: "4px",
+						marginRight: "-2px",
+					}}
 					onChange={(e) => setStepLength(parseInt(e.target.value))}
 				>
 					<option value="1">1/16</option>
@@ -102,17 +124,26 @@ export default function TopBar({
 					max="99"
 					defaultValue={sequence.length ? sequence.length : "1"}
 					onChange={(e) => {
-						if (e.target.value === "" || parseInt(e.target.value) < 0) {
+						if (
+							e.target.value === "" ||
+							parseInt(e.target.value) < 0
+						) {
 							e.target.value = "1";
 						} else if (parseInt(e.target.value) > 99) {
 							e.target.value = "99";
 						}
 						setLength(e.target.value);
 					}}
-					style={{ width: "38px", marginRight: "-6px", marginLeft: "6px" }}
+					style={{
+						width: "38px",
+						marginRight: "-6px",
+						marginLeft: "6px",
+					}}
 					maxLength={3}
 				/>
-				<span aria-hidden="true" style={{ marginRight: "6px"}}>Steps</span>
+				<span aria-hidden="true" style={{ marginRight: "6px" }}>
+					Steps
+				</span>
 			</div>
 			<select
 				aria-label="Instrument"
@@ -123,7 +154,7 @@ export default function TopBar({
 				<option value="Guitar">Guitar</option>
 				<option value="Bass">Bass</option>
 				<option value="Trumpet">Trumpet</option>
-				<option value="Synth Drum">Synth Drum</option>	
+				<option value="Synth Drum">Synth Drum</option>
 			</select>
 			<div className="settings">
 				<span aria-hidden="true">Vel:</span>
@@ -135,13 +166,20 @@ export default function TopBar({
 					max="100"
 					defaultValue={""}
 					onChange={(e) => {
-						if (e.target.value === "" || parseInt(e.target.value) < 1) {
+						if (
+							e.target.value === "" ||
+							parseInt(e.target.value) < 1
+						) {
 							e.target.value = "1";
 						} else if (parseInt(e.target.value) > 100) {
-							e.target.value = "100"
+							e.target.value = "100";
 						}
 					}}
-					style={{ width: "52px", marginRight: "-12px", marginLeft: "4px" }}
+					style={{
+						width: "52px",
+						marginRight: "-12px",
+						marginLeft: "4px",
+					}}
 					maxLength={3}
 				/>
 			</div>

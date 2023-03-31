@@ -47,6 +47,7 @@ export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = -1;
 	isPlaying = false;
+	tickFunction();
 }
 
 export function getInstruments() {
@@ -102,7 +103,7 @@ function PlayTick(
 	notes: Map<string, Note>,
 	instruments: Map<string, Soundfont.Player>
 ): any {
-	if (currentTick > sequence.length) {
+	if (currentTick >= sequence.length) {
 		clearInterval(intervalID);
 		currentTick = -1;
 		isPlaying = false;

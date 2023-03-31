@@ -50,6 +50,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const doReload = useRef<boolean>(true);
 	const [update, setUpdate] = useState<number>(0);
 	const [tick, setTick] = useState(-1);
+	const [updateSeq, setUpdateSeq] = useState(0);
 
 	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
@@ -109,6 +110,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		getInstruments();
 		reload();
 	}, []);
+
+	useEffect(() => {
+		setUpdateSeq(updateSeq + 1);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [seqData]);
 
 	function addNote(note: Note) {
 		clearUpdate();
@@ -200,6 +206,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 			<TopBar
+				key={updateSeq}
 				sequence={seqData}
 				setStepLength={(newStepLength) => {
 					setStepLength(newStepLength);

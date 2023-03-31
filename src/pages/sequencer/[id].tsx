@@ -207,6 +207,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			</Head>
 			<TopBar
 				key={updateSeq}
+				currentInstrument={currentInstrument}
 				sequence={seqData}
 				setStepLength={(newStepLength) => {
 					setStepLength(newStepLength);

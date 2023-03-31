@@ -13,6 +13,11 @@ import { useEffect, useState } from "react";
 
 type ContentPageProps = {
 	sequence: SequenceMetadata;
+	currentInstrument: {
+		instrument: Instrument;
+		primary: string;
+		accent: string;
+	};
 	setStepLength: (stepLength: number) => void;
 	setBPM: (stepLength: number) => void;
 	saveSequence: () => void;
@@ -26,6 +31,7 @@ type ContentPageProps = {
 
 export default function TopBar({
 	sequence,
+	currentInstrument,
 	setStepLength,
 	setBPM,
 	saveSequence,
@@ -149,6 +155,11 @@ export default function TopBar({
 				aria-label="Instrument"
 				className="instrument-selection dropdown"
 				onChange={(e) => setInstrument(e.target.value)}
+				defaultValue={
+					currentInstrument.instrument
+						? currentInstrument.instrument.name
+						: "Piano"
+				}
 			>
 				<option value="Piano">Piano</option>
 				<option value="Guitar">Guitar</option>

@@ -5,7 +5,7 @@ import {
 	PitchLocation,
 	SequenceMetadata,
 	instrumentList,
-	instrumentColors
+	instrumentColors,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import {
@@ -58,7 +58,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
 		primary: "--yellow",
-		accent: "--yellow-accent"
+		accent: "--yellow-accent",
 	});
 
 	// const sequenceMap = useMemo(() => {
@@ -85,16 +85,19 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		// Render Instruments
 		getInstruments();
 		//(getFluidData().then((v) => {setNotes(v.initialObjects.sequence as SharedMap)}));
-
 	}, []);
 
 	function addNote(note: Note) {
-		const submap: SharedMap = sequenceSharedMap.get(note.instrument.serialize()) as SharedMap;
+		const submap: SharedMap = sequenceSharedMap.get(
+			note.instrument.serialize()
+		) as SharedMap;
 		submap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		const submap: SharedMap = sequenceSharedMap.get(note.instrument.serialize()) as SharedMap;
+		const submap: SharedMap = sequenceSharedMap.get(
+			note.instrument.serialize()
+		) as SharedMap;
 		submap.delete(note.getPitchLocation().serialize());
 	}
 
@@ -144,40 +147,40 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					StopSequence();
 				}}
 				setInstrument={(instrument) => {
-					switch(instrument) {
+					switch (instrument) {
 						case "Piano":
 							setCurrentInstrument({
 								instrument: instrumentList.Piano,
 								primary: "--yellow",
-								accent: "--yellow-accent"
+								accent: "--yellow-accent",
 							});
 							break;
 						case "Guitar":
 							setCurrentInstrument({
 								instrument: instrumentList.Guitar,
 								primary: "--green",
-								accent: "--green-accent"
+								accent: "--green-accent",
 							});
 							break;
 						case "Bass":
 							setCurrentInstrument({
 								instrument: instrumentList.Bass,
 								primary: "--blue",
-								accent: "--blue-accent"
+								accent: "--blue-accent",
 							});
 							break;
 						case "Trumpet":
 							setCurrentInstrument({
 								instrument: instrumentList.Trumpet,
 								primary: "--red",
-								accent: "--red-accent"
+								accent: "--red-accent",
 							});
 							break;
 						case "Synth Drum":
 							setCurrentInstrument({
 								instrument: instrumentList.Synth_Drum,
 								primary: "--purple",
-								accent: "--purple-accent"
+								accent: "--purple-accent",
 							});
 							break;
 					}
@@ -199,7 +202,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	);
 }
 
-export async function getServerSideProps({
+export async function getInitialProps({
 	params,
 }: GetServerSidePropsContext<PageParams>): Promise<
 	GetServerSidePropsResult<ContentPageProps>
@@ -208,16 +211,10 @@ export async function getServerSideProps({
 		//const databaseSequence = await GetSequence((params as PageParams).id);
 		//const databaseNotes = await GetNotes((params as PageParams).id);
 		const container = await getFluidData();
-		const fluidSequence = container.initialObjects.sequence;
-		const fluidNotes = container.initialObjects.metadata;
-		if (
-			!(
-				fluidNotes instanceof SharedMap &&
-				fluidSequence instanceof SharedMap
-			)
-		) {
-			throw new Error("Notes or Sequence not found");
-		}
+		const fluidSequence: SharedMap = container.initialObjects
+			.sequence as SharedMap;
+		const fluidNotes: SharedMap = container.initialObjects
+			.metadata as SharedMap;
 
 		return {
 			// Passed to the page component as props
@@ -228,7 +225,7 @@ export async function getServerSideProps({
 		};
 	} catch (e) {
 		return {
-			notFound: true,
+			redirect: { destination: `/${e}`, permanent: false },
 		};
 	}
 }
@@ -243,5 +240,4 @@ const mapToSeqData = (map: SharedMap) => {
 	const seqData = new SequenceMetadata();
 	/*seqData.id = map.get("id");
 	seqData.bpm = map.get("bpm");*/
-
-}
+};

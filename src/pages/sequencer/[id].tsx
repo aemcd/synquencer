@@ -39,12 +39,14 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
-	const [noteList, setNotes] = useState(notes);
+	const [sequenceMap, setNotes] = useState<Map<string, Note>>(
+		new Map<string, Note>(
+			notes.map((note) => {
+				return [note.getPitchLocation().serialize(), note];
+			})
+		)
+	);
 	const [seqData, setSeq] = useState(sequence);
-
-	const sequenceMap = useMemo(() => {
-		return new Map<string, Note>();
-	}, []);
 
 	function getArray() {
 		const noteArr = new Array<Note>();
@@ -60,12 +62,21 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
 		});
-	}, [notes, sequenceMap]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [notes]);
 
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
 	}, []);
+
+	function addNote(note: Note) {
+		sequenceMap.set(note.getPitchLocation().serialize(), note);
+	}
+
+	function removeNote(note: Note) {
+		sequenceMap.delete(note.getPitchLocation().serialize());
+	}
 
 	return (
 		<>
@@ -83,7 +94,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			</Head>
 			<TopBar
 				sequence={seqData}
-				notes={noteList}
 				setStepLength={(newStepLength) => {
 					setStepLength(newStepLength);
 				}}
@@ -116,15 +126,13 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			/>
 			<PianoRoll
 				sequence={seqData}
-				notes={noteList}
 				stepLength={stepLength}
 				sequenceMap={sequenceMap}
 			/>
 			<Cursor
-				addNote={(note: Note) => {
-					const newNotes = [...noteList, note];
-					setNotes(newNotes);
-				}}
+				addNote={addNote}
+				removeNote={removeNote}
+				noteMap={sequenceMap}
 				sequence={seqData}
 			/>
 		</>

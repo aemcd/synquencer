@@ -21,6 +21,7 @@ export function playNoteDefault(note: Note) {
 }
 
 export function playNote(bpm: number, denominator: number, note: Note) {
+	getInstruments();
 	const instrument = instruments.get(note.instrument.name as string);
 	if (instrument != undefined) {
 		instrument.play(note.pitchName(), undefined, {

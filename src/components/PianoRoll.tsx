@@ -16,14 +16,12 @@ import {
 
 type ContentPageProps = {
 	sequence: SequenceMetadata;
-	notes: Array<Note>;
 	stepLength: number;
 	sequenceMap: Map<string, Note>;
 };
 
 export default function PianoRoll({
 	sequence,
-	notes,
 	stepLength,
 	sequenceMap,
 }: ContentPageProps) {
@@ -97,13 +95,10 @@ export default function PianoRoll({
 
 	useEffect(() => {
 		if (sequenceMap != null && drawFG != null) {
-			notes.forEach((note) => {
-				sequenceMap.set(note.getPitchLocation().serialize(), note);
-			});
 			drawFG();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [notes]);
+	}, [sequenceMap]);
 
 	function drawPiano() {
 		if (!pianoCtx) return;

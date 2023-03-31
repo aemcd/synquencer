@@ -7,9 +7,13 @@ import {
 import MW from "midi-writer-js";
 import Soundfont from "soundfont-player";
 
-let currentTick: number;
+export let currentTick: number = 0;
 let currentInterval: NodeJS.Timer;
-let isPlaying: boolean = false;
+const instruments: Map<string, Soundfont.Player> = new Map<
+	string,
+	Soundfont.Player
+>();
+export let isPlaying: boolean = false;
 
 export function getTick() {
 	return currentTick;
@@ -19,6 +23,39 @@ export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = 0;
 	isPlaying = false;
+}
+
+function getInstruments() {
+	const instrumentIDs: Soundfont.InstrumentName[] = [
+		"acoustic_grand_piano",
+		"acoustic_guitar_nylon",
+		"acoustic_bass",
+		"trumpet",
+		"synth_drum",
+	];
+	const instrumentNames: string[] = [
+		instrumentList.Piano.name,
+		instrumentList.Guitar.name,
+		instrumentList.Bass.name,
+		instrumentList.Trumpet.name,
+		instrumentList.Synth_Drum.name,
+	];
+
+	if (instruments.size == 0) {
+		Promise.all(
+			instrumentIDs.map((id) => {
+				const ac = new AudioContext();
+				ac.destination.channelCount = 2;
+				return Soundfont.instrument(ac, id);
+			})
+		).then((playerInstruments) => {
+			playerInstruments.forEach((player, index) => {
+				instruments.set(instrumentNames[index], player);
+			});
+		});
+	}
+
+	return instruments;
 }
 
 function setIntervalWrapper(
@@ -110,45 +147,13 @@ export function PlaySequence(
 	if (currentInterval != null) {
 		clearInterval(currentInterval);
 	}
-	const instrumentIDs: Soundfont.InstrumentName[] = [
-		"acoustic_grand_piano",
-		"acoustic_guitar_nylon",
-		"acoustic_bass",
-		"trumpet",
-		"synth_drum",
-	];
-	const instrumentNames: string[] = [
-		instrumentList.Piano.name,
-		instrumentList.Guitar.name,
-		instrumentList.Bass.name,
-		instrumentList.Trumpet.name,
-		instrumentList.Synth_Drum.name,
-	];
-
-	Promise.all(
-		instrumentIDs.map((id) => {
-			const ac = new AudioContext();
-			ac.destination.channelCount = 2;
-			return Soundfont.instrument(ac, id);
-		})
-	).then((playerInstruments) => {
-		const instruments: Map<string, Soundfont.Player> = new Map<
-			string,
-			Soundfont.Player
-		>();
-		playerInstruments.forEach((player, index) => {
-			instruments.set(instrumentNames[index], player);
-		});
-		isPlaying = true;
-		currentTick = 0;
-		currentInterval = setIntervalWrapper(
-			PlayTick,
-			toSec(sequence.bpm, sequence.denominator, 1) * 1000,
-			sequence,
-			notes,
-			instruments
-		);
-	});
+	currentInterval = setIntervalWrapper(
+		PlayTick,
+		toSec(sequence.bpm, sequence.denominator, 1) * 1000,
+		sequence,
+		notes,
+		getInstruments()
+	);
 }
 
 /**

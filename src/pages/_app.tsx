@@ -26,7 +26,7 @@ const getFluidData = async () => {
 		},
 		dynamicObjectTypes: [SharedString, SharedMap],
 	};
-	let container;
+	//let container;
 	const containerId = location.hash.substring(1);
 	if (!containerId) {
 		({ container } = await client.createContainer(schema));
@@ -46,22 +46,23 @@ let container: IFluidContainer;
 let localMetadata: SequenceMetadata; //local copy of properties for clients
 let localSequence: SharedMap;
 
-const loadSequence = async (id: string) => {//loads existing sequences and also initializes new ones
-	const databaseMetadata = await(GetSequence(id));
-	const databaseSequence = await(GetNotes(id));
-	let promisedMetadata: SequenceMetadata;
-	let promisedSequence: Note[];
-    if ((typeof databaseMetadata === 'undefined') || (typeof databaseMetadata === 'undefined')) {//case where we are creating new sequence
-        promisedMetadata = new SequenceMetadata();
-		promisedMetadata.id = id;
-		promisedSequence = [];
-		AddSequence(promisedMetadata);
+export const loadSequence = async (id: string) => {//loads existing sequences and also initializes new ones
+	const databaseSequence = await(GetSequence(id));
+	const databaseNotes = await(GetNotes(id));
+	let promisedSequence: SequenceMetadata;
+	let promisedNotes: Note[];
+    if ((typeof databaseSequence === 'undefined') || (typeof databaseNotes === 'undefined')) {//case where we are creating new sequence
+        promisedSequence = new SequenceMetadata();
+		promisedSequence.id = id;
+		promisedNotes = [];
+		AddSequence(promisedSequence);
+		AddNotes(id, promisedNotes);
     }
     else {//case where there is an existing sequence for the id
-		promisedMetadata = databaseMetadata;
-		promisedSequence = databaseSequence as Note[];
+		promisedSequence = databaseSequence;
+		promisedNotes = databaseNotes as Note[];
     }
-	return {promisedMetadata, promisedSequence};
+	return {promisedSequence, promisedNotes};
 }
 
 const saveSequence = (arg: {metadata: SequenceMetadata, sequence: Note[]}) => {//might be a more efficient way to do this
@@ -77,7 +78,7 @@ const sequenceDatabaseToSharedMap = async (list: Note[]) => {
 			const newNoteList = await container.create(SharedMap);
 			sequence.set(instrument, newNoteList);	
 		}
-		(sequence.get(instrument) as SharedMap).set(note.serialize(), note);
+		(sequence.get(instrument) as SharedMap).set(note.getPitchLocation().serialize(), note);
 	}
 	return sequence;
 }
@@ -135,8 +136,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
 	React.useEffect(() => {
 		getFluidData().then((data) => {
-			setMetadata(data);
-			setSequence(data);
+			setMetadata(data.initialObjects.metadata);
+			setSequence(data.initialObjects.sequence);
 		});
 	}, []);
 

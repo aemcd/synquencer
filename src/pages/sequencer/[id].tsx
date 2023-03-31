@@ -18,6 +18,8 @@ import TopBar from "@/components/TopBar";
 import { useMemo, useState } from "react";
 import { PlaySequence, StopSequence, WriteMidi } from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
+import { loadSequence } from "../_app";
+
 type PageParams = {
 	id: string;
 };
@@ -123,9 +125,11 @@ export async function getServerSideProps({
 	GetServerSidePropsResult<ContentPageProps>
 > {
 	try {
-		const databaseSequence = await GetSequence((params as PageParams).id);
-		const databaseNotes = await GetNotes((params as PageParams).id);
-
+		//const databaseSequence = await GetSequence((params as PageParams).id);
+		//const databaseNotes = await GetNotes((params as PageParams).id);
+		const loadedData = await loadSequence((params as PageParams).id);
+		const databaseSequence = loadedData.promisedSequence;
+		const databaseNotes = loadedData.promisedNotes;
 		if (
 			!(
 				databaseNotes instanceof Array<Note> &&

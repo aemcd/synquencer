@@ -15,12 +15,17 @@ const instruments: Map<string, Soundfont.Player> = new Map<
 >();
 export let isPlaying: boolean = false;
 
-export function playNote(note: Note) {
+export function playNoteDefault(note: Note) {
+	note.duration = 2;
+	playNote(120, 4, note);
+}
+
+export function playNote(bpm: number, denominator: number, note: Note) {
 	const instrument = instruments.get(note.instrument.name as string);
 	if (instrument != undefined) {
 		instrument.play(note.pitchName(), undefined, {
 			gain: note.velocity / 50,
-			duration: toSec(sequence.bpm, sequence.denominator, note.duration),
+			duration: toSec(bpm, denominator, note.duration),
 		});
 	}
 }

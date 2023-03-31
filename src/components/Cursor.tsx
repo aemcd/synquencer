@@ -10,9 +10,11 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 type Props = {
 	addNote: (note: Note) => void;
+ //editNote: (note: Note) => void;
+ 
 	sequence: SequenceMetadata;
 };
-export default function Cursor({ addNote, sequence }: Props) {
+export default function Cursor({ addNote, sequence}: Props) {
 	const cursorNote = React.useMemo(() => {
 		return new Note({
 			location: 0,
@@ -136,7 +138,9 @@ export default function Cursor({ addNote, sequence }: Props) {
 			switch (event.key) {
 				case "ArrowLeft":
 					if (handler.ctrl == true) {
-						
+				
+						cursorNote.location -= cursorNote.duration;
+
 						clearAnnouncer("assertive");
 						announce("Move note left.");
 						break;
@@ -162,11 +166,10 @@ export default function Cursor({ addNote, sequence }: Props) {
 				}
 					announce("move right");
 					break;
-				default:
-					alert(event);
-			}
+				
 		}
-	);
+}
+);
 	useHotkeys("ctrl+n, command+n", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
@@ -175,8 +178,18 @@ export default function Cursor({ addNote, sequence }: Props) {
 	useHotkeys("shift + up, shift + down", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
-		alert("changed velocity" + event.key);
-	});
+		switch (event.key) {
+			case "ArrowUp": {
+				cursorNote.velocity++;
+			break;
+		}
+			case "ArrowDown": {
+				cursorNote.velocity--;
+			break;
+			}
+			announce("changed velocity" + event.key);
+}
+});
 	useHotkeys("del", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();

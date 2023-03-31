@@ -69,7 +69,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		/*notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
 		});*/
-		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
 	}, [sequenceMap]);
 
 	useEffect(() => {

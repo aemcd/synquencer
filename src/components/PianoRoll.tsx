@@ -226,7 +226,9 @@ export default function PianoRoll({
 		fgCtx.clearRect(0, 0, rollWidth, rollHeight);
 
 		sequenceMap.forEach((value) => {
-			if (value !== selectedNote) {
+			if (value != selectedNote &&
+				value.instrument === currentInstrument.instrument
+			) {
 				drawNote(
 					value.location,
 					value.pitch,
@@ -238,7 +240,9 @@ export default function PianoRoll({
 			}
 		});
 
-		if (selectedNote && dragState == DRAG_STATES.NOT_DRAGGING) {
+		if (selectedNote &&
+			dragState == DRAG_STATES.NOT_DRAGGING &&
+			selectedNote.instrument == currentInstrument.instrument) {
 			drawNote(
 				selectedNote.location,
 				selectedNote.pitch,
@@ -403,7 +407,7 @@ export default function PianoRoll({
 					velocity: 100,
 					duration: stepLength,
 					pitch: startGridY,
-					instrument: new Instrument({ channel: 1, name: "Piano" }),
+					instrument: currentInstrument.instrument,
 				});
 				dragState = DRAG_STATES.CHANGING_LENGTH;
 				drawFG();
@@ -425,7 +429,7 @@ export default function PianoRoll({
 					velocity: copiedNote.velocity,
 					duration: copiedNote.duration,
 					pitch: startGridY,
-					instrument: new Instrument({ channel: 1, name: "Piano" }),
+					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
 				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
@@ -493,7 +497,7 @@ export default function PianoRoll({
 					velocity: selectedNote.velocity,
 					duration: selectedNote.duration,
 					pitch: pitch,
-					instrument: selectedNote.instrument,
+					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
 				removeNote(selectedNote);
@@ -524,7 +528,7 @@ export default function PianoRoll({
 						location - selectedNote.location + stepLength
 					),
 					pitch: startGridY,
-					instrument: new Instrument({ channel: 1, name: "Piano" }),
+					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
 				// sequenceMap.set(selectedNote.getPitchLocation().serialize(),newNote);

@@ -297,6 +297,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				currentInstrument={currentInstrument}
 				addNote={addNote}
 				removeNote={removeNote}
+				tick={tick}
 			/>
 			<Cursor
 				addNote={addNote}

@@ -26,6 +26,7 @@ type ContentPageProps = {
 	};
 	addNote: (note: Note) => void;
 	removeNote: (note: Note) => void;
+	tick: number
 };
 
 export default function PianoRoll({
@@ -35,6 +36,7 @@ export default function PianoRoll({
 	currentInstrument,
 	addNote,
 	removeNote,
+	tick
 }: ContentPageProps) {
 	let rollWidth = 767;
 	let rollHeight = 575;
@@ -206,18 +208,15 @@ export default function PianoRoll({
 		// darken past the end of the sequence
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg");
 		bgCtx.fillRect(
-			Math.max(
-				0,
-				1 +
-					gridWidth *
-						((sequence.length * 16 * sequence.numerator) /
-							sequence.denominator -
-							view.current.loc)
-			),
+			Math.max(0, 1 + gridWidth * (sequence.length - view.current.loc)),
 			0,
 			rollWidth,
 			rollHeight
 		);
+
+		// draw playhead
+		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3");
+		bgCtx.fillRect((tick - view.current.loc) * gridWidth , 0, gridWidth, rollHeight);
 	}
 
 	function drawFG() {

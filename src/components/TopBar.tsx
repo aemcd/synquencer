@@ -112,7 +112,7 @@ export default function TopBar({
 					style={{ width: "38px", marginRight: "-6px", marginLeft: "6px" }}
 					maxLength={3}
 				/>
-				<span aria-hidden="true" style={{ marginRight: "6px"}}>Bars</span>
+				<span aria-hidden="true" style={{ marginRight: "6px"}}>Steps</span>
 			</div>
 			<select
 				aria-label="Instrument"

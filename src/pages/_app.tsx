@@ -96,50 +96,46 @@ const sequenceSharedMapToDatabase = () => {
 
 export default function App({ Component, pageProps }: AppProps) {
 	//TODO: fully implement fluid framework structures with React
-	// const [fluidMetadata, setMetadata] = React.useState<any | null>(null);
-	// const [fluidSequence, setSequence] = React.useState<any | null>(null);
+	const [fluidMetadata, setMetadata] = React.useState<any | null>(null);
+	const [fluidSequence, setSequence] = React.useState<any | null>(null);
 
-	// React.useEffect(() => {
-	// 	if (fluidMetadata) {
-	// 		const { metadataContainer } = fluidMetadata;
-	// 		const updateLocalMetadata = () => {
-	// 			const args = Object.fromEntries(metadataContainer.entries());
-	// 			const clazz = SequenceMetadata as new (arg: any) => any;
-	// 			localMetadata = new clazz(args);
-	// 		};
-	// 		updateLocalMetadata();
-	// 		metadataContainer.on("valueChanged", updateLocalMetadata);
-	// 		return () => {
-	// 			metadataContainer.off("valueChanged", updateLocalMetadata);
-	// 		};
-	// 	} else {
-	// 		return;
-	// 	}
-	// }, [fluidMetadata]);
+	React.useEffect(() => {
+		if (fluidMetadata) {
+			const { metadataContainer } = fluidMetadata;
+			const updateLocalMetadata = () => {
+				const args = Object.fromEntries(metadataContainer.entries());
+				const clazz = SequenceMetadata as new (arg: any) => any;
+				localMetadata = new clazz(args);
+			};
+			updateLocalMetadata();
+			metadataContainer.on("valueChanged", updateLocalMetadata);
+			return () => {
+				metadataContainer.off("valueChanged", updateLocalMetadata);
+			};
+		} else {
+			return;
+		}
+	}, [fluidMetadata]);
 
-	// React.useEffect(() => {
-	// 	if (fluidSequence) {
-	// 		const sequenceContainer = fluidSequence as SharedMap;
-	// 		const updateLocalSequence = () => {
-	// 			localSequence = sequenceContainer;
-	// 		};
-	// 		updateLocalSequence();
-	// 		sequenceContainer.on("valueChanged", updateLocalSequence);
-	// 		return () => {
-	// 			sequenceContainer.off("valueChanged", updateLocalSequence);
-	// 		};
-	// 	} else {
-	// 		return;
-	// 	}
-	// }, [fluidSequence]);
+	React.useEffect(() => {
+		if (fluidSequence) {
+			const sequenceContainer = fluidSequence as SharedMap;
+			const updateLocalSequence = () => {
+				localSequence = sequenceContainer;
+			};
+			updateLocalSequence();
+			sequenceContainer.on("valueChanged", updateLocalSequence);
+			return () => {
+				sequenceContainer.off("valueChanged", updateLocalSequence);
+			};
+		} else {
+			return;
+		}
+	}, [fluidSequence]);
 
-	// React.useEffect(() => {
-	// 	getFluidData().then((data) => setMetadata(data.metadata));
-	// }, []);
-
-	// React.useEffect(() => {
-	// 	getFluidData().then((data) => setSequence(data.sequence));
-	// }, []);
+	React.useEffect(() => {
+		getFluidData().then((data) => setMetadata(data));
+	}, []);
 
 	return <Component {...pageProps} />;
 }

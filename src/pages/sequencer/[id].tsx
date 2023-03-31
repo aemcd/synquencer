@@ -23,7 +23,13 @@ import {
 	WriteMidi,
 } from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
-import { loadSequence } from "../_app";
+import {
+	loadSequence,
+	getContainer,
+	sequenceSharedMapToDatabase,
+	sequenceDatabaseToSharedMap,
+} from "../_app";
+import { SharedMap } from "fluid-framework";
 
 type PageParams = {
 	id: string;
@@ -48,22 +54,22 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	);
 	const [seqData, setSeq] = useState(sequence);
 
+	// const sequenceMap = useMemo(() => {
+	// 	return getContainer().initialObjects.sequence as SharedMap;
+	// }, []);
+
 	function getArray() {
-		const noteArr = new Array<Note>();
-		sequenceMap.forEach((value) => {
-			noteArr.push(value);
-		});
-		return noteArr;
+		return sequenceSharedMapToDatabase(sequenceMap);
 	}
 
 	const [stepLength, setStepLength] = useState(1);
 
 	useEffect(() => {
-		notes.forEach((note) => {
+		/*notes.forEach((note) => {
 			sequenceMap.set(note.getPitchLocation().serialize(), note);
-		});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [notes]);
+		});*/
+		sequenceDatabaseToSharedMap(notes);
+	}, [notes, sequenceMap]);
 
 	useEffect(() => {
 		// Render Instruments

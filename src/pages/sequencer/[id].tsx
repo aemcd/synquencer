@@ -4,6 +4,8 @@ import {
 	Note,
 	PitchLocation,
 	SequenceMetadata,
+	instrumentList,
+	instrumentColors
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import {
@@ -53,10 +55,15 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [sequenceSharedMap, setSharedNotes] = useState(notes);
 	const [seqSharedData, setSharedSeq] = useState(sequence);
 
+	const [currentInstrument, setCurrentInstrument] = useState({
+		instrument: instrumentList.Piano,
+		primary: "--yellow",
+		accent: "--yellow-accent"
+	});
 
-	/*const sequenceMap = useMemo(() => {
-		return getContainer().initialObjects.sequence as SharedMap;
-	}, []);*/
+	// const sequenceMap = useMemo(() => {
+	// 	return getContainer().initialObjects.sequence as SharedMap;
+	// }, []);
 
 	function getArray() {
 		//return Array.from(sequenceMap.values());
@@ -136,11 +143,51 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				stopSequence={() => {
 					StopSequence();
 				}}
+				setInstrument={(instrument) => {
+					switch(instrument) {
+						case "Piano":
+							setCurrentInstrument({
+								instrument: instrumentList.Piano,
+								primary: "--yellow",
+								accent: "--yellow-accent"
+							});
+							break;
+						case "Guitar":
+							setCurrentInstrument({
+								instrument: instrumentList.Guitar,
+								primary: "--green",
+								accent: "--green-accent"
+							});
+							break;
+						case "Bass":
+							setCurrentInstrument({
+								instrument: instrumentList.Bass,
+								primary: "--blue",
+								accent: "--blue-accent"
+							});
+							break;
+						case "Trumpet":
+							setCurrentInstrument({
+								instrument: instrumentList.Trumpet,
+								primary: "--red",
+								accent: "--red-accent"
+							});
+							break;
+						case "Synth Drum":
+							setCurrentInstrument({
+								instrument: instrumentList.Synth_Drum,
+								primary: "--purple",
+								accent: "--purple-accent"
+							});
+							break;
+					}
+				}}
 			/>
 			<PianoRoll
 				sequence={seqData}
 				stepLength={stepLength}
 				sequenceMap={sequenceMap}
+				currentInstrument={currentInstrument}
 			/>
 			<Cursor
 				addNote={addNote}

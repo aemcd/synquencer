@@ -76,6 +76,8 @@ export default function PianoRoll({
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
 	const view = useRef({loc: 0, pitch: 24});
+	const timeSig = useRef({num: 6, den: 8});
+	const seqLen = 4;
 
 	let computedStyle: CSSStyleDeclaration;
 	let pianoCtx: CanvasRenderingContext2D | null;
@@ -178,9 +180,9 @@ export default function PianoRoll({
 
 		// vertical grid lines
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
-			if ((view.current.loc + i + 1) % 16 == 0) {
+			if ((view.current.loc + i + 1) % (timeSig.current.num * 16 / timeSig.current.den) == 0) {
 				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4"));
-			} else if ((view.current.loc + i + 1) % 4 == 0) {
+			} else if ((view.current.loc + i + 1) % (16 / timeSig.current.den) == 0) {
 				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2"));
 			} else {
 				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0"));
@@ -189,6 +191,15 @@ export default function PianoRoll({
 				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
 			}
 		}
+
+		// darken past the end of the sequence
+		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg");
+		bgCtx.fillRect(
+			Math.max(0, 1 + gridWidth * (seqLen * 16 * timeSig.current.num / timeSig.current.den - view.current.loc)),
+			0,
+			rollWidth,
+			rollHeight
+		);
 	}
 
 	function drawFG() {
@@ -218,6 +229,15 @@ export default function PianoRoll({
 				computedStyle.getPropertyValue(currentInstrument.accent),
 				true
 			);
+		}
+
+		// draw location labels
+		fgCtx.font = "24px monospace";
+		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
+		for (let i = 0; i < rollWidth / gridWidth; i++) {
+			if ((view.current.loc + i) % (timeSig.current.num * 16 / timeSig.current.den) == 0) {
+				fgCtx.fillText(`${(view.current.loc + i) / (timeSig.current.num * 16 / timeSig.current.den)}`, i * gridWidth + 5, 20);
+			}
 		}
 	}
 
@@ -383,6 +403,8 @@ export default function PianoRoll({
 
 	function handleMouseMove(e: MouseEvent) {
 		e.preventDefault();
+
+		(document.activeElement as HTMLElement).blur();
 
 		if (dragState == DRAG_STATES.NOT_DRAGGING) return;
 
@@ -552,6 +574,10 @@ export default function PianoRoll({
 	}
 
 	function handlePianoClick(e: MouseEvent) {
+		e.preventDefault();
+
+		(document.activeElement as HTMLElement).blur();
+
 		let rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
 
 		let pixelY = e.clientY - rect.top - 2;
@@ -593,8 +619,9 @@ export default function PianoRoll({
 				ref={pianoRef}
 				width={"62px"}
 				height={rollHeight}
-				onClick={handlePianoClick}
+				onMouseDown={handlePianoClick}
 				onWheel={handlePianoScroll}
+				onContextMenu={(e) => e.preventDefault()}
 				style={{
 					position: "absolute",
 					left: "0",

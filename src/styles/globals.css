@@ -115,16 +115,12 @@ h1 {
   border-radius: 4px;
 }
 
-.settings-input option {
-  background-color: var(--bg);
-}
-
 .settings-input:hover {
   background-color: var(--bg1);
 }
 
-.settings-input:focus {
-  background: none;
+.settings-input option {
+  background-color: var(--bg);
 }
 
 .instrument-selection {
@@ -140,9 +136,22 @@ h1 {
   border-style: none;
   border-radius: 6px;
   vertical-align: top;
-  border-right: 6px solid transparent
 }
+
 .instrument-selection:hover {
   background-color: var(--bg3);
   cursor: pointer;
 }
+
+.instrument-selection option {
+  background-color: var(--bg2);
+}
+
+.dropdown {
+  border-right: 6px solid transparent;
+}
+
+/* .instrument-selection:hover option {
+  background-color: var(--bg2);
+  cursor: pointer;
+} */

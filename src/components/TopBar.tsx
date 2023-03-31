@@ -47,23 +47,40 @@ export default function TopBar({
 				<input
 					className="settings-input"
 					aria-label="BPM"
+					type="number"
+					min="1"
+					max="999"
 					defaultValue={sequence.bpm ? sequence.bpm : "120"}
-					onChange={(e) => setBPM(parseInt(e.target.value))}
-					style={{ width: "36px" }}
+					onChange={(e) => {
+						if (e.target.value === "" || parseInt(e.target.value) < 0) {
+							e.target.value = "1";
+						} else if (parseInt(e.target.value) > 999) {
+							e.target.value = "999"
+						}
+						setBPM(parseInt(e.target.value))
+					}}
+					style={{ width: "48px", marginRight: "-6px" }}
 					maxLength={3}
-				/>{" "}
-				<span aria-hidden="true">|</span>
-				<input
-					className="settings-input"
-					aria-label="Time Signature"
-					defaultValue="4/4"
-					style={{ width: "56px" }}
 				/>
+				<span aria-hidden="true">BPM |</span>
+				<select
+					className="settings-input dropdown"
+					aria-label="Time Signature"
+					style={{ width: "64px", marginLeft: "4px", marginRight: "-2px"}}
+					onChange={(e) => {
+						return;
+					}}
+				>
+					<option value="4/4">4/4</option>
+					<option value="3/4">3/4</option>
+					<option value="6/8">6/8</option>
+					<option value="5/4">5/4</option>
+				</select>
 				<span aria-hidden="true">|</span>
 				<select
-					className="settings-input"
+					className="settings-input dropdown"
 					aria-label="Step Length"
-					style={{ width: "76px" }}
+					style={{ width: "76px", marginLeft: "4px", marginRight: "-2px"}}
 					onChange={(e) => setStepLength(parseInt(e.target.value))}
 				>
 					<option value="1">1/16</option>
@@ -72,10 +89,29 @@ export default function TopBar({
 					<option value="8">1/2</option>
 					<option value="16">1/1</option>
 				</select>
+				<span aria-hidden="true">|</span>
+				<input
+					className="settings-input"
+					aria-label="Length"
+					type="number"
+					min="1"
+					max="999"
+					defaultValue={sequence.bpm ? sequence.bpm : "120"}
+					onChange={(e) => {
+						if (e.target.value === "" || parseInt(e.target.value) < 0) {
+							e.target.value = "1";
+						} else if (parseInt(e.target.value) > 999) {
+							e.target.value = "999"
+						}
+					}}
+					style={{ width: "38px", marginRight: "-6px", marginLeft: "6px" }}
+					maxLength={3}
+				/>
+				<span aria-hidden="true" style={{ marginRight: "6px"}}>Bars</span>
 			</div>
-			<select 
+			<select
 				aria-label="Instrument"
-				className="instrument-selection"
+				className="instrument-selection dropdown"
 				onChange={(e) => setInstrument(e.target.value)}
 			>
 				<option value="Piano">Piano</option>
@@ -84,6 +120,26 @@ export default function TopBar({
 				<option value="Trumpet">Trumpet</option>
 				<option value="Synth Drum">Synth Drum</option>	
 			</select>
+			<div className="settings">
+				<span aria-hidden="true">Vel:</span>
+				<input
+					className="settings-input"
+					aria-label="Velocity"
+					type="number"
+					min="1"
+					max="100"
+					defaultValue={""}
+					onChange={(e) => {
+						if (e.target.value === "" || parseInt(e.target.value) < 1) {
+							e.target.value = "1";
+						} else if (parseInt(e.target.value) > 100) {
+							e.target.value = "100"
+						}
+					}}
+					style={{ width: "52px", marginRight: "-12px", marginLeft: "4px" }}
+					maxLength={3}
+				/>
+			</div>
 			<button
 				className="top-button"
 				aria-label="Save"

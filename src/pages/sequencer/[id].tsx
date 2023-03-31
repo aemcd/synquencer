@@ -50,13 +50,24 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	let map = new Map<string, Note>();
 	let data = new SequenceMetadata();
 
-	const [sequenceSharedMap, setSharedNotes] = useState(notes);
-	const [seqSharedData, setSharedSeq] = useState(sequence);
-	const [sequenceMap, setNotes] = useState(map);
-	const [seqData, setSeq] = useState(mapToSeqData(sequence));
+	async function getNoteMap() {
+		const container = await getFluidData();
+		const fluidNotes: SharedMap = container.initialObjects
+			.sequence as SharedMap;
+		return fluidNotes;
+	}
 
-	console.error(notes);
-	console.error(sequence);
+	async function getSeqMap() {
+		const container = await getFluidData();
+		const fluidNotes: SharedMap = container.initialObjects
+			.metadata as SharedMap;
+		return fluidNotes;
+	}
+
+	const [sequenceSharedMap, setSharedNotes] = useState<SharedMap>();
+	const [seqSharedData, setSharedSeq] = useState<SharedMap>();
+	const [sequenceMap, setNotes] = useState<Map<string, Note>>(map);
+	const [seqData, setSeq] = useState<SequenceMetadata>(data);
 
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
@@ -64,13 +75,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		accent: "--yellow-accent",
 	});
 
-	// const sequenceMap = useMemo(() => {
-	// 	return getContainer().initialObjects.sequence as SharedMap;
-	// }, []);
-
 	function getArray() {
-		//return Array.from(sequenceMap.values());
-		return sequenceSharedMapToDatabase(sequenceSharedMap);
+		return Array.from(sequenceMap.values());
+		// if (sequenceSharedMap != null) {
+		// 	return sequenceSharedMapToDatabase(sequenceSharedMap);
+		// }
 	}
 
 	const [stepLength, setStepLength] = useState(1);
@@ -80,41 +89,53 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, [sequenceSharedMap]);
 
 	useEffect(() => {
-		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
 	}, [sequenceMap]);
 
 	useEffect(() => {
-		setSeq(mapToSeqData(seqSharedData));
+		if (seqSharedData != null) {
+			setSeq(mapToSeqData(seqSharedData));
+		}
 	}, [seqSharedData]);
 
 	useEffect(() => {
-		notes.forEach((note) => {
-			sequenceMap.set(note.getPitchLocation().serialize(), note);
-		});
-		sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
-	}, [seqData]);
+		// sequenceMap.forEach((note) => {
+		// 	sequenceMap.set(note.getPitchLocation().serialize(), note);
+		// });
+		//sequenceDatabaseToSharedMap(Array.from(sequenceMap.values()));
+	}, [sequenceMap]);
 
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
-		//(getFluidData().then((v) => {setNotes(v.initialObjects.sequence as SharedMap)}));
+		getFluidData().then((v) => {
+			setSharedNotes(v.initialObjects.sequence as SharedMap);
+			setSharedSeq(v.initialObjects.metadata as SharedMap);
+		});
 	}, []);
 
 	function addNote(note: Note) {
-		const submap: SharedMap = sequenceSharedMap.get(
-			note.instrument.serialize()
-		) as SharedMap;
-		submap.set(note.getPitchLocation().serialize(), note);
+		sequenceMap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		const submap: SharedMap = sequenceSharedMap.get(
-			note.instrument.serialize()
-		) as SharedMap;
-		submap.delete(note.getPitchLocation().serialize());
+		sequenceMap.delete(note.getPitchLocation().serialize());
+		// if (sequenceSharedMap != null) {
+		// 	const submap: SharedMap = sequenceSharedMap.get(
+		// 		note.instrument.serialize()
+		// 	) as SharedMap;
+		// 	submap.delete(note.getPitchLocation().serialize());
+		// }
 	}
-
-	return (
+	let myRender;
+	if (seqData == null || seqSharedData == null) {
+		myRender = (
+			<>
+				<div>Waiting</div>
+			</>
+		);
+	}
+	myRender = (
 		<>
 			<Head>
 				<title>Sequencer</title>
@@ -213,6 +234,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			/>
 		</>
 	);
+	return myRender;
 }
 
 export async function getInitialProps({
@@ -250,7 +272,6 @@ function getOctave(note: Note) {
 }
 
 function mapToSeqData(map: SharedMap): SequenceMetadata {
-	console.error(map);
 	return new SequenceMetadata({
 		id: map.get("id") as string,
 		length: map.get("length") as number,

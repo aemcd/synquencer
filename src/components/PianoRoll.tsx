@@ -18,12 +18,18 @@ type ContentPageProps = {
 	sequence: SequenceMetadata;
 	stepLength: number;
 	sequenceMap: Map<string, Note>;
+	currentInstrument: {
+		instrument: Instrument,
+		primary: string,
+		accent: string
+	};
 };
 
 export default function PianoRoll({
 	sequence,
 	stepLength,
 	sequenceMap,
+	currentInstrument	
 }: ContentPageProps) {
 	let rollWidth = 767;
 	let rollHeight = 575;
@@ -189,8 +195,8 @@ export default function PianoRoll({
 					value.location,
 					value.pitch,
 					value.duration,
-					computedStyle.getPropertyValue("--yellow"),
-					computedStyle.getPropertyValue("--yellow-accent"),
+					computedStyle.getPropertyValue(currentInstrument.primary),
+					computedStyle.getPropertyValue(currentInstrument.accent),
 					false
 				);
 			}
@@ -201,8 +207,8 @@ export default function PianoRoll({
 				selectedNote.location,
 				selectedNote.pitch,
 				selectedNote.duration,
-				computedStyle.getPropertyValue("--yellow"),
-				computedStyle.getPropertyValue("--yellow-accent"),
+				computedStyle.getPropertyValue(currentInstrument.primary),
+				computedStyle.getPropertyValue(currentInstrument.accent),
 				true
 			);
 		}
@@ -341,8 +347,8 @@ export default function PianoRoll({
 					startGridX,
 					startGridY,
 					selectedNote.duration,
-					computedStyle.getPropertyValue("--yellow"),
-					computedStyle.getPropertyValue("--yellow-accent"),
+					computedStyle.getPropertyValue(currentInstrument.primary),
+					computedStyle.getPropertyValue(currentInstrument.accent),
 					false
 				);
 			}
@@ -384,8 +390,8 @@ export default function PianoRoll({
 				selectedNote.location + location - startGridX,
 				pitch,
 				selectedNote.duration,
-				computedStyle.getPropertyValue("--yellow"),
-				computedStyle.getPropertyValue("--yellow-accent"),
+				computedStyle.getPropertyValue(currentInstrument.primary),
+				computedStyle.getPropertyValue(currentInstrument.accent),
 				false
 			);
 		} else {
@@ -398,8 +404,8 @@ export default function PianoRoll({
 					stepLength,
 					location - selectedNote.location + stepLength
 				),
-				computedStyle.getPropertyValue("--yellow"),
-				computedStyle.getPropertyValue("--yellow-accent"),
+				computedStyle.getPropertyValue(currentInstrument.primary),
+				computedStyle.getPropertyValue(currentInstrument.accent),
 				false
 			);
 		}

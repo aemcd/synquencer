@@ -10,9 +10,11 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 type Props = {
 	addNote: (note: Note) => void;
+ //editNote: (note: Note) => void;
+ 
 	sequence: SequenceMetadata;
 };
-export default function Cursor({ addNote, sequence }: Props) {
+export default function Cursor({ addNote, sequence}: Props) {
 	const cursorNote = React.useMemo(() => {
 		return new Note({
 			location: 0,

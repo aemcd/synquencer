@@ -1,4 +1,5 @@
-	import { WriteMidi } from "@/client/write_midi";
+		
+		import { WriteMidi } from "@/client/write_midi";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import { Note, SequenceMetadata } from "@/server/types";
 import Link from "next/link";

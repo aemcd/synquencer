@@ -21,6 +21,7 @@ import {
 } from "../database/calls";
 import * as React from "react";
 import { type } from "os";
+import randomstring from "randomstring";
 
 export const getFluidData = async () => {
 	const client: TinyliciousClient = new TinyliciousClient();
@@ -39,7 +40,6 @@ export const getFluidData = async () => {
 		location.hash = id;
 		if (!(container != null)) {
 			console.log("null container");
-			
 		}
 	} else {
 		({ container } = await client.getContainer(containerId, schema));
@@ -70,8 +70,13 @@ export const loadSequence = async (id: string) => {
 		typeof databaseNotes === "undefined"
 	) {
 		//case where we are creating new sequence
-		promisedSequence = new SequenceMetadata();
-		promisedSequence.id = id;
+		promisedSequence = new SequenceMetadata({
+			id: id,
+			length: 32,
+			bpm: 120,
+			numerator: 4,
+			denominator: 4,
+		});
 		promisedNotes = [];
 		AddSequence(promisedSequence);
 		AddNotes(id, promisedNotes);
@@ -146,7 +151,7 @@ export default function App({ Component, pageProps }: AppProps) {
 			updateLocalMetadata();
 			fluidMetadata.on("valueChanged", updateLocalMetadata);
 			return () => {
-//				metadataContainer.off("valueChanged", updateLocalMetadata);
+				//				metadataContainer.off("valueChanged", updateLocalMetadata);
 			};
 		} else {
 			return;
@@ -167,8 +172,6 @@ export default function App({ Component, pageProps }: AppProps) {
 			return;
 		}
 	}, [fluidSequence]);
-
-	
 
 	return <Component {...pageProps} />;
 }

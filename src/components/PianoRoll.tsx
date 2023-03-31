@@ -178,10 +178,14 @@ export default function PianoRoll({
 
 		// vertical grid lines
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
-			(i + 1) % 4 == 0
-				? (bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3"))
-				: (bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0"));
-			if ((i + 1) % stepLength == 0) {
+			if ((view.current.loc + i + 1) % 16 == 0) {
+				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4"));
+			} else if ((view.current.loc + i + 1) % 4 == 0) {
+				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2"));
+			} else {
+				(bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0"));
+			}
+			if ((view.current.loc + i + 1) % stepLength == 0) {
 				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
 			}
 		}
@@ -530,7 +534,40 @@ export default function PianoRoll({
 		velocityAlert(selectedNote.velocity);
 	} */
 
-	function handleWheel(e: any) {
+	function handleRollScroll(e: any) {
+		if (e.deltaY > 0) {
+			// scroll down
+			view.current.loc += 4;
+			drawBG();
+			drawFG();
+		} else if (e.deltaY < 0) {
+			// scroll up
+			if (!(view.current.loc - 4 < 0)) {
+				view.current.loc -= 4;
+				drawBG();
+				drawFG();
+			}
+		}
+		console.log(view.current.loc);
+	}
+
+	function handlePianoClick(e: MouseEvent) {
+		let rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+
+		let pixelY = e.clientY - rect.top - 2;
+
+		let pitch = view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
+
+		playNoteDefault(new Note({
+			location: 0,
+			velocity: selectedNote ? selectedNote.velocity : 100,
+			duration: 0,
+			pitch: pitch,
+			instrument: currentInstrument.instrument,
+		}));
+	}
+
+	function handlePianoScroll(e: any) {
 		if (e.deltaY > 0) {
 			// scroll down
 			if (!(view.current.pitch - 4 < 0)) {
@@ -550,22 +587,6 @@ export default function PianoRoll({
 		}
 	}
 
-	function handlePianoClick(e: MouseEvent) {
-		let rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
-
-		let pixelY = e.clientY - rect.top - 2;
-
-		let pitch = view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
-
-		playNoteDefault(new Note({
-			location: 0,
-			velocity: selectedNote ? selectedNote.velocity : 100,
-			duration: 0,
-			pitch: pitch,
-			instrument: currentInstrument.instrument,
-		}));
-	}
-
 	return (
 		<div aria-label="Piano Roll" style={{ position: "relative" }}>
 			<canvas
@@ -573,6 +594,7 @@ export default function PianoRoll({
 				width={"62px"}
 				height={rollHeight}
 				onClick={handlePianoClick}
+				onWheel={handlePianoScroll}
 				style={{
 					position: "absolute",
 					left: "0",
@@ -608,7 +630,7 @@ export default function PianoRoll({
 				onMouseUp={handleMouseUp}
 				onMouseOut={handleMouseOut}
 				onContextMenu={handleContextMenu}
-				onWheel={handleWheel}
+				onWheel={handleRollScroll}
 				width={rollWidth}
 				height={rollHeight}
 				style={{

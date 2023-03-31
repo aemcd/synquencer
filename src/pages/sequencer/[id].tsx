@@ -22,7 +22,9 @@ import TopBar from "@/components/TopBar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	getInstruments,
+	getTick,
 	PlaySequence,
+	setTickFunction,
 	StopSequence,
 	WriteMidi,
 } from "@/client/write_midi";
@@ -47,6 +49,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const thisInterval = useRef<NodeJS.Timer>();
 	const doReload = useRef<boolean>(true);
 	const [update, setUpdate] = useState<number>(0);
+	const [tick, setTick] = useState(-1);
 
 	sequence = new SequenceMetadata(sequence);
 	notes = notes.map((note) => {
@@ -224,6 +227,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				}}
 				playSequence={() => {
 					PlaySequence(seqData, sequenceMap);
+					setTickFunction(() => {
+						setTick(getTick());
+					});
 				}}
 				stopSequence={() => {
 					StopSequence();

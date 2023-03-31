@@ -35,6 +35,14 @@ export function getTick() {
 	return currentTick;
 }
 
+let tickFunction = () => {
+	return;
+};
+
+export function setTickFunction(func: () => void) {
+	tickFunction = func;
+}
+
 export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = -1;
@@ -98,6 +106,8 @@ function PlayTick(
 		clearInterval(intervalID);
 		currentTick = -1;
 		isPlaying = false;
+		tickFunction();
+		return;
 	} else {
 		const notesToPlay: Note[] = new Array<Note>();
 		notes.forEach((mapNote) => {
@@ -105,6 +115,8 @@ function PlayTick(
 				notesToPlay.push(mapNote);
 			}
 		});
+
+		tickFunction();
 
 		notesToPlay.forEach((note) => {
 			const instrument = instruments.get(note.instrument.name as string);

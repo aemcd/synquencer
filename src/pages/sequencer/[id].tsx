@@ -48,7 +48,6 @@ type ContentPageProps = {
 export default function Home({ sequence, notes }: ContentPageProps) {
 	const thisInterval = useRef<NodeJS.Timer>();
 	const doReload = useRef<boolean>(true);
-	const [update, setUpdate] = useState<number>(0);
 	const [tick, setTick] = useState(-1);
 	const [updateSeq, setUpdateSeq] = useState(0);
 
@@ -82,33 +81,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 
 	const [stepLength, setStepLength] = useState(1);
 
-	function clearUpdate() {
-		clearInterval(thisInterval.current);
-		thisInterval.current = undefined;
-		new Promise((resolve) =>
-			setTimeout(() => {
-				if (thisInterval.current != null) {
-					clearInterval(thisInterval.current);
-					thisInterval.current = setInterval(reload, 5000);
-				}
-			}, 13000)
-		);
-	}
-
-	useEffect(() => {
-		doReload.current = false;
-		clearUpdate();
-		const noteArr = getArray();
-		Promise.all([EditSequence(seqData.id, seqData)]).then((value) => {
-			doReload.current = true;
-		});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [update]);
-
 	useEffect(() => {
 		// Render Instruments
 		getInstruments();
-		reload();
 	}, []);
 
 	useEffect(() => {
@@ -117,78 +92,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, [seqData]);
 
 	function addNote(note: Note) {
-		clearUpdate();
-		if (sequenceMap.has(note.getPitchLocation().serialize())) {
-			EditNote(
-				seqData.id,
-				sequenceMap.get(note.getPitchLocation().serialize()) as Note,
-				note
-			).then((value) => {
-				doReload.current = true;
-			});
-		} else {
-			AddNote(seqData.id, note).then((value) => {
-				doReload.current = true;
-			});
-		}
-		setUpdate(update + 1);
 		sequenceMap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
 		sequenceMap.delete(note.getPitchLocation().serialize());
-		DeleteNote(seqData.id, note).then((value) => {
-			doReload.current = true;
-		});
-		setUpdate(update - 1);
-	}
-
-	function reload() {
-		if (doReload /*&& doReload2.current*/) {
-			clearInterval(thisInterval.current);
-			doReload.current = false;
-			Promise.all([GetSequence(seqData.id), GetNotes(seqData.id)]).then(
-				(value) => {
-					setSeq(value[0] as SequenceMetadata);
-					// (value[1] as Array<Note>).forEach((note) => {
-					// 	if (
-					// 		!sequenceMap.has(
-					// 			note.getPitchLocation().serialize()
-					// 		)
-					// 	) {
-					// 		sequenceMap.set(
-					// 			note.getPitchLocation().serialize(),
-					// 			note
-					// 		);
-					// 	}
-					// });
-					// const value2 = new Map<string, Note>(
-					// 	(value[1] as Array<Note>).map((note) => {
-					// 		return [note.getPitchLocation().serialize(), note];
-					// 	})
-					// );
-					// sequenceMap.forEach((note) => {
-					// 	if (!value2.has(note.getPitchLocation().serialize())) {
-					// 		sequenceMap.delete(
-					// 			note.getPitchLocation().serialize()
-					// 		);
-					// 	}
-					// });
-					setNotes(
-						new Map<string, Note>(
-							(value[1] as Array<Note>).map((note) => {
-								return [
-									note.getPitchLocation().serialize(),
-									note,
-								];
-							})
-						)
-					);
-					doReload.current = true;
-					thisInterval.current = setInterval(reload, 5000);
-				}
-			);
-		}
 	}
 
 	return (
@@ -216,7 +124,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.bpm = newBPM;
 					setSeq(newSeqData);
-					setUpdate(update + 1);
 				}}
 				saveSequence={() => {
 					const noteArr = getArray();
@@ -289,13 +196,11 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					newSeqData.numerator = parseInt(num);
 					newSeqData.denominator = parseInt(den);
 					setSeq(newSeqData);
-					setUpdate(update + 1);
 				}}
 				setLength={(length) => {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.length = parseInt(length);
 					setSeq(newSeqData);
-					setUpdate(update + 1);
 				}}
 			/>
 			<PianoRoll

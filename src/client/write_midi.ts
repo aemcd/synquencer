@@ -15,11 +15,21 @@ const instruments: Map<string, Soundfont.Player> = new Map<
 >();
 export let isPlaying: boolean = false;
 
+/**
+ * Play a note for a duration of an eighth note at 120bpm
+ * @param note The note to play
+ */
 export function playNoteDefault(note: Note) {
 	note.duration = 2;
 	playNote(120, 4, note);
 }
 
+/**
+ * Play a note
+ * @param bpm BPM of the sequence
+ * @param denominator Denominator of time signature
+ * @param note The note to play
+ */
 export function playNote(bpm: number, denominator: number, note: Note) {
 	getInstruments();
 	const instrument = instruments.get(note.instrument.name as string);
@@ -31,6 +41,10 @@ export function playNote(bpm: number, denominator: number, note: Note) {
 	}
 }
 
+/**
+ * Get current tick
+ * @returns Current tick in playback
+ */
 export function getTick() {
 	return currentTick;
 }
@@ -39,10 +53,17 @@ let tickFunction = () => {
 	return;
 };
 
+/**
+ * Set function to run every tick of playback
+ * @param func The function
+ */
 export function setTickFunction(func: () => void) {
 	tickFunction = func;
 }
 
+/**
+ * Stops the currently playing sequence
+ */
 export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = -1;
@@ -50,6 +71,10 @@ export function StopSequence() {
 	tickFunction();
 }
 
+/**
+ * Loads the instruments and returns them
+ * @returns instrument list
+ */
 export function getInstruments() {
 	const instrumentIDs: Soundfont.InstrumentName[] = [
 		"acoustic_grand_piano",
@@ -143,15 +168,17 @@ function PlayTick(
  * @param notes The notes of the sequence
  * @returns A midi file as Uint8Array
  */
-function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
+function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): string {
 	const track = new MW.Track();
 
 	track.setTimeSignature(sequence.numerator, sequence.denominator);
 	track.setTempo(sequence.bpm, 0);
 
-	const events = new Array<MW.Event>();
 	notes.forEach((note) => {
-		events.push(
+		track.addEvent(
+			new MW.ProgramChangeEvent({ instrument: note.instrument.channel })
+		);
+		track.addEvent(
 			new MW.NoteEvent({
 				pitch: note.pitchName() as MW.Pitch,
 				duration: `T${toTick(note.duration)}`,
@@ -161,10 +188,9 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): Uint8Array {
 			})
 		);
 	});
-	track.addEvent(events);
 
 	const writer = new MW.Writer(track);
-	return writer.buildFile();
+	return writer.dataUri();
 }
 
 export function PlaySequence(
@@ -192,28 +218,21 @@ export function WriteMidi(
 	sequence: SequenceMetadata,
 	notes: Array<Note>
 ): void {
-	// Create a blob with the data we want to download as a file
-	const midi = new Blob([GetMidi(sequence, notes)], { type: "audio/midi" });
-	const filename = "MIDI_Sequence.midi";
+	const filename = "Synquence.midi";
 
-	// IE, new browsers second works
-	if ((window.navigator as any).msSaveOrOpenBlob) {
-		(window.navigator as any).msSaveOrOpenBlob(midi, filename);
-	} else {
-		const link = document.createElement("a");
-		link.download = filename;
-		link.style.display = "none";
-		link.href = window.URL.createObjectURL(midi);
-		link.addEventListener("click", (e) => {
-			setTimeout(() => {
-				URL.revokeObjectURL(link.href), 30 * 1000;
-			});
-		});
+	const link = document.createElement("a");
+	link.download = filename;
+	link.style.display = "none";
+	link.href = GetMidi(sequence, notes);
+	link.addEventListener("click", () => {
+		setTimeout(() => {
+			URL.revokeObjectURL(link.href);
+		}, 30 * 1000);
+	});
 
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	}
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
 }
 
 function toTick(time: number) {

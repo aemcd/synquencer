@@ -21,28 +21,24 @@ export default function Cursor({
 	addNote,
 	removeNote,
 }: Props) {
-	const cursorNote = React.useMemo(() => {
-		return new Note({
+	const cursorNote = React.useRef(
+		new Note({
 			location: 0,
 			pitch: 12 * 4,
 			velocity: 50,
 			duration: 1,
 			instrument: instrumentList.Piano,
-		});
-	}, []);
-	let mod = React.useMemo<number>(() => {
-		return 0;
-	}, []);
-	let selectedNote = React.useMemo<Note | null>(() => {
-		return null;
-	}, []);
+		})
+	);
+	let mod = React.useRef<number>(0);
+	let selectedNote = React.useRef<Note | null>(null);
 
 	function setSelectedNote(note: Note | null) {
-		selectedNote = note;
+		selectedNote.current = note;
 	}
 
 	function setMod(n: number) {
-		mod = n;
+		mod.current = n;
 	}
 
 	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
@@ -72,9 +68,9 @@ export default function Cursor({
 				noteChange = 7;
 				break;
 		}
-		cursorNote.pitch += noteChange - (mod % 12);
-		setMod(mod + noteChange - (mod % 12));
-		const newNote = new Note(cursorNote);
+		cursorNote.current.pitch += noteChange - (mod.current % 12);
+		setMod(mod.current + noteChange - (mod.current % 12));
+		const newNote = new Note(cursorNote.current);
 		addNote(newNote);
 		clearAnnouncer("assertive");
 		announce(
@@ -90,22 +86,22 @@ export default function Cursor({
 		let action = "Position";
 		switch (event.key) {
 			case "ArrowUp":
-				cursorNote.pitch++;
-				setMod(mod + 1);
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.pitch++;
+				setMod(mod.current + 1);
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
 				break;
 			case "ArrowDown":
-				cursorNote.pitch--;
-				setMod(mod - 1);
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.pitch--;
+				setMod(mod.current - 1);
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 					action = "Note";
@@ -115,9 +111,9 @@ export default function Cursor({
 		clearAnnouncer("assertive");
 		announce(
 			`${action} at ` +
-				cursorNote.pitchName() +
+				cursorNote.current.pitchName() +
 				"at" +
-				cursorNote.location,
+				cursorNote.current.location,
 			"assertive",
 			7000
 		);
@@ -130,22 +126,22 @@ export default function Cursor({
 		let action = "Position ";
 		switch (event.key) {
 			case "ArrowUp":
-				cursorNote.pitch += 12;
-				setMod(mod + 12);
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.pitch += 12;
+				setMod(mod.current + 12);
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
 				break;
 			case "ArrowDown":
-				cursorNote.pitch -= 12;
-				setMod(mod - 12);
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.pitch -= 12;
+				setMod(mod.current - 12);
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 					action = "Note";
@@ -155,9 +151,9 @@ export default function Cursor({
 		clearAnnouncer("assertive");
 		announce(
 			`${action} at ` +
-				cursorNote.pitchName() +
+				cursorNote.current.pitchName() +
 				"at" +
-				cursorNote.location,
+				cursorNote.current.location,
 			"assertive",
 			7000
 		);
@@ -168,10 +164,10 @@ export default function Cursor({
 			case "1":
 				clearAnnouncer("assertive");
 				announce("Note duration set to 1/16.");
-				cursorNote.duration = 1;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.duration = 1;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
@@ -180,10 +176,10 @@ export default function Cursor({
 				clearAnnouncer("assertive");
 
 				announce("Note duration set to 1/8.");
-				cursorNote.duration = 2;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.duration = 2;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
@@ -192,10 +188,10 @@ export default function Cursor({
 				clearAnnouncer("assertive");
 
 				announce("Note duration set to 1/4.");
-				cursorNote.duration = 4;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.duration = 4;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
@@ -204,10 +200,10 @@ export default function Cursor({
 				clearAnnouncer("assertive");
 
 				announce("Note duration set to 1/2.");
-				cursorNote.duration = 8;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.duration = 8;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
@@ -216,10 +212,10 @@ export default function Cursor({
 				clearAnnouncer("assertive");
 
 				announce("Note duration set to 1/1.");
-				cursorNote.duration = 16;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.duration = 16;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
@@ -231,13 +227,18 @@ export default function Cursor({
 		function (event, handler) {
 			switch (event.key) {
 				case "ArrowLeft":
-					if (handler.ctrl == true && selectedNote != null) {
-						if (cursorNote.location - cursorNote.duration >= 0) {
-							cursorNote.location -= cursorNote.duration;
-							removeNote(selectedNote);
-							const newNote = new Note(cursorNote);
+					if (handler.ctrl == true && selectedNote.current != null) {
+						if (
+							cursorNote.current.location -
+								cursorNote.current.duration >=
+							0
+						) {
+							cursorNote.current.location -=
+								cursorNote.current.duration;
+							removeNote(selectedNote.current);
+							const newNote = new Note(cursorNote.current);
 							addNote(newNote);
-							selectedNote = newNote;
+							selectedNote.current = newNote;
 							clearAnnouncer("assertive");
 							announce(
 								"Move" +
@@ -250,49 +251,59 @@ export default function Cursor({
 							break;
 						}
 					}
-					if (cursorNote.location - cursorNote.duration >= 0) {
-						cursorNote.location -= cursorNote.duration;
-						let prevNote = selectedNote;
+					if (
+						cursorNote.current.location -
+							cursorNote.current.duration >=
+						0
+					) {
+						cursorNote.current.location -=
+							cursorNote.current.duration;
+						let prevNote = selectedNote.current;
 						let sameLoc = false;
 						setSelectedNote(null);
 						console.log(selectedNote);
 						noteMap.forEach((note) => {
-							cursorNote.location += cursorNote.duration;
+							cursorNote.current.location +=
+								cursorNote.current.duration;
 							if (
-								cursorNote.location == note.location &&
+								cursorNote.current.location == note.location &&
 								(prevNote == null ||
-									prevNote.location != cursorNote.location ||
-									prevNote.pitch > cursorNote.pitch)
+									prevNote.location !=
+										cursorNote.current.location ||
+									prevNote.pitch > cursorNote.current.pitch)
 							) {
 								setSelectedNote(note);
 								sameLoc = true;
-								cursorNote.location = note.location;
-								cursorNote.pitch = note.pitch;
+								cursorNote.current.location = note.location;
+								cursorNote.current.pitch = note.pitch;
 							}
-							cursorNote.location -= cursorNote.duration;
+							cursorNote.current.location -=
+								cursorNote.current.duration;
 							if (
-								cursorNote.location == note.location &&
+								cursorNote.current.location == note.location &&
 								!sameLoc
 							) {
 								setSelectedNote(note);
 							}
 						});
-						if (selectedNote == null) {
+						if (selectedNote.current == null) {
 							clearAnnouncer("assertive");
 							announce(
-								"rest at " + cursorNote.location,
+								"rest at " + cursorNote.current.location,
 								"assertive",
 								7000
 							);
 						} else {
-							cursorNote.location = selectedNote.location;
-							cursorNote.pitch = selectedNote.pitch;
-clearAnnouncer("assertive");
+							cursorNote.current.location =
+								selectedNote.current.location;
+							cursorNote.current.pitch =
+								selectedNote.current.pitch;
+							clearAnnouncer("assertive");
 							announce(
 								"Note at " +
-									selectedNote?.pitchName() +
+									selectedNote.current?.pitchName() +
 									" " +
-									selectedNote?.location,
+									selectedNote.current?.location,
 								"assertive",
 								7000
 							);
@@ -302,14 +313,16 @@ clearAnnouncer("assertive");
 					break;
 
 				case "ArrowRight":
-					if (handler.ctrl == true && selectedNote != null) {
+					if (handler.ctrl == true && selectedNote.current != null) {
 						if (
-							cursorNote.location + cursorNote.duration * 2 <=
+							cursorNote.current.location +
+								cursorNote.current.duration * 2 <=
 							sequence.length
 						) {
-							cursorNote.location += cursorNote.duration;
-							removeNote(selectedNote);
-							const newNote = new Note(cursorNote);
+							cursorNote.current.location +=
+								cursorNote.current.duration;
+							removeNote(selectedNote.current);
+							const newNote = new Note(cursorNote.current);
 							addNote(newNote);
 							setSelectedNote(newNote);
 							clearAnnouncer("assertive");
@@ -325,53 +338,59 @@ clearAnnouncer("assertive");
 						}
 					}
 					if (
-						cursorNote.location + cursorNote.duration * 2 <=
+						cursorNote.current.location +
+							cursorNote.current.duration * 2 <=
 						sequence.length
 					) {
-						cursorNote.location += cursorNote.duration;
-						const prevNote = selectedNote;
+						cursorNote.current.location +=
+							cursorNote.current.duration;
+						const prevNote = selectedNote.current;
 						setSelectedNote(null);
 						console.log(selectedNote);
 						let sameLoc = false;
 						noteMap.forEach((note) => {
-							cursorNote.location -= cursorNote.duration;
+							cursorNote.current.location -=
+								cursorNote.current.duration;
 							if (
-								cursorNote.location === note.location &&
+								cursorNote.current.location === note.location &&
 								(prevNote == null ||
-									prevNote.location !== cursorNote.location ||
-									prevNote.pitch < cursorNote.pitch)
+									prevNote.location !==
+										cursorNote.current.location ||
+									prevNote.pitch < cursorNote.current.pitch)
 							) {
 								setSelectedNote(note);
 								sameLoc = true;
-								cursorNote.location = note.location;
-								cursorNote.pitch = note.pitch;
+								cursorNote.current.location = note.location;
+								cursorNote.current.pitch = note.pitch;
 							}
-							cursorNote.location += cursorNote.duration;
+							cursorNote.current.location +=
+								cursorNote.current.duration;
 							if (
-								cursorNote.location === note.location &&
+								cursorNote.current.location === note.location &&
 								!sameLoc
 							) {
 								setSelectedNote(note);
 							}
 						});
 
-						if (selectedNote == null) {
+						if (selectedNote.current == null) {
 							clearAnnouncer("assertive");
 							announce(
-								"Rest at " + cursorNote.location,
+								"Rest at " + cursorNote.current.location,
 								"assertive",
 								7000
 							);
 						} else {
-							
-							cursorNote.location = selectedNote.location;
-							cursorNote.pitch = selectedNote.pitch;
+							cursorNote.current.location =
+								selectedNote.current.location;
+							cursorNote.current.pitch =
+								selectedNote.current.pitch;
 							clearAnnouncer("assertive");
 							announce(
 								"Note at " +
-									selectedNote?.pitchName() +
+									selectedNote.current.pitchName() +
 									" " +
-									selectedNote?.location,
+									selectedNote.current.location,
 								"assertive",
 								7000
 							);
@@ -391,33 +410,33 @@ clearAnnouncer("assertive");
 		event.preventDefault();
 		switch (event.key) {
 			case "ArrowUp": {
-				cursorNote.velocity += 10;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.velocity += 10;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
 				break;
 			}
 			case "ArrowDown": {
-				cursorNote.velocity -= 10;
-				if (selectedNote != null) {
-					removeNote(selectedNote);
-					const newNote = new Note(cursorNote);
+				cursorNote.current.velocity -= 10;
+				if (selectedNote.current != null) {
+					removeNote(selectedNote.current);
+					const newNote = new Note(cursorNote.current);
 					addNote(newNote);
 					setSelectedNote(newNote);
 				}
 				break;
 			}
 		}
-		announce(`Changed velocity to ${cursorNote.velocity}`);
+		announce(`Changed velocity to ${cursorNote.current.velocity}`);
 	});
 	useHotkeys("del", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
-		if (selectedNote != null) {
-			removeNote(selectedNote);
+		if (selectedNote.current != null) {
+			removeNote(selectedNote.current);
 			setSelectedNote(null);
 		}
 		announce("Note deleted");

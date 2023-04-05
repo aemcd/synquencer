@@ -441,6 +441,15 @@ export default function Cursor({
 		}
 		announce("Note deleted");
 	});
-
-	return null;
+	useHotkeys("ctrl+z", function (event, handler) {
+	event.preventDefault();
+	announce("Action undone");
+});
+	
+useHotkeys("ctrl+shift+z", function (event, handler) {
+	event.preventDefault();
+	announce("Action redone");
+});
+	
+return null;
 }

@@ -41,6 +41,8 @@ body {
   font-size: 1.25rem;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 h1 {

@@ -25,6 +25,7 @@ import randomstring from "randomstring";
 
 export const getFluidData = async () => {
 	const client: TinyliciousClient = new TinyliciousClient();
+	let container: IFluidContainer;
 	const schema = {
 		initialObjects: {
 			metadata: SharedMap,
@@ -45,12 +46,6 @@ export const getFluidData = async () => {
 		({ container } = await client.getContainer(containerId, schema));
 	}
 
-	return container;
-};
-
-let container: IFluidContainer;
-
-export const getContainer = () => {
 	return container;
 };
 
@@ -96,9 +91,9 @@ const saveSequence = (arg: {
 	AddSequence(arg.metadata);
 	AddNotes(arg.metadata.id, arg.sequence);
 };
-
-export const sequenceDatabaseToSharedMap = async (list: Note[]) => {
-	let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
+/*
+export const sequenceDatabaseToSharedMap = async (sequence: SharedMap, list: Note[]) => {
+	//let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
 	for (let note of list) {
 		const instrument = note.instrument.serialize();
 		if (!Array.from(sequence.keys()).includes(instrument)) {
@@ -114,6 +109,7 @@ export const sequenceDatabaseToSharedMap = async (list: Note[]) => {
 	container.initialObjects.sequence = sequence;
 	return sequence;
 };
+*/
 
 export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 	let list: Note[] = [];
@@ -129,49 +125,7 @@ export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 
 export default function App({ Component, pageProps }: AppProps) {
 	//TODO: fully implement fluid framework structures with React
-	const [fluidMetadata, setMetadata] = React.useState<SharedMap | null>(null);
-	const [fluidSequence, setSequence] = React.useState<SharedMap | null>(null);
-
-	React.useEffect(() => {
-		getFluidData().then((data) => {
-			setMetadata(data.initialObjects.metadata as SharedMap);
-			setSequence(data.initialObjects.sequence as SharedMap);
-		});
-	}, []);
-
-	React.useEffect(() => {
-		if (fluidMetadata !== null) {
-			const updateLocalMetadata = () => {
-				if (fluidMetadata != null) {
-					const args = Object.fromEntries(fluidMetadata.entries());
-					const clazz = SequenceMetadata as new (arg: any) => any;
-					localMetadata = new clazz(args);
-				}
-			};
-			updateLocalMetadata();
-			fluidMetadata.on("valueChanged", updateLocalMetadata);
-			return () => {
-				//				metadataContainer.off("valueChanged", updateLocalMetadata);
-			};
-		} else {
-			return;
-		}
-	}, [fluidMetadata]);
-
-	React.useEffect(() => {
-		if (fluidSequence !== null) {
-			const updateLocalSequence = () => {
-				localSequence = fluidSequence;
-			};
-			updateLocalSequence();
-			fluidSequence.on("valueChanged", updateLocalSequence);
-			return () => {
-				fluidSequence.off("valueChanged", updateLocalSequence);
-			};
-		} else {
-			return;
-		}
-	}, [fluidSequence]);
+	
 
 	return <Component {...pageProps} />;
 }

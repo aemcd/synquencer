@@ -31,11 +31,12 @@ import {
 import Cursor from "@/components/Cursor";
 import {
 	loadSequence,
-	getContainer,
+	//getContainer,
 	sequenceSharedMapToDatabase,
-	sequenceDatabaseToSharedMap,
+	//sequenceDatabaseToSharedMap,
+	getFluidData
 } from "../_app";
-import { SharedMap } from "fluid-framework";
+import { SharedMap, IFluidContainer } from "fluid-framework";
 
 type PageParams = {
 	id: string;
@@ -46,8 +47,8 @@ type ContentPageProps = {
 };
 
 export default function Home({ sequence, notes }: ContentPageProps) {
-	const thisInterval = useRef<NodeJS.Timer>();
-	const doReload = useRef<boolean>(true);
+	//const thisInterval = useRef<NodeJS.Timer>();
+	//const doReload = useRef<boolean>(true);
 	const [tick, setTick] = useState(-1);
 	const [updateSeq, setUpdateSeq] = useState(0);
 
@@ -56,13 +57,10 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
-	const [sequenceMap, setNotes] = useState<Map<string, Note>>(
-		new Map<string, Note>(
-			notes.map((note) => {
-				return [note.getPitchLocation().serialize(), note];
-			})
-		)
-	);
+	
+	const [unsharedMap, setUnsharedMap] = useState<Map<string, Note>>(new Map<string, Note>());
+
+
 	const [seqData, setSeq] = useState(sequence);
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
@@ -75,11 +73,61 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	// }, []);
 
 	function getArray() {
-		return Array.from(sequenceMap.values());
+		return Array.from((fluidSequence as SharedMap).values());
 		//return sequenceSharedMapToDatabase(sequenceMap);
 	}
 
 	const [stepLength, setStepLength] = useState(1);
+	const [container, setContainer] = useState<IFluidContainer>();
+
+	const [fluidMetadata, setMetadata] = useState<SharedMap | null>(null);
+	//const sequenceState = useState<SharedMap | null>(null);
+	//const [fluidSequence, setSequence]: [SharedMap, any] = [sequenceState[0] as SharedMap, sequenceState[1]];
+	const [fluidSequence, setSequence] = useState<SharedMap | null>(null);
+
+	useEffect(() => {
+		getFluidData().then((data)=> {
+			setContainer(data);
+			setMetadata(data.initialObjects.metadata as SharedMap);
+			setSequence(data.initialObjects.sequence as SharedMap);
+		});
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useEffect(() => {
+		if (fluidMetadata !== null) {
+			const updateLocalMetadata = () => {
+				if (fluidMetadata != null) {
+					const args = Object.fromEntries(fluidMetadata.entries());
+					const clazz = SequenceMetadata as new (arg: any) => any;
+					setSeq(new clazz(args));
+				}
+			};
+			updateLocalMetadata();
+			fluidMetadata.on("valueChanged", updateLocalMetadata);
+			return () => {};
+		} else {
+			return;
+		}
+	}, [fluidMetadata]);
+
+	useEffect(() => {
+		if (fluidSequence !== null) {
+			const updateLocalSequence = () => {
+				setSequence(fluidSequence);
+				let map: Map<string, Note> = new Map<string, Note>();
+				for (let submap of Array.from(fluidSequence.values())) {
+					(submap as SharedMap).forEach((note) => map.set(note.serialize(), note));
+				}
+				setUnsharedMap(map);
+			};
+			updateLocalSequence();
+			fluidSequence.on("valueChanged", updateLocalSequence);
+			return () => {};
+		} else {
+			return;
+		}
+	}, [fluidSequence, setSequence]);
 
 	useEffect(() => {
 		// Render Instruments
@@ -92,11 +140,20 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, [seqData]);
 
 	function addNote(note: Note) {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
+		let submap: SharedMap = (fluidSequence as SharedMap).get(note.instrument.serialize()) as SharedMap;
+		while (fluidSequence == undefined) {}
+		if (submap == undefined) {
+			(container as IFluidContainer).create(SharedMap).then((data) => {
+				while (data == undefined) {}
+				submap = data;
+			});
+		}
+		submap.set(note.getPitchLocation().serialize(), note);
 	}
 
 	function removeNote(note: Note) {
-		sequenceMap.delete(note.getPitchLocation().serialize());
+		const submap: SharedMap = (fluidSequence as SharedMap).get(note.instrument.serialize()) as SharedMap;
+		submap.delete(note.getPitchLocation().serialize());
 	}
 
 	return (
@@ -141,7 +198,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					WriteMidi(seqData, noteArr);
 				}}
 				playSequence={() => {
-					PlaySequence(seqData, sequenceMap);
+					PlaySequence(seqData, unsharedMap);
 					setTickFunction(() => {
 						setTick(getTick());
 					});
@@ -206,7 +263,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			<PianoRoll
 				sequence={seqData}
 				stepLength={stepLength}
-				sequenceMap={sequenceMap}
+				sequenceMap={unsharedMap}
 				currentInstrument={currentInstrument}
 				addNote={addNote}
 				removeNote={removeNote}
@@ -215,7 +272,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			<Cursor
 				addNote={addNote}
 				removeNote={removeNote}
-				noteMap={sequenceMap}
+				noteMap={unsharedMap}
 				sequence={seqData}
 			/>
 		</>

@@ -34,7 +34,7 @@ import {
 	//getContainer,
 	sequenceSharedMapToDatabase,
 	//sequenceDatabaseToSharedMap,
-	getFluidData
+	getFluidData,
 } from "../_app";
 import { SharedMap, IFluidContainer } from "fluid-framework";
 
@@ -57,9 +57,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 		return new Note(note);
 	});
 
-	
-	const [unsharedMap, setUnsharedMap] = useState<Map<string, Note>>(new Map<string, Note>());
-
+	const [unsharedMap, setUnsharedMap] = useState<Map<string, Note>>(
+		new Map<string, Note>()
+	);
 
 	const [seqData, setSeq] = useState(sequence);
 	const [currentInstrument, setCurrentInstrument] = useState({
@@ -86,12 +86,14 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	const [fluidSequence, setSequence] = useState<SharedMap | null>(null);
 
 	useEffect(() => {
-		getFluidData().then((data)=> {
+		// Render Instruments
+		getInstruments();
+		getFluidData().then((data) => {
 			setContainer(data);
 			setMetadata(data.initialObjects.metadata as SharedMap);
 			setSequence(data.initialObjects.sequence as SharedMap);
 		});
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -117,7 +119,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				setSequence(fluidSequence);
 				let map: Map<string, Note> = new Map<string, Note>();
 				for (let submap of Array.from(fluidSequence.values())) {
-					(submap as SharedMap).forEach((note) => map.set(note.serialize(), note));
+					(submap as SharedMap).forEach((note) =>
+						map.set(note.serialize(), note)
+					);
 				}
 				setUnsharedMap(map);
 			};
@@ -130,17 +134,14 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}, [fluidSequence, setSequence]);
 
 	useEffect(() => {
-		// Render Instruments
-		getInstruments();
-	}, []);
-
-	useEffect(() => {
 		setUpdateSeq(updateSeq + 1);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [seqData]);
 
 	function addNote(note: Note) {
-		let submap: SharedMap = (fluidSequence as SharedMap).get(note.instrument.serialize()) as SharedMap;
+		let submap: SharedMap = (fluidSequence as SharedMap).get(
+			note.instrument.serialize()
+		) as SharedMap;
 		while (fluidSequence == undefined) {}
 		if (submap == undefined) {
 			(container as IFluidContainer).create(SharedMap).then((data) => {
@@ -152,7 +153,9 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 	}
 
 	function removeNote(note: Note) {
-		const submap: SharedMap = (fluidSequence as SharedMap).get(note.instrument.serialize()) as SharedMap;
+		const submap: SharedMap = (fluidSequence as SharedMap).get(
+			note.instrument.serialize()
+		) as SharedMap;
 		submap.delete(note.getPitchLocation().serialize());
 	}
 

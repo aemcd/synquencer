@@ -6,6 +6,7 @@ import React, {
 	useMemo,
 	UIEventHandler,
 	WheelEventHandler,
+	useState
 } from "react";
 import {
 	Instrument,
@@ -81,7 +82,7 @@ export default function PianoRoll({
 	const bgRef = useRef<HTMLCanvasElement | null>(null);
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
 
-	const view = useRef({ loc: 0, pitch: 24 });
+	const [view, setView] = useState({ loc: 0, pitch: 24 });
 
 	let computedStyle: CSSStyleDeclaration;
 	let pianoCtx: CanvasRenderingContext2D | null;
@@ -102,11 +103,18 @@ export default function PianoRoll({
 		if (fgRef.current) {
 			fgCtx = fgRef.current.getContext("2d");
 		}
+	});
 
+	useEffect(() => {
 		drawBG();
 		drawFG();
+	}, [view.loc]);
+
+	useEffect(() => {
 		drawPiano();
-	});
+		drawBG();
+		drawFG();
+	}, [view.pitch]);
 
 	useEffect(() => {
 		if (sequenceMap != null && drawFG != null) {
@@ -123,7 +131,7 @@ export default function PianoRoll({
 		// draw white keys
 		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-white");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if (keyColors[(i + view.current.pitch) % 12]) {
+			if (keyColors[(i + view.pitch) % 12]) {
 				pianoCtx.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
@@ -142,9 +150,9 @@ export default function PianoRoll({
 		// draw C labels
 		pianoCtx.font = "24px monospace";
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if ((i + view.current.pitch) % 12 == 0) {
+			if ((i + view.pitch) % 12 == 0) {
 				let cLabel = `C${
-					Math.floor((i + view.current.pitch) / 12) - 1
+					Math.floor((i + view.pitch) / 12) - 1
 				}`;
 				pianoCtx.fillText(cLabel, 2, rollHeight - (i * gridHeight + 3));
 			}
@@ -166,7 +174,7 @@ export default function PianoRoll({
 		// color rows to match keys
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if (keyColors[(i + view.current.pitch) % 12]) {
+			if (keyColors[(i + view.pitch) % 12]) {
 				bgCtx.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
@@ -187,20 +195,20 @@ export default function PianoRoll({
 		// vertical grid lines
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			if (
-				(view.current.loc + i + 1) %
+				(view.loc + i + 1) %
 					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
 				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
 			} else if (
-				(view.current.loc + i + 1) % (16 / sequence.denominator) ==
+				(view.loc + i + 1) % (16 / sequence.denominator) ==
 				0
 			) {
 				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2");
 			} else {
 				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
 			}
-			if ((view.current.loc + i + 1) % stepLength == 0) {
+			if ((view.loc + i + 1) % stepLength == 0) {
 				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
 			}
 		}
@@ -208,7 +216,7 @@ export default function PianoRoll({
 		// darken past the end of the sequence
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg");
 		bgCtx.fillRect(
-			Math.max(0, 1 + gridWidth * (sequence.length - view.current.loc)),
+			Math.max(0, 1 + gridWidth * (sequence.length - view.loc)),
 			0,
 			rollWidth,
 			rollHeight
@@ -216,7 +224,7 @@ export default function PianoRoll({
 
 		// draw playhead
 		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3");
-		bgCtx.fillRect((tick - view.current.loc) * gridWidth , 0, gridWidth, rollHeight);
+		bgCtx.fillRect((tick - view.loc) * gridWidth , 0, gridWidth, rollHeight);
 	}
 
 	function drawFG() {
@@ -257,13 +265,13 @@ export default function PianoRoll({
 		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			if (
-				(view.current.loc + i) %
+				(view.loc + i) %
 					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
 				fgCtx.fillText(
 					`${
-						(view.current.loc + i) /
+						(view.loc + i) /
 						((sequence.numerator * 16) / sequence.denominator)
 					}`,
 					i * gridWidth + 5,
@@ -286,9 +294,9 @@ export default function PianoRoll({
 
 		fgCtx.fillStyle = colorFill;
 		fgCtx.fillRect(
-			(location - view.current.loc) * gridWidth,
+			(location - view.loc) * gridWidth,
 			rollHeight -
-				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				((pitch - view.pitch) * gridHeight + gridHeight) +
 				1,
 			gridWidth * length,
 			gridHeight
@@ -296,18 +304,18 @@ export default function PianoRoll({
 		fgCtx.strokeStyle = colorOutline;
 		fgCtx.lineWidth = 2;
 		fgCtx.strokeRect(
-			(location - view.current.loc) * gridWidth,
+			(location - view.loc) * gridWidth,
 			rollHeight -
-				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				((pitch - view.pitch) * gridHeight + gridHeight) +
 				1,
 			gridWidth * length,
 			gridHeight
 		);
 		fgCtx.fillStyle = colorOutline;
 		fgCtx.fillRect(
-			(location - view.current.loc + length) * gridWidth - 6,
+			(location - view.loc + length) * gridWidth - 6,
 			rollHeight -
-				((pitch - view.current.pitch) * gridHeight + gridHeight) +
+				((pitch - view.pitch) * gridHeight + gridHeight) +
 				5,
 			2,
 			gridHeight - 8
@@ -316,9 +324,9 @@ export default function PianoRoll({
 		if (highlighted) {
 			fgCtx.strokeStyle = computedStyle.getPropertyValue("--fg0");
 			fgCtx.strokeRect(
-				(location - view.current.loc) * gridWidth - 2,
+				(location - view.loc) * gridWidth - 2,
 				rollHeight -
-					((pitch - view.current.pitch) * gridHeight + gridHeight) -
+					((pitch - view.pitch) * gridHeight + gridHeight) -
 					1,
 				gridWidth * length + 4,
 				gridHeight + 4
@@ -344,9 +352,9 @@ export default function PianoRoll({
 
 		let isRightHalf = pixelX % gridWidth > gridWidth / 2;
 
-		let location = view.current.loc + Math.floor(pixelX / gridWidth);
+		let location = view.loc + Math.floor(pixelX / gridWidth);
 		let pitch =
-			view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
+			view.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
 
 		return { location, pitch, isRightHalf };
 	}
@@ -594,15 +602,11 @@ export default function PianoRoll({
 	function handleRollScroll(e: any) {
 		if (e.deltaY > 0) {
 			// scroll down
-			view.current.loc += 4;
-			drawBG();
-			drawFG();
+			setView({...view, loc: view.loc + 4});
 		} else if (e.deltaY < 0) {
 			// scroll up
-			if (!(view.current.loc - 4 < 0)) {
-				view.current.loc -= 4;
-				drawBG();
-				drawFG();
+			if (!(view.loc - 4 < 0)) {
+				setView({...view, loc: view.loc - 4});
 			}
 		}
 	}
@@ -617,7 +621,7 @@ export default function PianoRoll({
 		let pixelY = e.clientY - rect.top - 2;
 
 		let pitch =
-			view.current.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
+			view.pitch + Math.floor((rollHeight - pixelY) / gridHeight);
 
 		playNoteDefault(
 			new Note({
@@ -633,19 +637,15 @@ export default function PianoRoll({
 	function handlePianoScroll(e: any) {
 		if (e.deltaY > 0) {
 			// scroll down
-			if (!(view.current.pitch - 4 < 0)) {
-				view.current.pitch -= 4;
+			if (!(view.pitch - 4 < 0)) {
+				setView({...view, pitch: view.pitch - 4})
 				drawPiano();
-				drawBG();
-				drawFG();
 			}
 		} else if (e.deltaY < 0) {
 			// scroll up
-			if (!(view.current.pitch + 4 > 128 - rollHeight / gridHeight)) {
-				view.current.pitch += 4;
+			if (!(view.pitch + 4 > 128 - rollHeight / gridHeight)) {
+				setView({...view, pitch: view.pitch + 4})
 				drawPiano();
-				drawBG();
-				drawFG();
 			}
 		}
 	}

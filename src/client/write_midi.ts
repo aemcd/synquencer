@@ -9,11 +9,36 @@ import Soundfont from "soundfont-player";
 
 export let currentTick: number = -1;
 let currentInterval: NodeJS.Timer;
+let doLoop = false;
+let startTick = -1;
+let endTick = -1;
 const instruments: Map<string, Soundfont.Player> = new Map<
 	string,
 	Soundfont.Player
 >();
-export let isPlaying: boolean = false;
+
+/**
+ * Create a loop section for playback
+ * @param start Start tick of the loop
+ * @param end End tick of the loop
+ */
+export function setLoop(start: number, end: number) {
+	if (currentTick != -1) {
+		currentTick = start;
+	}
+	startTick = start;
+	endTick = end;
+	doLoop = true;
+}
+
+/**
+ * Clear a loop section
+ */
+export function clearLoop() {
+	startTick = -1;
+	endTick = -1;
+	doLoop = false;
+}
 
 /**
  * Play a note for a duration of an eighth note at 120bpm
@@ -67,7 +92,6 @@ export function setTickFunction(func: () => void) {
 export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = -1;
-	isPlaying = false;
 	tickFunction();
 }
 
@@ -128,10 +152,12 @@ function PlayTick(
 	notes: Map<string, Note>,
 	instruments: Map<string, Soundfont.Player>
 ): any {
-	if (currentTick >= sequence.length) {
+	if (doLoop && currentTick > endTick) {
+		currentTick = startTick;
+	}
+	if (currentTick >= sequence.length && !doLoop) {
 		clearInterval(intervalID);
 		currentTick = -1;
-		isPlaying = false;
 		tickFunction();
 		return;
 	} else {
@@ -198,7 +224,7 @@ export function PlaySequence(
 	notes: Map<string, Note>
 ) {
 	clearInterval(currentInterval);
-	currentTick = 0;
+	currentTick = doLoop ? startTick : 0;
 	currentInterval = setIntervalWrapper(
 		PlayTick,
 		toSec(sequence.bpm, sequence.denominator, 1) * 1000,

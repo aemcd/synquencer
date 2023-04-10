@@ -27,6 +27,8 @@ import {
 	setTickFunction,
 	StopSequence,
 	WriteMidi,
+	setLoop,
+	clearLoop,
 } from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
 import {

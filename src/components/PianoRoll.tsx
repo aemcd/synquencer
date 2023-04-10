@@ -6,7 +6,8 @@ import React, {
 	useMemo,
 	UIEventHandler,
 	WheelEventHandler,
-	useState
+	useState,
+	useCallback
 } from "react";
 import {
 	Instrument,
@@ -78,43 +79,51 @@ export default function PianoRoll({
 	let startGridX = -1;
 	let startGridY = -1;
 
+	const computedStyle = useRef<CSSStyleDeclaration | null>(null);
+
 	const pianoRef = useRef<HTMLCanvasElement | null>(null);
+	const pianoCtx = useRef<CanvasRenderingContext2D | null>(null);
 	const bgRef = useRef<HTMLCanvasElement | null>(null);
+	const bgCtx = useRef<CanvasRenderingContext2D | null>(null);
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
+	const fgCtx = useRef<CanvasRenderingContext2D | null>(null);
+
 
 	const [view, setView] = useState({ loc: 0, pitch: 24 });
 
-	let computedStyle: CSSStyleDeclaration;
-	let pianoCtx: CanvasRenderingContext2D | null;
-	let bgCtx: CanvasRenderingContext2D | null;
-	let fgCtx: CanvasRenderingContext2D | null;
-
 	useEffect(() => {
-		computedStyle = getComputedStyle(document.body);
+		computedStyle.current = getComputedStyle(document.body);
 
 		if (pianoRef.current) {
-			pianoCtx = pianoRef.current.getContext("2d");
+			pianoCtx.current = pianoRef.current.getContext("2d");
 		}
 
 		if (bgRef.current) {
-			bgCtx = bgRef.current.getContext("2d");
+			bgCtx.current = bgRef.current.getContext("2d");
 		}
 
 		if (fgRef.current) {
-			fgCtx = fgRef.current.getContext("2d");
+			fgCtx.current = fgRef.current.getContext("2d");
 		}
-	});
+	}, []);
 
 	useEffect(() => {
 		drawBG();
 		drawFG();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [view.loc]);
 
 	useEffect(() => {
 		drawPiano();
 		drawBG();
 		drawFG();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [view.pitch]);
+
+	useEffect(() => {
+		drawFG();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentInstrument]);
 
 	useEffect(() => {
 		if (sequenceMap != null && drawFG != null) {
@@ -123,16 +132,19 @@ export default function PianoRoll({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sequenceMap]);
 
-	function drawPiano() {
-		if (!pianoCtx) return;
+	const drawPiano = () => {
+		if (!pianoCtx.current || !computedStyle.current) {
+			console.log(pianoCtx);
+			return;
+		}
 
-		pianoCtx.clearRect(0, 0, 72, rollHeight);
+		pianoCtx.current.clearRect(0, 0, 72, rollHeight);
 
 		// draw white keys
-		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-white");
+		pianoCtx.current.fillStyle = computedStyle.current.getPropertyValue("--piano-white");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			if (keyColors[(i + view.pitch) % 12]) {
-				pianoCtx.fillRect(
+				pianoCtx.current.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
 					72,
@@ -142,19 +154,19 @@ export default function PianoRoll({
 		}
 
 		// draw key lines
-		pianoCtx.fillStyle = computedStyle.getPropertyValue("--piano-black");
+		pianoCtx.current.fillStyle = computedStyle.current.getPropertyValue("--piano-black");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			pianoCtx.fillRect(0, gridHeight * (i + 1) - 1, 72, 2);
+			pianoCtx.current.fillRect(0, gridHeight * (i + 1) - 1, 72, 2);
 		}
 
 		// draw C labels
-		pianoCtx.font = "24px monospace";
+		pianoCtx.current.font = "24px monospace";
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			if ((i + view.pitch) % 12 == 0) {
 				let cLabel = `C${
 					Math.floor((i + view.pitch) / 12) - 1
 				}`;
-				pianoCtx.fillText(cLabel, 2, rollHeight - (i * gridHeight + 3));
+				pianoCtx.current.fillText(cLabel, 2, rollHeight - (i * gridHeight + 3));
 			}
 		}
 
@@ -163,19 +175,19 @@ export default function PianoRoll({
 		fgCtx.font = "24px monospace";
 		fgCtx.fillStyle = computedStyle.getPropertyValue("--fg0");
 		fgCtx.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24); */
-	}
+	};
 
 	function drawBG() {
-		if (!bgCtx) return;
+		if (!bgCtx.current || !computedStyle.current) return;
 
 		// clear bg
-		bgCtx.clearRect(0, 0, rollWidth, rollHeight);
+		bgCtx.current.clearRect(0, 0, rollWidth, rollHeight);
 
 		// color rows to match keys
-		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg1");
+		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg1");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			if (keyColors[(i + view.pitch) % 12]) {
-				bgCtx.fillRect(
+				bgCtx.current.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
 					rollWidth,
@@ -184,12 +196,12 @@ export default function PianoRoll({
 			}
 		}
 
-		bgCtx.lineWidth = 2;
+		bgCtx.current.lineWidth = 2;
 
 		// horizontal grid lines
-		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
+		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg0");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			bgCtx.fillRect(0, gridHeight * (i + 1) - 1, rollWidth, 2);
+			bgCtx.current.fillRect(0, gridHeight * (i + 1) - 1, rollWidth, 2);
 		}
 
 		// vertical grid lines
@@ -199,23 +211,23 @@ export default function PianoRoll({
 					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
-				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
+				bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg4");
 			} else if (
 				(view.loc + i + 1) % (16 / sequence.denominator) ==
 				0
 			) {
-				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg2");
+				bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg2");
 			} else {
-				bgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
+				bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg0");
 			}
 			if ((view.loc + i + 1) % stepLength == 0) {
-				bgCtx.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
+				bgCtx.current.fillRect(gridWidth * (i + 1) - 1, 0, 2, rollHeight);
 			}
 		}
 
 		// darken past the end of the sequence
-		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg");
-		bgCtx.fillRect(
+		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg");
+		bgCtx.current.fillRect(
 			Math.max(0, 1 + gridWidth * (sequence.length - view.loc)),
 			0,
 			rollWidth,
@@ -223,14 +235,14 @@ export default function PianoRoll({
 		);
 
 		// draw playhead
-		bgCtx.fillStyle = computedStyle.getPropertyValue("--bg3");
-		bgCtx.fillRect((tick - view.loc) * gridWidth , 0, gridWidth, rollHeight);
+		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg3");
+		bgCtx.current.fillRect((tick - view.loc) * gridWidth , 0, gridWidth, rollHeight);
 	}
 
 	function drawFG() {
-		if (!fgCtx) return;
+		if (!fgCtx.current || !computedStyle.current) return;
 
-		fgCtx.clearRect(0, 0, rollWidth, rollHeight);
+		fgCtx.current.clearRect(0, 0, rollWidth, rollHeight);
 
 		sequenceMap.forEach((value) => {
 			if (value != selectedNote &&
@@ -240,8 +252,10 @@ export default function PianoRoll({
 					value.location,
 					value.pitch,
 					value.duration,
-					computedStyle.getPropertyValue(currentInstrument.primary),
-					computedStyle.getPropertyValue(currentInstrument.accent),
+					// @ts-ignore
+					computedStyle.current.getPropertyValue(currentInstrument.primary),
+					// @ts-ignore
+					computedStyle.current.getPropertyValue(currentInstrument.accent),
 					false
 				);
 			}
@@ -254,22 +268,22 @@ export default function PianoRoll({
 				selectedNote.location,
 				selectedNote.pitch,
 				selectedNote.duration,
-				computedStyle.getPropertyValue(currentInstrument.primary),
-				computedStyle.getPropertyValue(currentInstrument.accent),
+				computedStyle.current.getPropertyValue(currentInstrument.primary),
+				computedStyle.current.getPropertyValue(currentInstrument.accent),
 				true
 			);
 		}
 
 		// draw location labels
-		fgCtx.font = "24px monospace";
-		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg4");
+		fgCtx.current.font = "24px monospace";
+		fgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg4");
 		for (let i = 0; i < rollWidth / gridWidth; i++) {
 			if (
 				(view.loc + i) %
 					((sequence.numerator * 16) / sequence.denominator) ==
 				0
 			) {
-				fgCtx.fillText(
+				fgCtx.current.fillText(
 					`${
 						(view.loc + i) /
 						((sequence.numerator * 16) / sequence.denominator)
@@ -290,10 +304,10 @@ export default function PianoRoll({
 		highlighted: boolean
 	) {
 		if (length < 0) return;
-		if (!fgCtx) return;
+		if (!fgCtx.current || !computedStyle.current) return;
 
-		fgCtx.fillStyle = colorFill;
-		fgCtx.fillRect(
+		fgCtx.current.fillStyle = colorFill;
+		fgCtx.current.fillRect(
 			(location - view.loc) * gridWidth,
 			rollHeight -
 				((pitch - view.pitch) * gridHeight + gridHeight) +
@@ -301,9 +315,9 @@ export default function PianoRoll({
 			gridWidth * length,
 			gridHeight
 		);
-		fgCtx.strokeStyle = colorOutline;
-		fgCtx.lineWidth = 2;
-		fgCtx.strokeRect(
+		fgCtx.current.strokeStyle = colorOutline;
+		fgCtx.current.lineWidth = 2;
+		fgCtx.current.strokeRect(
 			(location - view.loc) * gridWidth,
 			rollHeight -
 				((pitch - view.pitch) * gridHeight + gridHeight) +
@@ -311,8 +325,8 @@ export default function PianoRoll({
 			gridWidth * length,
 			gridHeight
 		);
-		fgCtx.fillStyle = colorOutline;
-		fgCtx.fillRect(
+		fgCtx.current.fillStyle = colorOutline;
+		fgCtx.current.fillRect(
 			(location - view.loc + length) * gridWidth - 6,
 			rollHeight -
 				((pitch - view.pitch) * gridHeight + gridHeight) +
@@ -322,8 +336,8 @@ export default function PianoRoll({
 		);
 
 		if (highlighted) {
-			fgCtx.strokeStyle = computedStyle.getPropertyValue("--fg0");
-			fgCtx.strokeRect(
+			fgCtx.current.strokeStyle = computedStyle.current.getPropertyValue("--fg0");
+			fgCtx.current.strokeRect(
 				(location - view.loc) * gridWidth - 2,
 				rollHeight -
 					((pitch - view.pitch) * gridHeight + gridHeight) -
@@ -335,13 +349,13 @@ export default function PianoRoll({
 	}
 
 	function velocityAlert(velocity: number) {
-		if (!fgCtx || !selectedNote) return;
+		if (!fgCtx.current || !selectedNote || !computedStyle.current) return;
 
-		fgCtx.fillStyle = computedStyle.getPropertyValue("--bg0");
-		fgCtx.fillRect(0, 0, 200, 34);
-		fgCtx.font = "24px monospace";
-		fgCtx.fillStyle = computedStyle.getPropertyValue("--fg0");
-		fgCtx.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24);
+		fgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg0");
+		fgCtx.current.fillRect(0, 0, 200, 34);
+		fgCtx.current.font = "24px monospace";
+		fgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--fg0");
+		fgCtx.current.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24);
 	}
 
 	function getGridPos(e: MouseEvent) {
@@ -361,6 +375,10 @@ export default function PianoRoll({
 
 	function handleMouseDown(e: MouseEvent) {
 		e.preventDefault();
+
+		if (!computedStyle.current) {
+			return;
+		}
 
 		let { location, pitch, isRightHalf } = getGridPos(e);
 
@@ -422,8 +440,8 @@ export default function PianoRoll({
 					startGridX,
 					startGridY,
 					selectedNote.duration,
-					computedStyle.getPropertyValue(currentInstrument.primary),
-					computedStyle.getPropertyValue(currentInstrument.accent),
+					computedStyle.current.getPropertyValue(currentInstrument.primary),
+					computedStyle.current.getPropertyValue(currentInstrument.accent),
 					false
 				);
 			}
@@ -450,6 +468,10 @@ export default function PianoRoll({
 	function handleMouseMove(e: MouseEvent) {
 		e.preventDefault();
 
+		if (!computedStyle.current) {
+			return;
+		}
+
 		(document.activeElement as HTMLElement).blur();
 
 		if (dragState == DRAG_STATES.NOT_DRAGGING) return;
@@ -465,8 +487,8 @@ export default function PianoRoll({
 				selectedNote.location + location - startGridX,
 				pitch,
 				selectedNote.duration,
-				computedStyle.getPropertyValue(currentInstrument.primary),
-				computedStyle.getPropertyValue(currentInstrument.accent),
+				computedStyle.current.getPropertyValue(currentInstrument.primary),
+				computedStyle.current.getPropertyValue(currentInstrument.accent),
 				false
 			);
 		} else {
@@ -479,8 +501,8 @@ export default function PianoRoll({
 					stepLength,
 					location - selectedNote.location + stepLength
 				),
-				computedStyle.getPropertyValue(currentInstrument.primary),
-				computedStyle.getPropertyValue(currentInstrument.accent),
+				computedStyle.current.getPropertyValue(currentInstrument.primary),
+				computedStyle.current.getPropertyValue(currentInstrument.accent),
 				false
 			);
 		}

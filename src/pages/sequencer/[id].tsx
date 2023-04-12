@@ -39,7 +39,12 @@ import {
 	//sequenceDatabaseToSharedMap,
 	getFluidData,
 } from "../_app";
-import { SharedMap, IFluidContainer, SharedString } from "fluid-framework";
+import {
+	SharedMap,
+	IFluidContainer,
+	SharedString,
+	LoadableObjectRecord,
+} from "fluid-framework";
 import TinyliciousClient, {
 	TinyliciousContainerServices,
 } from "@fluidframework/tinylicious-client";
@@ -57,32 +62,9 @@ const RenderState = {
 export default function Home({ id }: PageParams) {
 	const [tick, setTick] = useState(-1);
 	const [stepLength, setStepLength] = useState(1);
-	const [fluidSequence, setFluidSequence] = useState<SharedMap>();
-	const [fluidNotes, setFluidNotes] = useState<SharedMap>();
-	const [container, setContainer] = useState<IFluidContainer>();
+	const [fluidSharedObjects, setFluidSharedObjects] =
+		useState<LoadableObjectRecord>();
 	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
-
-	const getMetadata = useCallback((flSeq?: SharedMap) => {
-		if (flSeq != null) {
-			return new SequenceMetadata({
-				id: flSeq.get("id") as string,
-				length: flSeq.get("length") as number,
-				bpm: flSeq.get("bpm") as number,
-				numerator: flSeq.get("numerator") as number,
-				denominator: flSeq.get("denominator") as number,
-			});
-		} else {
-			return new SequenceMetadata();
-		}
-	}, []);
-
-	const getNoteMap = useCallback((flNotes?: SharedMap) => {
-		if (flNotes != null) {
-			return new Map<string, Note>(flNotes as Map<string, Note>);
-		} else {
-			return new Map<string, Note>();
-		}
-	}, []);
 
 	const [notes, setNotes] = useState<Map<string, Note>>(
 		new Map<string, Note>()
@@ -101,7 +83,7 @@ export default function Home({ id }: PageParams) {
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {
-				setContainer(container);
+				setFluidSharedObjects(container.initialObjects);
 			})
 			.catch((reason) => {
 				setRenderState(RenderState.fail);
@@ -111,110 +93,75 @@ export default function Home({ id }: PageParams) {
 		getInstruments();
 	}, [id]);
 
-	/**
-	 * Runs on fluid update (Do not call)
-	 */
-	const fluidUpdateSeq = useCallback(
-		(flSeq: SharedMap) => {
-			if (flSeq != null) {
-				setSeq(getMetadata(flSeq));
-			}
-		},
-		[getMetadata]
-	);
-
-	/**
-	 * Runs on fluid update (Do not call)
-	 */
-	const fluidUpdateNotes = useCallback(
-		(flNotes: SharedMap) => {
-			if (flNotes != null) {
-				setNotes(getNoteMap(flNotes));
-			}
-		},
-		[getNoteMap]
-	);
-
 	// Run when container updates
 	useEffect(() => {
-		if (container != null) {
-			container.once("connected", () => {
-				const newMap = container.initialObjects.metadata as SharedMap;
-				const newNotes = container.initialObjects.sequence as SharedMap;
-				setFluidSequence(newMap);
-				setFluidNotes(newNotes);
-				newMap.on("valueChanged", fluidUpdateSeq);
-				newNotes.on("valueChanged", fluidUpdateNotes);
-				setSeq(getMetadata(newMap));
-				setNotes(getNoteMap(newNotes));
-				setRenderState(RenderState.ready);
-			});
+		if (fluidSharedObjects != null) {
+			const flSeq = fluidSharedObjects.metadata as SharedMap;
+			const flNotes = fluidSharedObjects.sequence as SharedMap;
+			const fluidUpdateSeq = () => {
+				setSeq(getMetadata(flSeq));
+			};
+			const fluidUpdateNotes = () => {
+				console.log(`flun: ${flNotes}`);
+				setNotes(getNoteMap(flNotes));
+				console.log("Update Notes");
+			};
+			fluidUpdateSeq();
+			fluidUpdateNotes();
+			flSeq.on("valueChanged", fluidUpdateSeq);
+			flNotes.on("valueChanged", fluidUpdateNotes);
+			setSeq(getMetadata(flSeq));
+			setNotes(getNoteMap(flNotes));
+			setRenderState(RenderState.ready);
+
 			return () => {
-				fluidSequence?.off("valueChanged", fluidUpdateSeq);
-				fluidNotes?.off("valueChanged", fluidUpdateNotes);
+				flSeq.off("valueChanged", fluidUpdateSeq);
+				flNotes.off("valueChanged", fluidUpdateNotes);
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [container]);
+	}, [fluidSharedObjects]);
 
 	const changeSeq = useCallback(
 		(newSequence: SequenceMetadata) => {
-			if (fluidSequence != null) {
+			const flSeq = fluidSharedObjects?.metadata as SharedMap;
+			if (flSeq != null) {
 				Object.keys(newSequence).forEach((key) => {
-					fluidSequence.set(
-						key,
-						newSequence[key as keyof SequenceMetadata]
-					);
+					flSeq.set(key, newSequence[key as keyof SequenceMetadata]);
 				});
 				setSeq(new SequenceMetadata(newSequence));
 			}
 		},
-		[fluidSequence]
-	);
-
-	const changeNotes = useCallback(
-		(newSequence: SequenceMetadata) => {
-			if (fluidSequence != null) {
-				Object.keys(newSequence).forEach((key) => {
-					fluidSequence.set(
-						key,
-						newSequence[key as keyof SequenceMetadata]
-					);
-				});
-				setSeq(new SequenceMetadata(newSequence));
-			}
-		},
-		[fluidSequence]
+		[fluidSharedObjects]
 	);
 
 	const getArray = useCallback(() => {
 		return Array.from(notes.values());
 	}, [notes]);
 
-	function addNote(note: Note) {
-		// let submap: SharedMap = (fluidSequence as SharedMap).get(
-		// 	note.instrument.serialize()
-		// ) as SharedMap;
-		// while (fluidSequence == undefined) {}
-		// if (submap == undefined) {
-		// 	(container as IFluidContainer).create(SharedMap).then((data) => {
-		// 		while (data == undefined) {}
-		// 		submap = data;
-		// 	});
-		// }
-		// submap.set(note.getPitchLocation().serialize(), note);
-	}
+	const addNote = useCallback(
+		(note: Note) => {
+			const flNotes = fluidSharedObjects?.sequence as SharedMap;
 
-	function removeNote(note: Note) {
-		// const submap: SharedMap = (fluidSequence as SharedMap).get(
-		// 	note.instrument.serialize()
-		// ) as SharedMap;
-		// submap.delete(note.getPitchLocation().serialize());
-	}
+			flNotes?.set(note.getPitchLocation().serialize(), note);
+			//notes.set(note.getPitchLocation().serialize(), note);
+		},
+		[fluidSharedObjects]
+	);
+
+	const removeNote = useCallback(
+		(note: Note) => {
+			const flNotes = fluidSharedObjects?.sequence as SharedMap;
+
+			flNotes?.delete(note.getPitchLocation().serialize());
+			//notes.set(note.getPitchLocation().serialize(), note);
+		},
+		[fluidSharedObjects]
+	);
 
 	useEffect(() => {
-		console.log(fluidSequence);
-		console.log(fluidNotes);
+		console.log(fluidSharedObjects?.metadata as SharedMap);
+		console.log(fluidSharedObjects?.sequence as SharedMap);
 		console.log(seqData);
 		console.log(notes);
 	});
@@ -398,4 +345,30 @@ function getOctave(note: Note) {
 	const pitchNumber: number = note.pitch % 12;
 	const octaveNumber: number = (note.pitch - pitchNumber) / 12;
 	return octaveNumber;
+}
+
+function getMetadata(flSeq: SharedMap) {
+	if (flSeq != null) {
+		return new SequenceMetadata({
+			id: flSeq.get("id") as string,
+			length: flSeq.get("length") as number,
+			bpm: flSeq.get("bpm") as number,
+			numerator: flSeq.get("numerator") as number,
+			denominator: flSeq.get("denominator") as number,
+		});
+	} else {
+		return new SequenceMetadata();
+	}
+}
+
+function getNoteMap(flNotes: SharedMap) {
+	if (flNotes != null) {
+		const newMap = new Map<string, Note>();
+		flNotes.forEach((note, pitchLoc) => {
+			newMap.set(pitchLoc, new Note(note));
+		});
+		return newMap;
+	} else {
+		return new Map<string, Note>();
+	}
 }

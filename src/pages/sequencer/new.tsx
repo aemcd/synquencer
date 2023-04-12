@@ -50,15 +50,15 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 		denominator: 4,
 	});
 	const metadata = container.initialObjects.metadata as SharedMap;
-	// const notes = container.initialObjects.sequence as SharedMap;
-	// const testNote = new Note({
-	// 	location: 0,
-	// 	velocity: 10,
-	// 	duration: 4,
-	// 	pitch: 40,
-	// 	instrument: instrumentList.Piano,
-	// });
-	// notes.set(testNote.serialize(), testNote);
+	const notes = container.initialObjects.sequence as SharedMap;
+	const startNote = new Note({
+		location: 0,
+		velocity: 100,
+		duration: 4,
+		pitch: 60,
+		instrument: instrumentList.Piano,
+	});
+	notes.set(startNote.getPitchLocation().serialize(), startNote);
 	metadata.set("id", id);
 	metadata.set("length", newSeq.length);
 	metadata.set("bpm", newSeq.bpm);

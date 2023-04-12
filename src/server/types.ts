@@ -2,6 +2,8 @@
 //https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
 //https://www.xolv.io/blog/dev-notes/how-to-pass-a-class-to-a-function-in-typescript/
 
+import { SharedMap } from "fluid-framework";
+
 export abstract class Serializable {
 	serialize() {
 		return JSON.stringify(Object.entries(this));
@@ -131,6 +133,13 @@ export class PitchLocation extends Serializable {
 	}
 }
 
+export const schema = {
+	initialObjects: {
+		metadata: SharedMap,
+		sequence: SharedMap,
+	},
+} as const;
+
 /*
 export class Pitch {
     height: number;
@@ -176,12 +185,12 @@ export const instrumentList = {
 	Bass: new Instrument({ channel: 33, name: "Bass" }),
 	Trumpet: new Instrument({ channel: 57, name: "Trumpet" }),
 	Synth_Drum: new Instrument({ channel: 119, name: "Synth Drum" }),
-};
+} as const;
 
 export const instrumentColors = {
-	Piano: {primary: "--yellow", accent: "--yellow-accent"},
-	Guitar: {primary: "--green", accent: "--green-accent"},
-	Bass: {primary: "--blue", accent: "--blue-accent"},
-	Trumpet: {primary: "--red", accent: "--red-accent"},
-	Synth_Drum: {primary: "--purple", accent: "--purple-accent"} 
-}
+	Piano: { primary: "--yellow", accent: "--yellow-accent" },
+	Guitar: { primary: "--green", accent: "--green-accent" },
+	Bass: { primary: "--blue", accent: "--blue-accent" },
+	Trumpet: { primary: "--red", accent: "--red-accent" },
+	Synth_Drum: { primary: "--purple", accent: "--purple-accent" },
+};

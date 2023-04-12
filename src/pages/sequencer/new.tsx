@@ -2,7 +2,7 @@ import Head from "next/head";
 import TopBar from "@/components/TopBar";
 import PianoRoll from "@/components/PianoRoll";
 import { AddSequence } from "@/database/calls";
-import { SequenceMetadata } from "@/server/types";
+import { Note, SequenceMetadata, instrumentList, schema } from "@/server/types";
 import * as randomstring from "randomstring";
 import { useRouter } from "next/router";
 import {
@@ -11,6 +11,8 @@ import {
 	GetServerSidePropsResult,
 } from "next";
 import { InsertOneResult } from "mongodb";
+import TinyliciousClient from "@fluidframework/tinylicious-client";
+import { IFluidContainer, SharedMap } from "fluid-framework";
 
 type route = {
 	route: string;
@@ -37,29 +39,48 @@ export default function Home() {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+	const client: TinyliciousClient = new TinyliciousClient();
+	const { container, services } = await client.createContainer(schema);
+	const id = await container.attach();
 	const newSeq = new SequenceMetadata({
-		id: randomstring.generate(),
+		id: id,
 		length: 32,
 		bpm: 120,
 		numerator: 4,
 		denominator: 4,
 	});
-
+	const metadata = container.initialObjects.metadata as SharedMap;
+	// const notes = container.initialObjects.sequence as SharedMap;
+	// const testNote = new Note({
+	// 	location: 0,
+	// 	velocity: 10,
+	// 	duration: 4,
+	// 	pitch: 40,
+	// 	instrument: instrumentList.Piano,
+	// });
+	// notes.set(testNote.serialize(), testNote);
+	metadata.set("id", id);
+	metadata.set("length", newSeq.length);
+	metadata.set("bpm", newSeq.bpm);
+	metadata.set("numerator", newSeq.numerator);
+	metadata.set("denominator", newSeq.denominator);
 	const response = await AddSequence(newSeq);
-	console.log(response);
-	if (response !== undefined && response?.acknowledged) {
-		return {
-			redirect: {
-				permanent: false,
-				destination: `/sequencer/${newSeq.id}`,
-			},
-		};
-	} else {
+
+	//await client.getContainer(id, schema);
+
+	//container.dispose();
+	if (container != null && response?.acknowledged === true) {
 		return {
 			redirect: {
 				permanent: true,
-				destination: "..",
+				destination: `/sequencer/${id}`,
 			},
 		};
 	}
+	return {
+		redirect: {
+			permanent: true,
+			destination: "..",
+		},
+	};
 }

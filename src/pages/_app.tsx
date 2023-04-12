@@ -31,7 +31,7 @@ export const getFluidData = async () => {
 			metadata: SharedMap,
 			sequence: SharedMap,
 		},
-		dynamicObjectTypes: [SharedString, SharedMap],
+		dynamicObjectTypes: [SharedMap, SharedMap],
 	};
 	//let container;
 	const containerId = location.hash.substring(1);
@@ -125,7 +125,6 @@ export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 
 export default function App({ Component, pageProps }: AppProps) {
 	//TODO: fully implement fluid framework structures with React
-	
 
 	return <Component {...pageProps} />;
 }

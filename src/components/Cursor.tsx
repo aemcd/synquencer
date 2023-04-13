@@ -4,7 +4,7 @@ import {
 	Instrument,
 	instrumentList,
 	Note,
-	PitchLocation,
+	NoteKey,
 	SequenceMetadata,
 } from "@/server/types";
 import { useHotkeys } from "react-hotkeys-hook";

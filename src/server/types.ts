@@ -118,22 +118,25 @@ export class Note extends Serializable {
 		return `${pitchName}${octavenumber}`;
 	}
 
-	public getPitchLocation() {
-		return new PitchLocation({
+	public getNoteKey() {
+		return new NoteKey({
 			pitch: this.pitch,
 			location: this.location,
+			instrument: this.instrument
 		});
 	}
 }
 
-export class PitchLocation extends Serializable {
+export class NoteKey extends Serializable {
 	pitch: number;
 	location: number;
+	instrument: Instrument;
 
-	constructor(args: { pitch: number; location: number }) {
+	constructor(args: { pitch: number; location: number, instrument: Instrument}) {
 		super();
 		this.pitch = args.pitch;
 		this.location = args.location;
+		this.instrument = args.instrument;
 	}
 }
 
@@ -143,21 +146,6 @@ export const schema = {
 		sequence: SharedMap,
 	},
 } as const;
-
-/*
-export class Pitch {
-    height: number;
-    name: String;
-
-    constructor (
-        height: number,
-        name: String
-    ) {
-        this.height = height;
-        this.name = name;
-    }
-}
-*/
 
 export class Instrument extends Serializable {
 	channel: number;

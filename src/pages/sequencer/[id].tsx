@@ -4,7 +4,7 @@ import {
 	Instrument,
 	instrumentList,
 	Note,
-	PitchLocation,
+	NoteKey,
 	schema,
 	SequenceMetadata,
 } from "@/server/types";
@@ -35,9 +35,7 @@ import {
 import Cursor from "@/components/Cursor";
 import {
 	loadSequence,
-	//getContainer,
 	sequenceSharedMapToDatabase,
-	//sequenceDatabaseToSharedMap,
 	getFluidData,
 } from "../_app";
 import {
@@ -174,8 +172,7 @@ export default function Home({ id }: PageParams) {
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;
 
-			flNotes?.set(note.getPitchLocation().serialize(), note);
-			//notes.set(note.getPitchLocation().serialize(), note);
+			flNotes?.set(note.getNoteKey().serialize(), note);
 		},
 		[fluidInitialObjects]
 	);
@@ -184,8 +181,7 @@ export default function Home({ id }: PageParams) {
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;
 
-			flNotes?.delete(note.getPitchLocation().serialize());
-			//notes.set(note.getPitchLocation().serialize(), note);
+			flNotes?.delete(note.getNoteKey().serialize());
 		},
 		[fluidInitialObjects]
 	);

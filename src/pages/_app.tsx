@@ -8,7 +8,6 @@ import {
 	SequenceMetadata,
 	Note,
 	Instrument,
-	PitchLocation,
 } from "@/server/types";
 import { SharedString } from "@fluidframework/sequence";
 import { IFluidContainer, IValueChanged, SharedMap } from "fluid-framework";
@@ -31,7 +30,7 @@ export const getFluidData = async () => {
 			metadata: SharedMap,
 			sequence: SharedMap,
 		},
-		dynamicObjectTypes: [SharedMap, SharedMap],
+		dynamicObjectTypes: [],
 	};
 	//let container;
 	const containerId = location.hash.substring(1);
@@ -102,7 +101,7 @@ export const sequenceDatabaseToSharedMap = async (sequence: SharedMap, list: Not
 			sequence.set(instrument, newNoteList);
 		}
 		(sequence.get(instrument) as SharedMap).set(
-			note.getPitchLocation().serialize(),
+			note.getNoteKey().serialize(),
 			note
 		);
 	}

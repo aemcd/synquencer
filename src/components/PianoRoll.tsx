@@ -12,7 +12,7 @@ import React, {
 import {
 	Instrument,
 	Note,
-	PitchLocation,
+	NoteKey,
 	SequenceMetadata,
 } from "@/server/types";
 import { playNoteDefault } from "@/client/write_midi";
@@ -391,7 +391,7 @@ export default function PianoRoll({
 			if (selectedNote != null) {
 				// @ts-ignore
 				removeNote(selectedNote);
-				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
 			}
 			selectedNote = null;
 			drawFG();
@@ -445,7 +445,7 @@ export default function PianoRoll({
 					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
-				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
+				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
 				selectedNote = newNote;
 				copiedNote = newNote;
 				drawFG();
@@ -518,8 +518,8 @@ export default function PianoRoll({
 				});
 				addNote(newNote);
 				removeNote(selectedNote);
-				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
-				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
+				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
 				selectedNote = newNote;
 			}
 		} else {
@@ -529,7 +529,7 @@ export default function PianoRoll({
 					location == startGridX &&
 					pitch == startGridY &&
 					sequenceMap.has(
-						new PitchLocation({
+						new NoteKey({
 							pitch: startGridY,
 							location: startGridX,
 						}).serialize()
@@ -548,7 +548,7 @@ export default function PianoRoll({
 					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
-				// sequenceMap.set(selectedNote.getPitchLocation().serialize(),newNote);
+				// sequenceMap.set(selectedNote.getNoteKey().serialize(),newNote);
 				selectedNote = newNote;
 			}
 		}
@@ -585,7 +585,7 @@ export default function PianoRoll({
 					instrument: selectedNote.instrument,
 				});
 				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
+					newNote.getNoteKey().serialize(),
 					newNote
 				);
 				selectedNote = newNote;
@@ -600,7 +600,7 @@ export default function PianoRoll({
 					instrument: selectedNote.instrument,
 				});
 				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
+					newNote.getNoteKey().serialize(),
 					newNote
 				);
 				selectedNote = newNote;

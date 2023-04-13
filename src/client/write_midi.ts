@@ -1,7 +1,7 @@
 import {
 	instrumentList,
 	Note,
-	PitchLocation,
+	NoteKey,
 	SequenceMetadata,
 } from "@/server/types";
 import MW from "midi-writer-js";

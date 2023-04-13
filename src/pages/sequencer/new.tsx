@@ -65,7 +65,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 		pitch: 60,
 		instrument: instrumentList.Piano,
 	});
-	notes.set(startNote.getPitchLocation().serialize(), startNote);
+	notes.set(startNote.getNoteKey().serialize(), startNote);
 	metadata.set("id", id);
 	metadata.set("length", newSeq.length);
 	metadata.set("bpm", newSeq.bpm);

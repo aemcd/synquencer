@@ -44,6 +44,8 @@ import {
 	IFluidContainer,
 	SharedString,
 	LoadableObjectRecord,
+	AttachState,
+	ConnectionState,
 } from "fluid-framework";
 import TinyliciousClient, {
 	TinyliciousContainerServices,
@@ -62,7 +64,7 @@ const RenderState = {
 export default function Home({ id }: PageParams) {
 	const [tick, setTick] = useState(-1);
 	const [stepLength, setStepLength] = useState(1);
-	const [fluidSharedObjects, setFluidSharedObjects] =
+	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
 	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
 
@@ -83,7 +85,34 @@ export default function Home({ id }: PageParams) {
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {
-				setFluidSharedObjects(container.initialObjects);
+				if (container == null || services == null) {
+					setRenderState(RenderState.fail);
+					return;
+				}
+				console.log(container.connectionState);
+				console.log(services);
+
+				if (
+					container.attachState === AttachState.Attached ||
+					container.attachState === AttachState.Attaching
+				) {
+					if (
+						container.connectionState ===
+							ConnectionState.Connected ||
+						container.connectionState ==
+							ConnectionState.CatchingUp ||
+						container.connectionState ==
+							ConnectionState.EstablishingConnection
+					) {
+						setFluidInitialObjects(container.initialObjects);
+					} else {
+						container.connect();
+						setFluidInitialObjects(container.initialObjects);
+					}
+				} else {
+					setRenderState(RenderState.fail);
+					throw Error("Not attached to service");
+				}
 			})
 			.catch((reason) => {
 				setRenderState(RenderState.fail);
@@ -95,9 +124,9 @@ export default function Home({ id }: PageParams) {
 
 	// Run when container updates
 	useEffect(() => {
-		if (fluidSharedObjects != null) {
-			const flSeq = fluidSharedObjects.metadata as SharedMap;
-			const flNotes = fluidSharedObjects.sequence as SharedMap;
+		if (fluidInitialObjects != null) {
+			const flSeq = fluidInitialObjects.metadata as SharedMap;
+			const flNotes = fluidInitialObjects.sequence as SharedMap;
 			const fluidUpdateSeq = () => {
 				setSeq(getMetadata(flSeq));
 			};
@@ -120,11 +149,11 @@ export default function Home({ id }: PageParams) {
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [fluidSharedObjects]);
+	}, [fluidInitialObjects]);
 
 	const changeSeq = useCallback(
 		(newSequence: SequenceMetadata) => {
-			const flSeq = fluidSharedObjects?.metadata as SharedMap;
+			const flSeq = fluidInitialObjects?.metadata as SharedMap;
 			if (flSeq != null) {
 				Object.keys(newSequence).forEach((key) => {
 					flSeq.set(key, newSequence[key as keyof SequenceMetadata]);
@@ -132,7 +161,7 @@ export default function Home({ id }: PageParams) {
 				setSeq(new SequenceMetadata(newSequence));
 			}
 		},
-		[fluidSharedObjects]
+		[fluidInitialObjects]
 	);
 
 	const getArray = useCallback(() => {
@@ -141,27 +170,27 @@ export default function Home({ id }: PageParams) {
 
 	const addNote = useCallback(
 		(note: Note) => {
-			const flNotes = fluidSharedObjects?.sequence as SharedMap;
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
 
 			flNotes?.set(note.getPitchLocation().serialize(), note);
 			//notes.set(note.getPitchLocation().serialize(), note);
 		},
-		[fluidSharedObjects]
+		[fluidInitialObjects]
 	);
 
 	const removeNote = useCallback(
 		(note: Note) => {
-			const flNotes = fluidSharedObjects?.sequence as SharedMap;
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
 
 			flNotes?.delete(note.getPitchLocation().serialize());
 			//notes.set(note.getPitchLocation().serialize(), note);
 		},
-		[fluidSharedObjects]
+		[fluidInitialObjects]
 	);
 
 	useEffect(() => {
-		console.log(fluidSharedObjects?.metadata as SharedMap);
-		console.log(fluidSharedObjects?.sequence as SharedMap);
+		console.log(fluidInitialObjects?.metadata as SharedMap);
+		console.log(fluidInitialObjects?.sequence as SharedMap);
 		console.log(seqData);
 		console.log(notes);
 	});

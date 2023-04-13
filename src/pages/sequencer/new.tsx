@@ -2,7 +2,13 @@ import Head from "next/head";
 import TopBar from "@/components/TopBar";
 import PianoRoll from "@/components/PianoRoll";
 import { AddSequence } from "@/database/calls";
-import { Note, SequenceMetadata, instrumentList, schema } from "@/server/types";
+import {
+	Note,
+	SequenceMetadata,
+	connectionConfig,
+	instrumentList,
+	schema,
+} from "@/server/types";
 import * as randomstring from "randomstring";
 import { useRouter } from "next/router";
 import {
@@ -13,6 +19,7 @@ import {
 import { InsertOneResult } from "mongodb";
 import TinyliciousClient from "@fluidframework/tinylicious-client";
 import { IFluidContainer, SharedMap } from "fluid-framework";
+import { AzureClient } from "@fluidframework/azure-client";
 
 type route = {
 	route: string;
@@ -39,7 +46,7 @@ export default function Home() {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-	const client: TinyliciousClient = new TinyliciousClient();
+	const client: AzureClient = new AzureClient(connectionConfig);
 	const { container, services } = await client.createContainer(schema);
 	const id = await container.attach();
 	const newSeq = new SequenceMetadata({

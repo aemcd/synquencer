@@ -1,5 +1,6 @@
 import Head from "next/head";
 import {
+	connectionConfig,
 	Instrument,
 	instrumentList,
 	Note,
@@ -50,6 +51,7 @@ import {
 import TinyliciousClient, {
 	TinyliciousContainerServices,
 } from "@fluidframework/tinylicious-client";
+import { AzureClient } from "@fluidframework/azure-client";
 
 type PageParams = {
 	id: string;
@@ -81,7 +83,7 @@ export default function Home({ id }: PageParams) {
 	});
 
 	useEffect(() => {
-		const client: TinyliciousClient = new TinyliciousClient();
+		const client: AzureClient = new AzureClient(connectionConfig);
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {

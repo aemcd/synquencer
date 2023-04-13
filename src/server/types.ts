@@ -2,7 +2,11 @@
 //https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
 //https://www.xolv.io/blog/dev-notes/how-to-pass-a-class-to-a-function-in-typescript/
 
+import { v4 as uuidv4 } from "uuid";
 import { SharedMap } from "fluid-framework";
+import { getRandomName } from "@fluidframework/server-services-client";
+import { AzureClientProps } from "@fluidframework/azure-client";
+import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 
 export abstract class Serializable {
 	serialize() {
@@ -193,4 +197,36 @@ export const instrumentColors = {
 	Bass: { primary: "--blue", accent: "--blue-accent" },
 	Trumpet: { primary: "--red", accent: "--red-accent" },
 	Synth_Drum: { primary: "--purple", accent: "--purple-accent" },
-};
+} as const;
+
+export const useAzure = false;
+
+export function generateUser() {
+	const userConfig = {
+		id: uuidv4(),
+		name: getRandomName(),
+	} as const;
+	return userConfig;
+}
+
+export const user = generateUser();
+
+export const connectionConfig: AzureClientProps = useAzure
+	? ({
+			connection: {
+				tenantId: "c3172c50-a661-4db0-8a69-e03fb1a39f3b",
+				tokenProvider: new InsecureTokenProvider(
+					"043eecec8e88cffd7263ea50a6aa8240",
+					user
+				),
+				type: "remote",
+				endpoint: "https://us.fluidrelay.azure.com",
+			},
+	  } as const)
+	: ({
+			connection: {
+				tokenProvider: new InsecureTokenProvider("fooBar", user),
+				type: "local",
+				endpoint: "http://localhost:7070",
+			},
+	  } as const);

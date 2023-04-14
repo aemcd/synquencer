@@ -1,9 +1,11 @@
 import Head from "next/head";
 import {
+	connectionConfig,
 	Instrument,
 	instrumentList,
 	Note,
-	PitchLocation,
+	NoteKey,
+	schema,
 	SequenceMetadata,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
@@ -19,7 +21,7 @@ import {
 } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	getInstruments,
 	getTick,
@@ -33,72 +35,202 @@ import {
 import Cursor from "@/components/Cursor";
 import {
 	loadSequence,
-	getContainer,
 	sequenceSharedMapToDatabase,
-	sequenceDatabaseToSharedMap,
+	getFluidData,
 } from "../_app";
-import { SharedMap } from "fluid-framework";
+import {
+	SharedMap,
+	IFluidContainer,
+	SharedString,
+	LoadableObjectRecord,
+	AttachState,
+	ConnectionState,
+} from "fluid-framework";
+import TinyliciousClient, {
+	TinyliciousContainerServices,
+} from "@fluidframework/tinylicious-client";
+import { AzureClient } from "@fluidframework/azure-client";
 
 type PageParams = {
 	id: string;
 };
-type ContentPageProps = {
-	sequence: SequenceMetadata;
-	notes: Array<Note>;
-};
 
-export default function Home({ sequence, notes }: ContentPageProps) {
-	const thisInterval = useRef<NodeJS.Timer>();
-	const doReload = useRef<boolean>(true);
+const RenderState = {
+	wait: 0,
+	ready: 1,
+	fail: -1,
+} as const;
+
+export default function Home({ id }: PageParams) {
 	const [tick, setTick] = useState(-1);
-	const [updateSeq, setUpdateSeq] = useState(0);
+	const [stepLength, setStepLength] = useState(1);
+	const [fluidInitialObjects, setFluidInitialObjects] =
+		useState<LoadableObjectRecord>();
+	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
 
-	sequence = new SequenceMetadata(sequence);
-	notes = notes.map((note) => {
-		return new Note(note);
-	});
-
-	const [sequenceMap, setNotes] = useState<Map<string, Note>>(
-		new Map<string, Note>(
-			notes.map((note) => {
-				return [note.getPitchLocation().serialize(), note];
-			})
-		)
+	const [notes, setNotes] = useState<Map<string, Note>>(
+		new Map<string, Note>()
 	);
-	const [seqData, setSeq] = useState(sequence);
+	const [seqData, setSeq] = useState<SequenceMetadata>(
+		new SequenceMetadata()
+	);
 	const [currentInstrument, setCurrentInstrument] = useState({
 		instrument: instrumentList.Piano,
 		primary: "--yellow",
 		accent: "--yellow-accent",
 	});
 
-	// const sequenceMap = useMemo(() => {
-	// 	return getContainer().initialObjects.sequence as SharedMap;
-	// }, []);
-
-	function getArray() {
-		return Array.from(sequenceMap.values());
-		//return sequenceSharedMapToDatabase(sequenceMap);
-	}
-
-	const [stepLength, setStepLength] = useState(1);
-
 	useEffect(() => {
+		const client: AzureClient = new AzureClient(connectionConfig);
+		client
+			.getContainer(id, schema)
+			.then(({ container, services }) => {
+				if (container == null || services == null) {
+					setRenderState(RenderState.fail);
+					return;
+				}
+				console.log(container.connectionState);
+				console.log(services);
+
+				if (
+					container.attachState === AttachState.Attached ||
+					container.attachState === AttachState.Attaching
+				) {
+					if (
+						container.connectionState ===
+							ConnectionState.Connected ||
+						container.connectionState ==
+							ConnectionState.CatchingUp ||
+						container.connectionState ==
+							ConnectionState.EstablishingConnection
+					) {
+						setFluidInitialObjects(container.initialObjects);
+					} else {
+						container.connect();
+						setFluidInitialObjects(container.initialObjects);
+					}
+				} else {
+					setRenderState(RenderState.fail);
+					throw Error("Not attached to service");
+				}
+			})
+			.catch((reason) => {
+				setRenderState(RenderState.fail);
+			});
+
 		// Render Instruments
 		getInstruments();
-	}, []);
+	}, [id]);
+
+	// Run when container updates
+	useEffect(() => {
+		if (fluidInitialObjects != null) {
+			const flSeq = fluidInitialObjects.metadata as SharedMap;
+			const flNotes = fluidInitialObjects.sequence as SharedMap;
+			const fluidUpdateSeq = () => {
+				setSeq(getMetadata(flSeq));
+			};
+			const fluidUpdateNotes = () => {
+				console.log(`flun: ${flNotes}`);
+				setNotes(getNoteMap(flNotes));
+				console.log("Update Notes");
+			};
+			fluidUpdateSeq();
+			fluidUpdateNotes();
+			flSeq.on("valueChanged", fluidUpdateSeq);
+			flNotes.on("valueChanged", fluidUpdateNotes);
+			setSeq(getMetadata(flSeq));
+			setNotes(getNoteMap(flNotes));
+			setRenderState(RenderState.ready);
+
+			return () => {
+				flSeq.off("valueChanged", fluidUpdateSeq);
+				flNotes.off("valueChanged", fluidUpdateNotes);
+			};
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [fluidInitialObjects]);
+
+	const changeSeq = useCallback(
+		(newSequence: SequenceMetadata) => {
+			const flSeq = fluidInitialObjects?.metadata as SharedMap;
+			if (flSeq != null) {
+				Object.keys(newSequence).forEach((key) => {
+					flSeq.set(key, newSequence[key as keyof SequenceMetadata]);
+				});
+				setSeq(new SequenceMetadata(newSequence));
+			}
+		},
+		[fluidInitialObjects]
+	);
+
+	const getArray = useCallback(() => {
+		return Array.from(notes.values());
+	}, [notes]);
+
+	const addNote = useCallback(
+		(note: Note) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+
+			flNotes?.set(note.getNoteKey().serialize(), note);
+		},
+		[fluidInitialObjects]
+	);
+
+	const removeNote = useCallback(
+		(note: Note) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+
+			flNotes?.delete(note.getNoteKey().serialize());
+		},
+		[fluidInitialObjects]
+	);
 
 	useEffect(() => {
-		setUpdateSeq(updateSeq + 1);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [seqData]);
+		console.log(fluidInitialObjects?.metadata as SharedMap);
+		console.log(fluidInitialObjects?.sequence as SharedMap);
+		console.log(seqData);
+		console.log(notes);
+	});
 
-	function addNote(note: Note) {
-		sequenceMap.set(note.getPitchLocation().serialize(), note);
+	if (renderSate === RenderState.wait) {
+		return (
+			<>
+				<Head>
+					<title>Sequencer</title>
+					<meta
+						name="description"
+						content="Generated by create next app"
+					/>
+					<meta
+						name="viewport"
+						content="width=device-width, initial-scale=1"
+					/>
+					<link rel="icon" href="/favicon.ico" />
+				</Head>
+				<div>Loading...</div>
+			</>
+		);
 	}
 
-	function removeNote(note: Note) {
-		sequenceMap.delete(note.getPitchLocation().serialize());
+	if (renderSate === RenderState.fail) {
+		return (
+			<>
+				<Head>
+					<title>Sequencer</title>
+					<meta
+						name="description"
+						content="Generated by create next app"
+					/>
+					<meta
+						name="viewport"
+						content="width=device-width, initial-scale=1"
+					/>
+					<link rel="icon" href="/favicon.ico" />
+				</Head>
+				<div>Failed To Load</div>
+			</>
+		);
 	}
 
 	return (
@@ -116,7 +248,6 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 			<TopBar
-				key={updateSeq}
 				currentInstrument={currentInstrument}
 				sequence={seqData}
 				setStepLength={(newStepLength) => {
@@ -143,7 +274,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					WriteMidi(seqData, noteArr);
 				}}
 				playSequence={() => {
-					PlaySequence(seqData, sequenceMap);
+					PlaySequence(seqData, notes);
 					setTickFunction(() => {
 						setTick(getTick());
 					});
@@ -197,18 +328,18 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.numerator = parseInt(num);
 					newSeqData.denominator = parseInt(den);
-					setSeq(newSeqData);
+					changeSeq(newSeqData);
 				}}
 				setLength={(length) => {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.length = parseInt(length);
-					setSeq(newSeqData);
+					changeSeq(newSeqData);
 				}}
 			/>
 			<PianoRoll
 				sequence={seqData}
 				stepLength={stepLength}
-				sequenceMap={sequenceMap}
+				sequenceMap={notes}
 				currentInstrument={currentInstrument}
 				addNote={addNote}
 				removeNote={removeNote}
@@ -217,7 +348,7 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 			<Cursor
 				addNote={addNote}
 				removeNote={removeNote}
-				noteMap={sequenceMap}
+				noteMap={notes}
 				sequence={seqData}
 			/>
 		</>
@@ -227,36 +358,44 @@ export default function Home({ sequence, notes }: ContentPageProps) {
 export async function getServerSideProps({
 	params,
 }: GetServerSidePropsContext<PageParams>): Promise<
-	GetServerSidePropsResult<ContentPageProps>
+	GetServerSidePropsResult<PageParams>
 > {
-	try {
-		const databaseSequence = await GetSequence((params as PageParams).id);
-		const databaseNotes = await GetNotes((params as PageParams).id);
-		if (
-			!(
-				databaseNotes instanceof Array<Note> &&
-				databaseSequence instanceof SequenceMetadata
-			)
-		) {
-			throw new Error("Notes or Sequence not found");
-		}
-
-		return {
-			// Passed to the page component as props
-			props: {
-				sequence: JSON.parse(JSON.stringify(databaseSequence)),
-				notes: JSON.parse(JSON.stringify(databaseNotes)),
-			},
-		};
-	} catch (e) {
-		return {
-			notFound: true,
-		};
-	}
+	return {
+		// Passed to the page component as props
+		props: {
+			id: (params as PageParams).id,
+		},
+	};
 }
 
 function getOctave(note: Note) {
 	const pitchNumber: number = note.pitch % 12;
 	const octaveNumber: number = (note.pitch - pitchNumber) / 12;
 	return octaveNumber;
+}
+
+function getMetadata(flSeq: SharedMap) {
+	if (flSeq != null) {
+		return new SequenceMetadata({
+			id: flSeq.get("id") as string,
+			length: flSeq.get("length") as number,
+			bpm: flSeq.get("bpm") as number,
+			numerator: flSeq.get("numerator") as number,
+			denominator: flSeq.get("denominator") as number,
+		});
+	} else {
+		return new SequenceMetadata();
+	}
+}
+
+function getNoteMap(flNotes: SharedMap) {
+	if (flNotes != null) {
+		const newMap = new Map<string, Note>();
+		flNotes.forEach((note, pitchLoc) => {
+			newMap.set(pitchLoc, new Note(note));
+		});
+		return newMap;
+	} else {
+		return new Map<string, Note>();
+	}
 }

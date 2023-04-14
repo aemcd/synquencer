@@ -12,7 +12,7 @@ import React, {
 import {
 	Instrument,
 	Note,
-	PitchLocation,
+	NoteKey,
 	SequenceMetadata,
 } from "@/server/types";
 import { playNoteDefault } from "@/client/write_midi";
@@ -31,6 +31,33 @@ type ContentPageProps = {
 	tick: number
 };
 
+let KEY_COLORS: boolean[] = [
+	true,
+	false,
+	true,
+	false,
+	true,
+	true,
+	false,
+	true,
+	false,
+	true,
+	false,
+	true,
+];
+
+const DRAG_STATES = {
+	NOT_DRAGGING: 0,
+	MOVING_NOTE: 1,
+	CHANGING_LENGTH: 2,
+} as const;
+
+const rollWidth = 767;
+const rollHeight = 575;
+
+const gridWidth = 24;
+const gridHeight = 24;
+
 export default function PianoRoll({
 	sequence,
 	stepLength,
@@ -40,11 +67,6 @@ export default function PianoRoll({
 	removeNote,
 	tick
 }: ContentPageProps) {
-	let rollWidth = 767;
-	let rollHeight = 575;
-
-	let gridWidth = 24;
-	let gridHeight = 24;
 
 	// viewPos and view.current.pitch represent the note location
 	// of the bottom-left of this canvas
@@ -52,44 +74,23 @@ export default function PianoRoll({
 	// 24 is C1
 	//let view.current.pitch = 24;
 
-	let keyColors: boolean[] = [
-		true,
-		false,
-		true,
-		false,
-		true,
-		true,
-		false,
-		true,
-		false,
-		true,
-		false,
-		true,
-	];
-
-	const DRAG_STATES = {
-		NOT_DRAGGING: 0,
-		MOVING_NOTE: 1,
-		CHANGING_LENGTH: 2,
-	} as const;
-
 	let dragState: number = DRAG_STATES.NOT_DRAGGING;
 	let selectedNote: Note | null = null;
 	let copiedNote: Note | null = null;
 	let startGridX = -1;
 	let startGridY = -1;
 
+	const [view, setView] = useState({ loc: 0, pitch: 24 });
+	
 	const computedStyle = useRef<CSSStyleDeclaration | null>(null);
 
 	const pianoRef = useRef<HTMLCanvasElement | null>(null);
-	const pianoCtx = useRef<CanvasRenderingContext2D | null>(null);
 	const bgRef = useRef<HTMLCanvasElement | null>(null);
-	const bgCtx = useRef<CanvasRenderingContext2D | null>(null);
 	const fgRef = useRef<HTMLCanvasElement | null>(null);
+
+	const pianoCtx = useRef<CanvasRenderingContext2D | null>(null);
+	const bgCtx = useRef<CanvasRenderingContext2D | null>(null);
 	const fgCtx = useRef<CanvasRenderingContext2D | null>(null);
-
-
-	const [view, setView] = useState({ loc: 0, pitch: 24 });
 
 	useEffect(() => {
 		computedStyle.current = getComputedStyle(document.body);
@@ -108,22 +109,10 @@ export default function PianoRoll({
 	}, []);
 
 	useEffect(() => {
-		drawBG();
-		drawFG();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [view.loc]);
-
-	useEffect(() => {
 		drawPiano();
 		drawBG();
 		drawFG();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [view.pitch]);
-
-	useEffect(() => {
-		drawFG();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentInstrument]);
+	});
 
 	useEffect(() => {
 		if (sequenceMap != null && drawFG != null) {
@@ -132,9 +121,8 @@ export default function PianoRoll({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sequenceMap]);
 
-	const drawPiano = () => {
+	function drawPiano() {
 		if (!pianoCtx.current || !computedStyle.current) {
-			console.log(pianoCtx);
 			return;
 		}
 
@@ -143,7 +131,7 @@ export default function PianoRoll({
 		// draw white keys
 		pianoCtx.current.fillStyle = computedStyle.current.getPropertyValue("--piano-white");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if (keyColors[(i + view.pitch) % 12]) {
+			if (KEY_COLORS[(i + view.pitch) % 12]) {
 				pianoCtx.current.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
@@ -175,7 +163,7 @@ export default function PianoRoll({
 		fgCtx.font = "24px monospace";
 		fgCtx.fillStyle = computedStyle.getPropertyValue("--fg0");
 		fgCtx.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24); */
-	};
+	}
 
 	function drawBG() {
 		if (!bgCtx.current || !computedStyle.current) return;
@@ -186,7 +174,7 @@ export default function PianoRoll({
 		// color rows to match keys
 		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg1");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
-			if (keyColors[(i + view.pitch) % 12]) {
+			if (KEY_COLORS[(i + view.pitch) % 12]) {
 				bgCtx.current.fillRect(
 					0,
 					rollHeight - (i * gridHeight + gridHeight),
@@ -403,7 +391,7 @@ export default function PianoRoll({
 			if (selectedNote != null) {
 				// @ts-ignore
 				removeNote(selectedNote);
-				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
 			}
 			selectedNote = null;
 			drawFG();
@@ -457,7 +445,7 @@ export default function PianoRoll({
 					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
-				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
+				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
 				selectedNote = newNote;
 				copiedNote = newNote;
 				drawFG();
@@ -530,8 +518,8 @@ export default function PianoRoll({
 				});
 				addNote(newNote);
 				removeNote(selectedNote);
-				//sequenceMap.set(newNote.getPitchLocation().serialize(),newNote);
-				//sequenceMap.delete(selectedNote.getPitchLocation().serialize());
+				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
+				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
 				selectedNote = newNote;
 			}
 		} else {
@@ -541,7 +529,7 @@ export default function PianoRoll({
 					location == startGridX &&
 					pitch == startGridY &&
 					sequenceMap.has(
-						new PitchLocation({
+						new NoteKey({
 							pitch: startGridY,
 							location: startGridX,
 						}).serialize()
@@ -560,7 +548,7 @@ export default function PianoRoll({
 					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
-				// sequenceMap.set(selectedNote.getPitchLocation().serialize(),newNote);
+				// sequenceMap.set(selectedNote.getNoteKey().serialize(),newNote);
 				selectedNote = newNote;
 			}
 		}
@@ -597,7 +585,7 @@ export default function PianoRoll({
 					instrument: selectedNote.instrument,
 				});
 				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
+					newNote.getNoteKey().serialize(),
 					newNote
 				);
 				selectedNote = newNote;
@@ -612,7 +600,7 @@ export default function PianoRoll({
 					instrument: selectedNote.instrument,
 				});
 				sequenceMap.set(
-					newNote.getPitchLocation().serialize(),
+					newNote.getNoteKey().serialize(),
 					newNote
 				);
 				selectedNote = newNote;

@@ -2,6 +2,12 @@
 //https://dev.to/hansott/simple-way-to-serialize-objects-to-json-in-typescript-27f5
 //https://www.xolv.io/blog/dev-notes/how-to-pass-a-class-to-a-function-in-typescript/
 
+import { v4 as uuidv4 } from "uuid";
+import { SharedMap } from "fluid-framework";
+import { getRandomName } from "@fluidframework/server-services-client";
+import { AzureClientProps } from "@fluidframework/azure-client";
+import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
+
 export abstract class Serializable {
 	serialize() {
 		return JSON.stringify(Object.entries(this));
@@ -112,39 +118,34 @@ export class Note extends Serializable {
 		return `${pitchName}${octavenumber}`;
 	}
 
-	public getPitchLocation() {
-		return new PitchLocation({
+	public getNoteKey() {
+		return new NoteKey({
 			pitch: this.pitch,
 			location: this.location,
+			instrument: this.instrument
 		});
 	}
 }
 
-export class PitchLocation extends Serializable {
+export class NoteKey extends Serializable {
 	pitch: number;
 	location: number;
+	instrument: Instrument;
 
-	constructor(args: { pitch: number; location: number }) {
+	constructor(args: { pitch: number; location: number, instrument: Instrument}) {
 		super();
 		this.pitch = args.pitch;
 		this.location = args.location;
+		this.instrument = args.instrument;
 	}
 }
 
-/*
-export class Pitch {
-    height: number;
-    name: String;
-
-    constructor (
-        height: number,
-        name: String
-    ) {
-        this.height = height;
-        this.name = name;
-    }
-}
-*/
+export const schema = {
+	initialObjects: {
+		metadata: SharedMap,
+		sequence: SharedMap,
+	},
+} as const;
 
 export class Instrument extends Serializable {
 	channel: number;
@@ -176,12 +177,44 @@ export const instrumentList = {
 	Bass: new Instrument({ channel: 33, name: "Bass" }),
 	Trumpet: new Instrument({ channel: 57, name: "Trumpet" }),
 	Synth_Drum: new Instrument({ channel: 119, name: "Synth Drum" }),
-};
+} as const;
 
 export const instrumentColors = {
-	Piano: {primary: "--yellow", accent: "--yellow-accent"},
-	Guitar: {primary: "--green", accent: "--green-accent"},
-	Bass: {primary: "--blue", accent: "--blue-accent"},
-	Trumpet: {primary: "--red", accent: "--red-accent"},
-	Synth_Drum: {primary: "--purple", accent: "--purple-accent"} 
+	Piano: { primary: "--yellow", accent: "--yellow-accent" },
+	Guitar: { primary: "--green", accent: "--green-accent" },
+	Bass: { primary: "--blue", accent: "--blue-accent" },
+	Trumpet: { primary: "--red", accent: "--red-accent" },
+	Synth_Drum: { primary: "--purple", accent: "--purple-accent" },
+} as const;
+
+export const useAzure = false;
+
+export function generateUser() {
+	const userConfig = {
+		id: uuidv4(),
+		name: getRandomName(),
+	} as const;
+	return userConfig;
 }
+
+export const user = generateUser();
+
+export const connectionConfig: AzureClientProps = useAzure
+	? ({
+			connection: {
+				tenantId: "c3172c50-a661-4db0-8a69-e03fb1a39f3b",
+				tokenProvider: new InsecureTokenProvider(
+					"043eecec8e88cffd7263ea50a6aa8240",
+					user
+				),
+				type: "remote",
+				endpoint: "https://us.fluidrelay.azure.com",
+			},
+	  } as const)
+	: ({
+			connection: {
+				tokenProvider: new InsecureTokenProvider("fooBar", user),
+				type: "local",
+				endpoint: "http://localhost:7070",
+			},
+	  } as const);

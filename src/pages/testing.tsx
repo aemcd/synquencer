@@ -207,7 +207,7 @@ export default function Test() {
 							const noteMap = new Map<string, Note>();
 							notes.forEach((note) =>
 								noteMap.set(
-									note.getPitchLocation().serialize(),
+									note.getNoteKey().serialize(),
 									note
 								)
 							);

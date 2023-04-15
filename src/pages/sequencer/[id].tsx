@@ -9,19 +9,10 @@ import {
 	SequenceMetadata,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
-import {
-	AddNote,
-	AddNotes,
-	ClearNotes,
-	DeleteNote,
-	EditNote,
-	EditSequence,
-	GetNotes,
-	GetSequence,
-} from "@/database/calls";
+import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
-import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	getInstruments,
 	getTick,
@@ -34,22 +25,14 @@ import {
 } from "@/client/write_midi";
 import Cursor from "@/components/Cursor";
 import {
-	loadSequence,
-	sequenceSharedMapToDatabase,
-	getFluidData,
-} from "../_app";
-import {
 	SharedMap,
-	IFluidContainer,
-	SharedString,
 	LoadableObjectRecord,
 	AttachState,
 	ConnectionState,
+	IValueChanged,
 } from "fluid-framework";
-import TinyliciousClient, {
-	TinyliciousContainerServices,
-} from "@fluidframework/tinylicious-client";
 import { AzureClient } from "@fluidframework/azure-client";
+import { UndoRedoStack } from "@/client/undo_redo";
 
 type PageParams = {
 	id: string;
@@ -67,6 +50,7 @@ export default function Home({ id }: PageParams) {
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
 	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
+	const [undoRedoHandler] = useState(new UndoRedoStack());
 
 	const [notes, setNotes] = useState<Map<string, Note>>(
 		new Map<string, Note>()
@@ -89,8 +73,6 @@ export default function Home({ id }: PageParams) {
 					setRenderState(RenderState.fail);
 					return;
 				}
-				console.log(container.connectionState);
-				console.log(services);
 
 				if (
 					container.attachState === AttachState.Attached ||
@@ -127,20 +109,20 @@ export default function Home({ id }: PageParams) {
 		if (fluidInitialObjects != null) {
 			const flSeq = fluidInitialObjects.metadata as SharedMap;
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
-			const fluidUpdateSeq = () => {
+			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
 			};
-			const fluidUpdateNotes = () => {
-				console.log(`flun: ${flNotes}`);
+			const fluidUpdateNotes = (
+				changed: IValueChanged,
+				local: boolean
+			) => {
 				setNotes(getNoteMap(flNotes));
-				console.log("Update Notes");
 			};
-			fluidUpdateSeq();
-			fluidUpdateNotes();
-			flSeq.on("valueChanged", fluidUpdateSeq);
-			flNotes.on("valueChanged", fluidUpdateNotes);
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
+			flSeq.on("valueChanged", fluidUpdateSeq);
+			flNotes.on("valueChanged", fluidUpdateNotes);
+			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
 			return () => {
@@ -168,30 +150,71 @@ export default function Home({ id }: PageParams) {
 		return Array.from(notes.values());
 	}, [notes]);
 
+	const removeAndAddNote = useCallback(
+		(rmNote: Note, addNote: Note) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+			const rmKey = rmNote.getNoteKey().serialize();
+			const addKey = addNote.getNoteKey().serialize();
+			const rmPrevValue = flNotes.get(rmKey);
+			if (flNotes.delete(rmKey)) {
+				undoRedoHandler.push({
+					key: rmKey,
+					currentValue: undefined,
+					previousValue: rmPrevValue,
+				});
+			}
+			const addPrevValue = flNotes.get(addKey);
+			flNotes.set(addKey, addNote);
+			undoRedoHandler.push({
+				key: addKey,
+				currentValue: addNote,
+				previousValue: addPrevValue,
+			});
+			undoRedoHandler.finish();
+		},
+		[fluidInitialObjects, undoRedoHandler]
+	);
+
 	const addNote = useCallback(
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-
-			flNotes?.set(note.getNoteKey().serialize(), note);
+			const key = note.getNoteKey().serialize();
+			const prevValue = flNotes.get(key);
+			flNotes.set(key, note);
+			undoRedoHandler.push({
+				key: key,
+				currentValue: note,
+				previousValue: prevValue,
+			});
+			undoRedoHandler.finish();
 		},
-		[fluidInitialObjects]
+		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeNote = useCallback(
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-
-			flNotes?.delete(note.getNoteKey().serialize());
+			const key = note.getNoteKey().serialize();
+			const prevValue = flNotes.get(key);
+			if (flNotes.delete(key)) {
+				undoRedoHandler.push({
+					key: key,
+					currentValue: undefined,
+					previousValue: prevValue,
+				});
+			}
+			undoRedoHandler.finish();
 		},
-		[fluidInitialObjects]
+		[fluidInitialObjects, undoRedoHandler]
 	);
 
-	useEffect(() => {
-		console.log(fluidInitialObjects?.metadata as SharedMap);
-		console.log(fluidInitialObjects?.sequence as SharedMap);
-		console.log(seqData);
-		console.log(notes);
-	});
+	const undo = useCallback(() => {
+		return undoRedoHandler.undo();
+	}, [undoRedoHandler]);
+
+	const redo = useCallback(() => {
+		return undoRedoHandler.redo();
+	}, [undoRedoHandler]);
 
 	if (renderSate === RenderState.wait) {
 		return (
@@ -343,13 +366,17 @@ export default function Home({ id }: PageParams) {
 				currentInstrument={currentInstrument}
 				addNote={addNote}
 				removeNote={removeNote}
+				removeAndAddNote={removeAndAddNote}
 				tick={tick}
 			/>
 			<Cursor
 				addNote={addNote}
 				removeNote={removeNote}
+				removeAndAddNote={removeAndAddNote}
 				noteMap={notes}
 				sequence={seqData}
+				undo={undo}
+				redo={redo}
 			/>
 		</>
 	);
@@ -392,7 +419,9 @@ function getNoteMap(flNotes: SharedMap) {
 	if (flNotes != null) {
 		const newMap = new Map<string, Note>();
 		flNotes.forEach((note, pitchLoc) => {
-			newMap.set(pitchLoc, new Note(note));
+			if (note != null) {
+				newMap.set(pitchLoc, new Note(note));
+			}
 		});
 		return newMap;
 	} else {

@@ -14,12 +14,18 @@ type Props = {
 	sequence: SequenceMetadata;
 	addNote: (note: Note) => void;
 	removeNote: (note: Note) => void;
+	removeAndAddNote: (rmNote: Note, addNote: Note) => void;
+	undo: () => boolean;
+	redo: () => boolean;
 };
 export default function Cursor({
 	noteMap,
 	sequence,
 	addNote,
 	removeNote,
+	removeAndAddNote,
+	undo,
+	redo,
 }: Props) {
 	const cursorNote = React.useRef(
 		new Note({
@@ -89,9 +95,8 @@ export default function Cursor({
 				cursorNote.current.pitch++;
 				setMod(mod.current + 1);
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
@@ -100,9 +105,8 @@ export default function Cursor({
 				cursorNote.current.pitch--;
 				setMod(mod.current - 1);
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
@@ -129,9 +133,8 @@ export default function Cursor({
 				cursorNote.current.pitch += 12;
 				setMod(mod.current + 12);
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
@@ -140,9 +143,8 @@ export default function Cursor({
 				cursorNote.current.pitch -= 12;
 				setMod(mod.current - 12);
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 					action = "Note";
 				}
@@ -166,9 +168,8 @@ export default function Cursor({
 				announce("Note duration set to 1/16.");
 				cursorNote.current.duration = 1;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -178,9 +179,8 @@ export default function Cursor({
 				announce("Note duration set to 1/8.");
 				cursorNote.current.duration = 2;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -190,9 +190,8 @@ export default function Cursor({
 				announce("Note duration set to 1/4.");
 				cursorNote.current.duration = 4;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -202,9 +201,8 @@ export default function Cursor({
 				announce("Note duration set to 1/2.");
 				cursorNote.current.duration = 8;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -214,9 +212,8 @@ export default function Cursor({
 				announce("Note duration set to 1/1.");
 				cursorNote.current.duration = 16;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -235,9 +232,8 @@ export default function Cursor({
 						) {
 							cursorNote.current.location -=
 								cursorNote.current.duration;
-							removeNote(selectedNote.current);
 							const newNote = new Note(cursorNote.current);
-							addNote(newNote);
+							removeAndAddNote(selectedNote.current, newNote);
 							selectedNote.current = newNote;
 							clearAnnouncer("assertive");
 							announce(
@@ -321,9 +317,8 @@ export default function Cursor({
 						) {
 							cursorNote.current.location +=
 								cursorNote.current.duration;
-							removeNote(selectedNote.current);
 							const newNote = new Note(cursorNote.current);
-							addNote(newNote);
+							removeAndAddNote(selectedNote.current, newNote);
 							setSelectedNote(newNote);
 							clearAnnouncer("assertive");
 							announce(
@@ -412,9 +407,8 @@ export default function Cursor({
 			case "ArrowUp": {
 				cursorNote.current.velocity += 10;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -422,9 +416,8 @@ export default function Cursor({
 			case "ArrowDown": {
 				cursorNote.current.velocity -= 10;
 				if (selectedNote.current != null) {
-					removeNote(selectedNote.current);
 					const newNote = new Note(cursorNote.current);
-					addNote(newNote);
+					removeAndAddNote(selectedNote.current, newNote);
 					setSelectedNote(newNote);
 				}
 				break;
@@ -443,11 +436,22 @@ export default function Cursor({
 	});
 	useHotkeys("ctrl+z", function (event, handler) {
 		event.preventDefault();
+		undo();
+		setSelectedNote(null);
 		announce("Action undone");
 	});
 
 	useHotkeys("ctrl+shift+z", function (event, handler) {
 		event.preventDefault();
+		redo();
+		setSelectedNote(null);
+		announce("Action redone");
+	});
+
+	useHotkeys("ctrl+y", function (event, handler) {
+		event.preventDefault();
+		redo();
+		setSelectedNote(null);
 		announce("Action redone");
 	});
 

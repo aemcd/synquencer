@@ -30,9 +30,11 @@ import {
 	AttachState,
 	ConnectionState,
 	IValueChanged,
+	IFluidContainer,
 } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
+import { useRouter } from "next/router";
 
 type PageParams = {
 	id: string;
@@ -45,10 +47,12 @@ const RenderState = {
 } as const;
 
 export default function Home({ id }: PageParams) {
+	const router = useRouter();
 	const [tick, setTick] = useState(-1);
 	const [stepLength, setStepLength] = useState(1);
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
+	const [fluidContainer, setFluidContainer] = useState<IFluidContainer>();
 	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
 
@@ -74,6 +78,14 @@ export default function Home({ id }: PageParams) {
 					return;
 				}
 
+				container.once("disposed", (error?) => {
+					if (error != null) {
+						console.error(error);
+					}
+					router.push("/");
+					setRenderState(RenderState.wait);
+				});
+
 				if (
 					container.attachState === AttachState.Attached ||
 					container.attachState === AttachState.Attaching
@@ -86,22 +98,29 @@ export default function Home({ id }: PageParams) {
 						container.connectionState ==
 							ConnectionState.EstablishingConnection
 					) {
+						setFluidContainer(container);
 						setFluidInitialObjects(container.initialObjects);
 					} else {
 						container.connect();
-						setFluidInitialObjects(container.initialObjects);
+						setRenderState(RenderState.fail);
+						container.once("connected", () => {
+							setFluidContainer(container);
+							setFluidInitialObjects(container.initialObjects);
+						});
+						throw new Error("Could not connect");
 					}
 				} else {
 					setRenderState(RenderState.fail);
-					throw Error("Not attached to service");
+					throw new Error("Not attached to service");
 				}
 			})
 			.catch((reason) => {
-				setRenderState(RenderState.fail);
+				setRenderState(RenderState.wait);
 			});
 
 		// Render Instruments
 		getInstruments();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [id]);
 
 	// Run when container updates
@@ -281,16 +300,9 @@ export default function Home({ id }: PageParams) {
 					newSeqData.bpm = newBPM;
 					setSeq(newSeqData);
 				}}
-				saveSequence={() => {
-					const noteArr = getArray();
-					Promise.all([
-						EditSequence(seqData.id, seqData),
-						ClearNotes(seqData.id),
-					]).then((value) => {
-						AddNotes(seqData.id, noteArr).then((value) =>
-							alert("Saved Successfully")
-						);
-					});
+				goHome={() => {
+					fluidContainer?.dispose();
+					setRenderState(RenderState.wait);
 				}}
 				downloadSequence={() => {
 					const noteArr = getArray();

@@ -78,9 +78,9 @@ export class UndoRedoStack {
 
 class Stack<T> {
 	private _store: T[] = [];
-	constructor(_stack?: Stack<T>) {
-		if (_stack != null) {
-			this._store = _stack._store.slice();
+	constructor(stack?: Stack<T>) {
+		if (stack != null) {
+			this._store = stack._store.slice();
 		}
 	}
 	push(val: T) {

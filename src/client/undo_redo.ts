@@ -1,4 +1,3 @@
-import e from "express";
 import { SharedMap } from "fluid-framework";
 
 export type ValueChange = {

@@ -9,9 +9,9 @@ import {
 	Note,
 	Instrument,
 } from "@/server/types";
-import { SharedString } from "@fluidframework/sequence";
-import { IFluidContainer, IValueChanged, SharedMap } from "fluid-framework";
-import { TinyliciousClient } from "@fluidframework/tinylicious-client";
+import { IFluidContainer, SharedMap } from "fluid-framework";
+import { SharedCounter } from "@fluidframework/counter";
+import { TinyliciousClient, TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 import {
 	AddNotes,
 	AddSequence,
@@ -24,28 +24,30 @@ import randomstring from "randomstring";
 
 export const getFluidData = async () => {
 	const client: TinyliciousClient = new TinyliciousClient();
-	let container: IFluidContainer;
+
 	const schema = {
 		initialObjects: {
 			metadata: SharedMap,
 			sequence: SharedMap,
+			syncPlaybackVotes: SharedCounter,
 		},
 		dynamicObjectTypes: [],
 	};
-	//let container;
+	let container: IFluidContainer;
+	let services: TinyliciousContainerServices;
 	const containerId = location.hash.substring(1);
 	if (!containerId) {
-		({ container } = await client.createContainer(schema));
+		({ container, services } = await client.createContainer(schema));
 		const id = await container.attach();
 		location.hash = id;
 		if (!(container != null)) {
 			console.log("null container");
 		}
 	} else {
-		({ container } = await client.getContainer(containerId, schema));
+		({ container, services } = await client.getContainer(containerId, schema));
 	}
 
-	return container;
+	return {container, services};
 };
 
 //METADATA CODE HERE ----------------------------------
@@ -90,25 +92,6 @@ const saveSequence = (arg: {
 	AddSequence(arg.metadata);
 	AddNotes(arg.metadata.id, arg.sequence);
 };
-/*
-export const sequenceDatabaseToSharedMap = async (sequence: SharedMap, list: Note[]) => {
-	//let sequence = container.initialObjects.sequence as SharedMap; //i think this works with passing by reference?? needs to be tested
-	for (let note of list) {
-		const instrument = note.instrument.serialize();
-		if (!Array.from(sequence.keys()).includes(instrument)) {
-			//add new instrument submap to sequence map
-			const newNoteList = await container.create(SharedMap);
-			sequence.set(instrument, newNoteList);
-		}
-		(sequence.get(instrument) as SharedMap).set(
-			note.getNoteKey().serialize(),
-			note
-		);
-	}
-	container.initialObjects.sequence = sequence;
-	return sequence;
-};
-*/
 
 export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 	let list: Note[] = [];

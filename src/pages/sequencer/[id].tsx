@@ -23,6 +23,7 @@ import {
 	setLoop,
 	clearLoop,
 } from "@/client/write_midi";
+import { SharedCounter } from "@fluidframework/counter";
 import Cursor from "@/components/Cursor";
 import {
 	SharedMap,
@@ -35,6 +36,7 @@ import {
 import { AzureClient } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
+import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 
 type PageParams = {
 	id: string;
@@ -53,7 +55,9 @@ export default function Home({ id }: PageParams) {
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
 	const [fluidContainer, setFluidContainer] = useState<IFluidContainer>();
-	const [renderSate, setRenderState] = useState<number>(RenderState.wait);
+	const [fluidServices, setFluidServices] = useState<TinyliciousContainerServices>();
+	const [renderState, setRenderState] = useState<number>(RenderState.wait);
+	const [voteCount, setVoteCount] = useState(0);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
 
 	const [notes, setNotes] = useState<Map<string, Note>>(
@@ -100,12 +104,14 @@ export default function Home({ id }: PageParams) {
 					) {
 						setFluidContainer(container);
 						setFluidInitialObjects(container.initialObjects);
+						setFluidServices(services);
 					} else {
 						container.connect();
 						setRenderState(RenderState.fail);
 						container.once("connected", () => {
 							setFluidContainer(container);
 							setFluidInitialObjects(container.initialObjects);
+							setFluidServices(services);
 						});
 						throw new Error("Could not connect");
 					}
@@ -128,6 +134,8 @@ export default function Home({ id }: PageParams) {
 		if (fluidInitialObjects != null) {
 			const flSeq = fluidInitialObjects.metadata as SharedMap;
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
+			const flVotes = fluidInitialObjects.syncPlaybackVotes as SharedCounter;
+
 			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
 			};
@@ -137,16 +145,26 @@ export default function Home({ id }: PageParams) {
 			) => {
 				setNotes(getNoteMap(flNotes));
 			};
+			const fluidUpdateVoteCount = (
+				changed: IValueChanged,
+				local: boolean
+			) => {
+				setVoteCount(flVotes.value);
+			};
+
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
+			setVoteCount(flVotes.value);
 			flSeq.on("valueChanged", fluidUpdateSeq);
 			flNotes.on("valueChanged", fluidUpdateNotes);
+			flVotes.on("valueChanged", fluidUpdateVoteCount);
 			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
 			return () => {
 				flSeq.off("valueChanged", fluidUpdateSeq);
 				flNotes.off("valueChanged", fluidUpdateNotes);
+				flVotes.off("valueChanged", fluidUpdateVoteCount);
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,6 +212,14 @@ export default function Home({ id }: PageParams) {
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
+	const voteForSyncPlayback = useCallback(() => {
+		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
+		flVotes.increment(1);
+		if (flVotes.value == fluidServices?.audience.getMembers().size) {
+			//TODO: synchronized playback
+		}
+	}, [fluidInitialObjects, fluidServices]);
+
 	const addNote = useCallback(
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;
@@ -235,7 +261,7 @@ export default function Home({ id }: PageParams) {
 		return undoRedoHandler.redo();
 	}, [undoRedoHandler]);
 
-	if (renderSate === RenderState.wait) {
+	if (renderState === RenderState.wait) {
 		return (
 			<>
 				<Head>
@@ -255,7 +281,7 @@ export default function Home({ id }: PageParams) {
 		);
 	}
 
-	if (renderSate === RenderState.fail) {
+	if (renderState === RenderState.fail) {
 		return (
 			<>
 				<Head>

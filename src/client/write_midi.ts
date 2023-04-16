@@ -93,6 +93,9 @@ export function StopSequence() {
 	clearInterval(currentInterval);
 	currentTick = -1;
 	tickFunction();
+	instruments.forEach((player) => {
+		player.stop();
+	});
 }
 
 /**
@@ -116,10 +119,9 @@ export function getInstruments() {
 	];
 
 	if (instruments.size == 0) {
+		const ac = new AudioContext();
 		Promise.all(
 			instrumentIDs.map((id) => {
-				const ac = new AudioContext();
-				ac.destination.channelCount = 2;
 				return Soundfont.instrument(ac, id);
 			})
 		).then((playerInstruments) => {

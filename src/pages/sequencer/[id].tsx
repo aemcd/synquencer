@@ -222,7 +222,7 @@ export default function Home({ id }: PageParams) {
 
 	const unvoteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
-		flVotes.increment(1);
+		flVotes.increment(-1);
 	}, [fluidInitialObjects]);
 
 	const addNote = useCallback(

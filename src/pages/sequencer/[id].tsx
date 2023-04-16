@@ -220,6 +220,11 @@ export default function Home({ id }: PageParams) {
 		}
 	}, [fluidInitialObjects, fluidServices]);
 
+	const unvoteForSyncPlayback = useCallback(() => {
+		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
+		flVotes.increment(1);
+	}, [fluidInitialObjects]);
+
 	const addNote = useCallback(
 		(note: Note) => {
 			const flNotes = fluidInitialObjects?.sequence as SharedMap;

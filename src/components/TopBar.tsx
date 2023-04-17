@@ -48,197 +48,195 @@ export default function TopBar({
 
 	return (
 		<div className="top-bar">
-			<button
-				className="top-button"
-				aria-label="Play"
-				onClick={playSequence}
-			>
-				▶
-			</button>
-			<button
-				className="top-button"
-				aria-label="Stop"
-				onClick={stopSequence}
-			>
-				◼
-			</button>
-			<div className="settings">
-				<input
-					className="settings-input"
-					aria-label="BPM"
-					type="number"
-					min="1"
-					max="999"
-					defaultValue={sequence.bpm ? sequence.bpm : "120"}
-					onChange={(e) => {
-						if (
-							e.target.value === "" ||
-							parseInt(e.target.value) < 0
-						) {
-							e.target.value = "1";
-						} else if (parseInt(e.target.value) > 999) {
-							e.target.value = "999";
+			<div style={{display: "inline-block"}}>
+				<button
+					className="top-button"
+					aria-label="Play"
+					onClick={playSequence}
+				>
+					▶
+				</button>
+				<button
+					className="top-button"
+					aria-label="Stop"
+					onClick={stopSequence}
+				>
+					◼
+				</button>
+				<div className="settings">
+					<input
+						className="settings-input"
+						aria-label="BPM"
+						type="number"
+						min="1"
+						max="999"
+						defaultValue={sequence.bpm ? sequence.bpm : "120"}
+						onChange={(e) => {
+							if (
+								e.target.value === "" ||
+								parseInt(e.target.value) < 0
+							) {
+								e.target.value = "1";
+							} else if (parseInt(e.target.value) > 999) {
+								e.target.value = "999";
+							}
+							setBPM(parseInt(e.target.value));
+						}}
+						style={{ width: "48px", marginRight: "-6px" }}
+						maxLength={3}
+					/>
+					<span aria-hidden="true">BPM |</span>
+					<select
+						className="settings-input dropdown"
+						aria-label="Time Signature"
+						style={{
+							width: "64px",
+							marginLeft: "4px",
+							marginRight: "-2px",
+						}}
+						onChange={(e) => {
+							setTimeSig(e.target.value);
+						}}
+						defaultValue={
+							sequence.denominator
+								? `${sequence.numerator}/${sequence.denominator}`
+								: "4/4"
 						}
-						setBPM(parseInt(e.target.value));
-					}}
-					style={{ width: "48px", marginRight: "-6px" }}
-					maxLength={3}
-				/>
-				<span aria-hidden="true">BPM |</span>
+					>
+						<option value="4/4">4/4</option>
+						<option value="3/4">3/4</option>
+						<option value="6/8">6/8</option>
+						<option value="5/4">5/4</option>
+					</select>
+					<span aria-hidden="true">|</span>
+					<select
+						className="settings-input dropdown"
+						aria-label="Step Length"
+						style={{
+							width: "76px",
+							marginLeft: "4px",
+							marginRight: "-2px",
+						}}
+						onChange={(e) => setStepLength(parseInt(e.target.value))}
+					>
+						<option value="1">1/16</option>
+						<option value="2">1/8</option>
+						<option value="4">1/4</option>
+						<option value="8">1/2</option>
+						<option value="16">1/1</option>
+					</select>
+					<span aria-hidden="true">|</span>
+					<input
+						className="settings-input"
+						aria-label="Length"
+						type="number"
+						min="1"
+						max="99"
+						defaultValue={sequence.length ? sequence.length : "1"}
+						onChange={(e) => {
+							if (
+								e.target.value === "" ||
+								parseInt(e.target.value) < 0
+							) {
+								e.target.value = "1";
+							} else if (parseInt(e.target.value) > 99) {
+								e.target.value = "99";
+							}
+							setLength(e.target.value);
+						}}
+						style={{
+							width: "38px",
+							marginRight: "-6px",
+							marginLeft: "6px",
+						}}
+						maxLength={3}
+					/>
+					<span aria-hidden="true" style={{ marginRight: "6px" }}>
+						Steps
+					</span>
+				</div>
 				<select
-					className="settings-input dropdown"
-					aria-label="Time Signature"
-					style={{
-						width: "64px",
-						marginLeft: "4px",
-						marginRight: "-2px",
-					}}
-					onChange={(e) => {
-						setTimeSig(e.target.value);
-					}}
+					aria-label="Instrument"
+					className="instrument-selection dropdown"
+					onChange={(e) => setInstrument(e.target.value)}
 					defaultValue={
-						sequence.denominator
-							? `${sequence.numerator}/${sequence.denominator}`
-							: "4/4"
+						currentInstrument.instrument
+							? currentInstrument.instrument.name
+							: "Piano"
 					}
 				>
-					<option value="4/4">4/4</option>
-					<option value="3/4">3/4</option>
-					<option value="6/8">6/8</option>
-					<option value="5/4">5/4</option>
+					<option value="Piano">Piano</option>
+					<option value="Guitar">Guitar</option>
+					<option value="Bass">Bass</option>
+					<option value="Trumpet">Trumpet</option>
+					<option value="Synth Drum">Synth Drum</option>
 				</select>
-				<span aria-hidden="true">|</span>
-				<select
-					className="settings-input dropdown"
-					aria-label="Step Length"
-					style={{
-						width: "76px",
-						marginLeft: "4px",
-						marginRight: "-2px",
-					}}
-					onChange={(e) => setStepLength(parseInt(e.target.value))}
-				>
-					<option value="1">1/16</option>
-					<option value="2">1/8</option>
-					<option value="4">1/4</option>
-					<option value="8">1/2</option>
-					<option value="16">1/1</option>
-				</select>
-				<span aria-hidden="true">|</span>
-				<input
-					className="settings-input"
-					aria-label="Length"
-					type="number"
-					min="1"
-					max="99"
-					defaultValue={sequence.length ? sequence.length : "1"}
-					onChange={(e) => {
-						if (
-							e.target.value === "" ||
-							parseInt(e.target.value) < 0
-						) {
-							e.target.value = "1";
-						} else if (parseInt(e.target.value) > 99) {
-							e.target.value = "99";
-						}
-						setLength(e.target.value);
-					}}
-					style={{
-						width: "38px",
-						marginRight: "-6px",
-						marginLeft: "6px",
-					}}
-					maxLength={3}
-				/>
-				<span aria-hidden="true" style={{ marginRight: "6px" }}>
-					Steps
-				</span>
+				{/* <div className="settings">
+					<span aria-hidden="true">Vel:</span>
+					<input
+						className="settings-input"
+						aria-label="Velocity"
+						type="number"
+						min="1"
+						max="100"
+						defaultValue={""}
+						onChange={(e) => {
+							if (
+								e.target.value === "" ||
+								parseInt(e.target.value) < 1
+							) {
+								e.target.value = "1";
+							} else if (parseInt(e.target.value) > 100) {
+								e.target.value = "100";
+							}
+						}}
+						style={{
+							width: "52px",
+							marginRight: "-12px",
+							marginLeft: "4px",
+						}}
+						maxLength={3}
+					/>
+				</div> */}
 			</div>
-			<select
-				aria-label="Instrument"
-				className="instrument-selection dropdown"
-				onChange={(e) => setInstrument(e.target.value)}
-				defaultValue={
-					currentInstrument.instrument
-						? currentInstrument.instrument.name
-						: "Piano"
-				}
-			>
-				<option value="Piano">Piano</option>
-				<option value="Guitar">Guitar</option>
-				<option value="Bass">Bass</option>
-				<option value="Trumpet">Trumpet</option>
-				<option value="Synth Drum">Synth Drum</option>
-			</select>
-			{/* <div className="settings">
-				<span aria-hidden="true">Vel:</span>
-				<input
-					className="settings-input"
-					aria-label="Velocity"
-					type="number"
-					min="1"
-					max="100"
-					defaultValue={""}
-					onChange={(e) => {
-						if (
-							e.target.value === "" ||
-							parseInt(e.target.value) < 1
-						) {
-							e.target.value = "1";
-						} else if (parseInt(e.target.value) > 100) {
-							e.target.value = "100";
-						}
+			<div style={{display: "inline-block", float: "right", marginRight: "6px"}}>
+				<button
+					className="top-button"
+					aria-label="Download"
+					onClick={downloadSequence}
+				>
+					<svg width="18" height="18" viewBox="0 0 185.2 185.2">
+						<path
+							fill="var(--fg2)"
+							d="M26.5 529.2h185.2v-79.4h-26.5v53H53v-53H26.5z"
+							transform="translate(-26.5 -344)"
+						/>
+						<path
+							fill="var(--fg2)"
+							d="M119 476.3 53 410h39.6V344h53V410h39.6z"
+							transform="translate(-26.5 -344)"
+						/>
+					</svg>
+				</button>
+				<button className="top-button" aria-hidden="true"
+					onClick={() => {
+						setTheme(theme === "light" ? "dark" : "light");
+						setTimeout(() => {
+							setInstrument(currentInstrument.instrument.name);
+						}, 0);
 					}}
-					style={{
-						width: "52px",
-						marginRight: "-12px",
-						marginLeft: "4px",
-					}}
-					maxLength={3}
-				/>
-			</div> */}
-			<button
-				className="top-button"
-				aria-label="Download"
-				onClick={downloadSequence}
-			>
-				<svg width="18" height="18" viewBox="0 0 185.2 185.2">
-					<path
-						fill="var(--fg2)"
-						d="M26.5 529.2h185.2v-79.4h-26.5v53H53v-53H26.5z"
-						transform="translate(-26.5 -344)"
-					/>
-					<path
-						fill="var(--fg2)"
-						d="M119 476.3 53 410h39.6V344h53V410h39.6z"
-						transform="translate(-26.5 -344)"
-					/>
-				</svg>
-			</button>
-			<button className="top-button" aria-label="Home" onClick={goHome}>
-				<svg width="20" height="20" viewBox="0 0 238.1 198.4">
-					<path
-						fill="var(--fg2)"
-						d="M119 0 0 119h39.7v79.4h52.9v-52.9h53v53h52.8V119h39.7z"
-					/>
-				</svg>
-			</button>
-			<button className="top-button" aria-label="Light"
-				onClick={() => {
-					setTheme("light");
-					setTimeout(() => {
-						setInstrument(currentInstrument.instrument.name);
-					}, 0);
-				}}
-			>L</button>
-			<button className="top-button" aria-label="Dark"
-				onClick={() => {
-					setTheme("dark");
-					setTimeout(() => {
-						setInstrument(currentInstrument.instrument.name);
-					}, 0);
-				}}
-			>D</button>
+				>
+					{theme === "light" ? "🌘︎" : "☀"}
+				</button>
+				<button className="top-button" aria-label="Home" onClick={goHome}>
+					<svg width="20" height="20" viewBox="0 0 238.1 198.4">
+						<path
+							fill="var(--fg2)"
+							d="M119 0 0 119h39.7v79.4h52.9v-52.9h53v53h52.8V119h39.7z"
+						/>
+					</svg>
+				</button>
+			</div>
 		</div>
 	);
 }

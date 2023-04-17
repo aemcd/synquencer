@@ -107,8 +107,6 @@ export default function PianoRoll({
 	}, []);
 
 	useEffect(() => {
-		console.log("hello");
-
 		drawPiano();
 		drawBG();
 		drawFG();

@@ -150,6 +150,7 @@ h1 {
 
 .top-bar {
   background-color: var(--bg1);
+  overflow: auto;
 }
 
 .top-button {

@@ -7,6 +7,7 @@ import { SharedMap } from "fluid-framework";
 import { getRandomName } from "@fluidframework/server-services-client";
 import { AzureClientProps } from "@fluidframework/azure-client";
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
+import { SharedCounter } from "@fluidframework/counter";
 
 export abstract class Serializable {
 	serialize() {
@@ -122,7 +123,7 @@ export class Note extends Serializable {
 		return new NoteKey({
 			pitch: this.pitch,
 			location: this.location,
-			instrument: this.instrument
+			instrument: this.instrument,
 		});
 	}
 }
@@ -132,7 +133,11 @@ export class NoteKey extends Serializable {
 	location: number;
 	instrument: Instrument;
 
-	constructor(args: { pitch: number; location: number, instrument: Instrument}) {
+	constructor(args: {
+		pitch: number;
+		location: number;
+		instrument: Instrument;
+	}) {
 		super();
 		this.pitch = args.pitch;
 		this.location = args.location;
@@ -144,6 +149,7 @@ export const schema = {
 	initialObjects: {
 		metadata: SharedMap,
 		sequence: SharedMap,
+		syncPlaybackVotes: SharedCounter,
 	},
 } as const;
 

@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { announce, clearAnnouncer } from "@react-aria/live-announcer";
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 
 type ContentPageProps = {
 	sequence: SequenceMetadata;
@@ -43,6 +44,8 @@ export default function TopBar({
 	setTimeSig,
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
+	const { theme, setTheme } = useTheme();
+
 	return (
 		<div className="top-bar">
 			<button
@@ -220,6 +223,22 @@ export default function TopBar({
 					/>
 				</svg>
 			</button>
+			<button className="top-button" aria-label="Light"
+				onClick={() => {
+					setTheme("light");
+					setTimeout(() => {
+						setInstrument(currentInstrument.instrument.name);
+					}, 0);
+				}}
+			>L</button>
+			<button className="top-button" aria-label="Dark"
+				onClick={() => {
+					setTheme("dark");
+					setTimeout(() => {
+						setInstrument(currentInstrument.instrument.name);
+					}, 0);
+				}}
+			>D</button>
 		</div>
 	);
 }

@@ -21,6 +21,7 @@ import {
 import * as React from "react";
 import { type } from "os";
 import randomstring from "randomstring";
+import { ThemeProvider } from "next-themes";
 
 export const getFluidData = async () => {
 	const client: TinyliciousClient = new TinyliciousClient();
@@ -108,5 +109,9 @@ export const sequenceSharedMapToDatabase = (sequence: SharedMap) => {
 export default function App({ Component, pageProps }: AppProps) {
 	//TODO: fully implement fluid framework structures with React
 
-	return <Component {...pageProps} />;
+	return (
+		<ThemeProvider>
+			<Component {...pageProps} />
+		</ThemeProvider>
+	) 
 }

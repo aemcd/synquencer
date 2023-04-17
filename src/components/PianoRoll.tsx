@@ -27,7 +27,7 @@ type ContentPageProps = {
 	tick: number;
 };
 
-let KEY_COLORS: boolean[] = [
+const KEY_COLORS: boolean[] = [
 	true,
 	false,
 	true,
@@ -107,6 +107,8 @@ export default function PianoRoll({
 	}, []);
 
 	useEffect(() => {
+		console.log("hello");
+
 		drawPiano();
 		drawBG();
 		drawFG();
@@ -146,7 +148,7 @@ export default function PianoRoll({
 
 		// draw key lines
 		pianoCtx.current.fillStyle =
-			computedStyle.current.getPropertyValue("--piano-black");
+			computedStyle.current.getPropertyValue("--piano-line");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			pianoCtx.current.fillRect(0, gridHeight * (i + 1) - 1, 72, 2);
 		}
@@ -175,11 +177,13 @@ export default function PianoRoll({
 		if (!bgCtx.current || !computedStyle.current) return;
 
 		// clear bg
-		bgCtx.current.clearRect(0, 0, rollWidth, rollHeight);
+		// bgCtx.current.clearRect(0, 0, rollWidth, rollHeight);
+		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--roll-bg");
+		bgCtx.current.fillRect(0, 0, rollWidth, rollHeight);
 
 		// color rows to match keys
 		bgCtx.current.fillStyle =
-			computedStyle.current.getPropertyValue("--bg1");
+			computedStyle.current.getPropertyValue("--roll-bg-accent");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			if (KEY_COLORS[(i + view.pitch) % 12]) {
 				bgCtx.current.fillRect(
@@ -195,7 +199,7 @@ export default function PianoRoll({
 
 		// horizontal grid lines
 		bgCtx.current.fillStyle =
-			computedStyle.current.getPropertyValue("--bg0");
+			computedStyle.current.getPropertyValue("--roll-bg");
 		for (let i = 0; i < rollHeight / gridHeight; i++) {
 			bgCtx.current.fillRect(0, gridHeight * (i + 1) - 1, rollWidth, 2);
 		}
@@ -214,7 +218,7 @@ export default function PianoRoll({
 					computedStyle.current.getPropertyValue("--bg2");
 			} else {
 				bgCtx.current.fillStyle =
-					computedStyle.current.getPropertyValue("--bg0");
+					computedStyle.current.getPropertyValue("--roll-bg");
 			}
 			if ((view.loc + i + 1) % stepLength == 0) {
 				bgCtx.current.fillRect(
@@ -715,9 +719,9 @@ export default function PianoRoll({
 					top: "0",
 					imageRendering: "pixelated",
 					border: "solid",
-					borderColor: "var(--bg3)",
+					borderColor: "var(--bg4)",
 					borderWidth: "2px",
-					backgroundColor: "var(--black)",
+					backgroundColor: "var(--piano-black)",
 				}}
 			/>
 			<canvas
@@ -731,8 +735,9 @@ export default function PianoRoll({
 					zIndex: "0",
 					imageRendering: "pixelated",
 					border: "solid",
-					borderColor: "var(--bg3)",
+					borderColor: "var(--bg4)",
 					borderWidth: "2px",
+					backgroundColor: "var(--roll-bg)"
 				}}
 			/>
 			<canvas
@@ -754,7 +759,7 @@ export default function PianoRoll({
 					zIndex: "1",
 					imageRendering: "pixelated",
 					border: "solid",
-					borderColor: "var(--bg3)",
+					borderColor: "var(--bg4)",
 					borderWidth: "2px",
 				}}
 			/>

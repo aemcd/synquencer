@@ -1,4 +1,4 @@
-:root {
+html {
   /* gruvbox dark */
   --fg: #ebdbb2;
   --fg0: #fbf1c7;
@@ -32,6 +32,86 @@
 
   --piano-black: #202020;
   --piano-white: #DFDFDF;
+}
+
+[data-theme="dark"] {
+  /* gruvbox dark */
+  --fg: #ebdbb2;
+  --fg0: #fbf1c7;
+  --fg1: #ebdbb2;
+  --fg2: #d5c4a1;
+  --fg3: #bdae93;
+  --fg4: #a89984;
+  --bg: #282828;
+  --bg0: #282828;
+  --bg1: #3c3836;
+  --bg2: #504945;
+  --bg3: #665c54;
+  --bg4: #7c6f64;
+
+  --black: #282828;
+  --red: #cc241d;
+  --green: #98971a;
+  --yellow: #d79921;
+  --blue: #458588;
+  --purple: #b16286;
+  --cyan: #689d6a;
+  --white: #a89984;
+  --black-accent: #928374;
+  --red-accent: #fb4934;
+  --green-accent: #b8bb26;
+  --yellow-accent: #fabd2f;
+  --blue-accent: #83a598;
+  --purple-accent: #d3869b;
+  --cyan-accent: #8ec07c;
+  --white-accent: #ebdbb2;
+
+  --roll-bg: #282828;
+  --roll-bg-accent: #3c3836;
+
+  --piano-black: #282828;
+  --piano-white: #DFDFDF;
+  --piano-line: #504945;
+}
+
+[data-theme="light"] {
+  /* gruvbox light */
+  --fg: #3c3836;
+  --fg0: #282828;
+  --fg1: #3c3836;
+  --fg2: #504945;
+  --fg3: #665c54;
+  --fg4: #7c6f64;
+  --bg: #fbf1c7;
+  --bg0: #fbf1c7;
+  --bg1: #ebdbb2;
+  --bg2: #d5c4a1;
+  --bg3: #bdae93;
+  --bg4: #a89984;
+
+  --black: #282828;
+  --red: #cc241d;
+  --green: #98971a;
+  --yellow: #d79921;
+  --blue: #458588;
+  --purple: #b16286;
+  --cyan: #689d6a;
+  --white: #a89984;
+  --black-accent: #9d8374;
+  --red-accent: #9d0006;
+  --green-accent: #79740e;
+  --yellow-accent: #b57614;
+  --blue-accent: #076678;
+  --purple-accent: #8f3f71;
+  --cyan-accent: #427b58;
+  --white-accent: #7c6f64;
+
+  --roll-bg: #ebdbb2;
+  --roll-bg-accent: #fbf1c7;
+
+  --piano-black: #202020;
+  --piano-white: #DFDFDF;
+  --piano-line: #504945;
 }
 
 body {

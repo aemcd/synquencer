@@ -70,7 +70,9 @@ export default function PianoRoll({
 	// 24 is C1
 	//let view.current.pitch = 24;
 
-	let dragState: number = DRAG_STATES.NOT_DRAGGING;
+	const dragState = useRef<number>(DRAG_STATES.NOT_DRAGGING);
+	const lastMouseMove = useRef<MouseEvent | null>(null);
+
 	let selectedNote: Note | null = null;
 	let copiedNote: Note | null = null;
 	let startGridX = -1;
@@ -108,6 +110,10 @@ export default function PianoRoll({
 		drawPiano();
 		drawBG();
 		drawFG();
+
+		if (lastMouseMove.current) {
+			handleMouseMove(lastMouseMove.current);
+		}
 	});
 
 	useEffect(() => {
@@ -270,7 +276,7 @@ export default function PianoRoll({
 
 		if (
 			selectedNote &&
-			dragState == DRAG_STATES.NOT_DRAGGING &&
+			dragState.current == DRAG_STATES.NOT_DRAGGING &&
 			selectedNote.instrument.name == currentInstrument.instrument.name
 		) {
 			drawNote(
@@ -431,10 +437,10 @@ export default function PianoRoll({
 					isRightHalf
 				) {
 					// end of the note was clicked - start changing length
-					dragState = DRAG_STATES.CHANGING_LENGTH;
+					dragState.current = DRAG_STATES.CHANGING_LENGTH;
 				} else {
 					// another part of the note was clicked - start moving
-					dragState = DRAG_STATES.MOVING_NOTE;
+					dragState.current = DRAG_STATES.MOVING_NOTE;
 				}
 			} else {
 				// no note found; creating new note
@@ -445,7 +451,7 @@ export default function PianoRoll({
 					pitch: startGridY,
 					instrument: currentInstrument.instrument,
 				});
-				dragState = DRAG_STATES.CHANGING_LENGTH;
+				dragState.current = DRAG_STATES.CHANGING_LENGTH;
 				drawFG();
 				drawNote(
 					startGridX,
@@ -489,13 +495,13 @@ export default function PianoRoll({
 
 		(document.activeElement as HTMLElement).blur();
 
-		if (dragState == DRAG_STATES.NOT_DRAGGING) return;
+		if (dragState.current == DRAG_STATES.NOT_DRAGGING) return;
 
 		if (!selectedNote) return;
 
 		let { location, pitch } = getGridPos(e);
 
-		if (dragState == DRAG_STATES.MOVING_NOTE) {
+		if (dragState.current == DRAG_STATES.MOVING_NOTE) {
 			// moving note
 			drawFG();
 			drawNote(
@@ -534,13 +540,13 @@ export default function PianoRoll({
 	function handleMouseUp(e: MouseEvent) {
 		e.preventDefault();
 
-		if (dragState == DRAG_STATES.NOT_DRAGGING) return;
+		if (dragState.current == DRAG_STATES.NOT_DRAGGING) return;
 
 		if (!selectedNote) return;
 
 		let { location, pitch } = getGridPos(e);
 
-		if (dragState == DRAG_STATES.MOVING_NOTE) {
+		if (dragState.current == DRAG_STATES.MOVING_NOTE) {
 			// done moving note
 			if (!(location == startGridX && pitch == startGridY)) {
 				// check to make sure we're actually changing the note location
@@ -588,7 +594,7 @@ export default function PianoRoll({
 			}
 		}
 
-		dragState = DRAG_STATES.NOT_DRAGGING;
+		dragState.current = DRAG_STATES.NOT_DRAGGING;
 		// selectedNote = null;
 
 		drawFG();
@@ -597,7 +603,7 @@ export default function PianoRoll({
 	function handleMouseOut(e: MouseEvent) {
 		e.preventDefault();
 
-		dragState = DRAG_STATES.NOT_DRAGGING;
+		dragState.current = DRAG_STATES.NOT_DRAGGING;
 		// selectedNote = null;
 
 		drawFG();

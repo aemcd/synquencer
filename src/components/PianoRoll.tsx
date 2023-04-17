@@ -399,6 +399,7 @@ export default function PianoRoll({
 
 		sequenceMap.forEach((value) => {
 			if (
+				value.instrument.name === currentInstrument.instrument.name &&
 				pitch == value.pitch &&
 				location >= value.location &&
 				location < value.location + value.duration

@@ -30,8 +30,12 @@ html {
   --cyan-accent: #8ec07c;
   --white-accent: #ebdbb2;
 
-  --piano-black: #202020;
+  --roll-bg: #282828;
+  --roll-bg-accent: #3c3836;
+
+  --piano-black: #282828;
   --piano-white: #DFDFDF;
+  --piano-line: #504945;
 }
 
 [data-theme="dark"] {

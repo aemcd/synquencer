@@ -22,6 +22,8 @@ import {
 	WriteMidi,
 	setLoop,
 	clearLoop,
+	playNote,
+	playNoteDefault,
 } from "@/client/write_midi";
 import { SharedCounter } from "@fluidframework/counter";
 import Cursor from "@/components/Cursor";
@@ -55,7 +57,8 @@ export default function Home({ id }: PageParams) {
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
 	const [fluidContainer, setFluidContainer] = useState<IFluidContainer>();
-	const [fluidServices, setFluidServices] = useState<TinyliciousContainerServices>();
+	const [fluidServices, setFluidServices] =
+		useState<TinyliciousContainerServices>();
 	const [renderState, setRenderState] = useState<number>(RenderState.wait);
 	const [voteCount, setVoteCount] = useState(0);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
@@ -134,7 +137,8 @@ export default function Home({ id }: PageParams) {
 		if (fluidInitialObjects != null) {
 			const flSeq = fluidInitialObjects.metadata as SharedMap;
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
-			const flVotes = fluidInitialObjects.syncPlaybackVotes as SharedCounter;
+			const flVotes =
+				fluidInitialObjects.syncPlaybackVotes as SharedCounter;
 
 			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
@@ -413,6 +417,7 @@ export default function Home({ id }: PageParams) {
 				tick={tick}
 			/>
 			<Cursor
+				PlayNote={playNoteDefault}
 				addNote={addNote}
 				removeNote={removeNote}
 				removeAndAddNote={removeAndAddNote}

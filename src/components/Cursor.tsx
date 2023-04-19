@@ -1,5 +1,5 @@
 import { announce, clearAnnouncer } from "@react-aria/live-announcer";
-import React, { useEffect , useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import {
 	Instrument,
 	instrumentList,
@@ -18,7 +18,7 @@ type Props = {
 	undo: () => boolean;
 	redo: () => boolean;
 	PlayNote: (note: Note) => void;
-}
+};
 export default function Cursor({
 	noteMap,
 	sequence,
@@ -27,7 +27,8 @@ export default function Cursor({
 	removeAndAddNote,
 	undo,
 	redo,
- PlayNote,  }: Props) {
+	PlayNote,
+}: Props) {
 	const cursorNote = React.useRef(
 		new Note({
 			location: 0,
@@ -41,8 +42,8 @@ export default function Cursor({
 	let mod = React.useRef<number>(0);
 	let mode = React.useRef(true);
 
-		let selectedNote = React.useRef<Note | null>(null);
-		
+	let selectedNote = React.useRef<Note | null>(null);
+
 	function setSelectedNote(note: Note | null) {
 		selectedNote.current = note;
 	}
@@ -50,107 +51,102 @@ export default function Cursor({
 	function setMod(n: number) {
 		mod.current = n;
 	}
-useHotkeys("shift+k", function (event, handler) {
-	if (mode.current == true) {
-				mode.current  = false;
-	clearAnnouncer("assertive");
-	announce("Input mode");
-} else {
-	mode.current = true;
-	clearAnnouncer("assertive");
-	announce("Keyboard mode");
-}
-	
+	useHotkeys("shift+k", function (event, handler) {
+		if (mode.current == true) {
+			mode.current = false;
+			clearAnnouncer("assertive");
+			announce("Input mode");
+		} else {
+			mode.current = true;
+			clearAnnouncer("assertive");
+			announce("Keyboard mode");
+		}
 	});
 
-		useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
+	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
 		if (mode.current == true) {
 			return;
 		} else {
 			// Prevent the default refresh event under WINDOWS system
 
-
-		
-		event.preventDefault();
-		setSelectedNote(null);
-		let noteChange = -3;
-		switch (event.key) {
-			case "a":
-				break;
-			case "b":
-				noteChange = -1;
-				break;
-			case "c":
-				noteChange = 0;
-				break;
-			case "d":
-				noteChange = 2;
-				break;
-			case "e":
-				noteChange = 4;
-				break;
-			case "f":
-				noteChange = 5;
-				break;
-			case "g":
-				noteChange = 7;
-				break;
+			event.preventDefault();
+			setSelectedNote(null);
+			let noteChange = -3;
+			switch (event.key) {
+				case "a":
+					break;
+				case "b":
+					noteChange = -1;
+					break;
+				case "c":
+					noteChange = 0;
+					break;
+				case "d":
+					noteChange = 2;
+					break;
+				case "e":
+					noteChange = 4;
+					break;
+				case "f":
+					noteChange = 5;
+					break;
+				case "g":
+					noteChange = 7;
+					break;
+			}
+			cursorNote.current.pitch += noteChange - (mod.current % 12);
+			setMod(mod.current + noteChange - (mod.current % 12));
+			const newNote = new Note(cursorNote.current);
+			addNote(newNote);
+			clearAnnouncer("assertive");
+			announce(
+				newNote.pitchName() + " added at " + newNote.location,
+				"assertive",
+				7000
+			);
+			setSelectedNote(newNote);
 		}
-		cursorNote.current.pitch += noteChange - (mod.current % 12);
-		setMod(mod.current + noteChange - (mod.current % 12));
-		const newNote = new Note(cursorNote.current);
-		addNote(newNote);
-		clearAnnouncer("assertive");
-		announce(
-			newNote.pitchName() + " added at " + newNote.location,
-			"assertive",
-			7000
-		);
-		setSelectedNote(newNote);
- 
- }
-});
+	});
 
 	useHotkeys("up, down", function (event, handler) {
 		if (mode.current == true) {
 			return;
-		}
-		else {
+		} else {
 			event.preventDefault();
-		let action = "Position";
-		switch (event.key) {
-			case "ArrowUp":
-				cursorNote.current.pitch++;
-				setMod(mod.current + 1);
-				if (selectedNote.current != null) {
-					const newNote = new Note(cursorNote.current);
-					removeAndAddNote(selectedNote.current, newNote);
-					setSelectedNote(newNote);
-					action = "Note";
-				}
-				break;
-			case "ArrowDown":
-				cursorNote.current.pitch--;
-				setMod(mod.current - 1);
-				if (selectedNote.current != null) {
-					const newNote = new Note(cursorNote.current);
-					removeAndAddNote(selectedNote.current, newNote);
-					setSelectedNote(newNote);
-					action = "Note";
-				}
-				break;
+			let action = "Position";
+			switch (event.key) {
+				case "ArrowUp":
+					cursorNote.current.pitch++;
+					setMod(mod.current + 1);
+					if (selectedNote.current != null) {
+						const newNote = new Note(cursorNote.current);
+						removeAndAddNote(selectedNote.current, newNote);
+						setSelectedNote(newNote);
+						action = "Note";
+					}
+					break;
+				case "ArrowDown":
+					cursorNote.current.pitch--;
+					setMod(mod.current - 1);
+					if (selectedNote.current != null) {
+						const newNote = new Note(cursorNote.current);
+						removeAndAddNote(selectedNote.current, newNote);
+						setSelectedNote(newNote);
+						action = "Note";
+					}
+					break;
+			}
+			clearAnnouncer("assertive");
+			announce(
+				`${action} at ` +
+					cursorNote.current.pitchName() +
+					"at" +
+					cursorNote.current.location,
+				"assertive",
+				7000
+			);
 		}
-		clearAnnouncer("assertive");
-		announce(
-			`${action} at ` +
-				cursorNote.current.pitchName() +
-				"at" +
-				cursorNote.current.location,
-			"assertive",
-			7000
-		);
- }
-});
+	});
 
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
@@ -159,41 +155,41 @@ useHotkeys("shift+k", function (event, handler) {
 			return;
 		} else {
 			event.preventDefault();
-		let action = "Position ";
-		switch (event.key) {
-			case "ArrowUp":
-				cursorNote.current.pitch += 12;
-				setMod(mod.current + 12);
-				if (selectedNote.current != null) {
-					const newNote = new Note(cursorNote.current);
-					removeAndAddNote(selectedNote.current, newNote);
-					setSelectedNote(newNote);
-					action = "Note";
-				}
-				break;
-			case "ArrowDown":
-				cursorNote.current.pitch -= 12;
-				setMod(mod.current - 12);
-				if (selectedNote.current != null) {
-					const newNote = new Note(cursorNote.current);
-					removeAndAddNote(selectedNote.current, newNote);
-					setSelectedNote(newNote);
-					action = "Note";
-				}
-				break;
+			let action = "Position ";
+			switch (event.key) {
+				case "ArrowUp":
+					cursorNote.current.pitch += 12;
+					setMod(mod.current + 12);
+					if (selectedNote.current != null) {
+						const newNote = new Note(cursorNote.current);
+						removeAndAddNote(selectedNote.current, newNote);
+						setSelectedNote(newNote);
+						action = "Note";
+					}
+					break;
+				case "ArrowDown":
+					cursorNote.current.pitch -= 12;
+					setMod(mod.current - 12);
+					if (selectedNote.current != null) {
+						const newNote = new Note(cursorNote.current);
+						removeAndAddNote(selectedNote.current, newNote);
+						setSelectedNote(newNote);
+						action = "Note";
+					}
+					break;
+			}
+			clearAnnouncer("assertive");
+			announce(
+				`${action} at ` +
+					cursorNote.current.pitchName() +
+					"at" +
+					cursorNote.current.location,
+				"assertive",
+				7000
+			);
+			//alert("Move note" + event.key + "an octave");
 		}
-		clearAnnouncer("assertive");
-		announce(
-			`${action} at ` +
-				cursorNote.current.pitchName() +
-				"at" +
-				cursorNote.current.location,
-			"assertive",
-			7000
-		);
-		//alert("Move note" + event.key + "an octave");
- }
-});
+	});
 	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
 		switch (event.key) {
 			case "1":
@@ -259,8 +255,33 @@ useHotkeys("shift+k", function (event, handler) {
 				return;
 			} else {
 				switch (event.key) {
-				case "ArrowLeft":
-					if (handler.ctrl == true && selectedNote.current != null) {
+					case "ArrowLeft":
+						if (
+							handler.ctrl == true &&
+							selectedNote.current != null
+						) {
+							if (
+								cursorNote.current.location -
+									cursorNote.current.duration >=
+								0
+							) {
+								cursorNote.current.location -=
+									cursorNote.current.duration;
+								const newNote = new Note(cursorNote.current);
+								removeAndAddNote(selectedNote.current, newNote);
+								selectedNote.current = newNote;
+								clearAnnouncer("assertive");
+								announce(
+									"Move" +
+										newNote.pitchName() +
+										" to " +
+										newNote.location,
+									"assertive",
+									7000
+								);
+								break;
+							}
+						}
 						if (
 							cursorNote.current.location -
 								cursorNote.current.duration >=
@@ -268,84 +289,90 @@ useHotkeys("shift+k", function (event, handler) {
 						) {
 							cursorNote.current.location -=
 								cursorNote.current.duration;
-							const newNote = new Note(cursorNote.current);
-							removeAndAddNote(selectedNote.current, newNote);
-							selectedNote.current = newNote;
-							clearAnnouncer("assertive");
-							announce(
-								"Move" +
-									newNote.pitchName() +
-									" to " +
-									newNote.location,
-								"assertive",
-								7000
-							);
+							let prevNote = selectedNote.current;
+							let sameLoc = false;
+							setSelectedNote(null);
+							console.log(selectedNote);
+							noteMap.forEach((note) => {
+								cursorNote.current.location +=
+									cursorNote.current.duration;
+								if (
+									cursorNote.current.location ==
+										note.location &&
+									(prevNote == null ||
+										prevNote.location !=
+											cursorNote.current.location ||
+										prevNote.pitch >
+											cursorNote.current.pitch)
+								) {
+									setSelectedNote(note);
+									sameLoc = true;
+									cursorNote.current.location = note.location;
+									cursorNote.current.pitch = note.pitch;
+								}
+								cursorNote.current.location -=
+									cursorNote.current.duration;
+								if (
+									cursorNote.current.location ==
+										note.location &&
+									!sameLoc
+								) {
+									setSelectedNote(note);
+								}
+							});
+							if (selectedNote.current == null) {
+								clearAnnouncer("assertive");
+								announce(
+									"rest at " + cursorNote.current.location,
+									"assertive",
+									7000
+								);
+							} else {
+								cursorNote.current.location =
+									selectedNote.current.location;
+								cursorNote.current.pitch =
+									selectedNote.current.pitch;
+								clearAnnouncer("assertive");
+								announce(
+									"Note at " +
+										selectedNote.current?.pitchName() +
+										" " +
+										selectedNote.current?.location,
+									"assertive",
+									7000
+								);
+							}
 							break;
 						}
-					}
-					if (
-						cursorNote.current.location -
-							cursorNote.current.duration >=
-						0
-					) {
-						cursorNote.current.location -=
-							cursorNote.current.duration;
-						let prevNote = selectedNote.current;
-						let sameLoc = false;
-						setSelectedNote(null);
-						console.log(selectedNote);
-						noteMap.forEach((note) => {
-							cursorNote.current.location +=
-								cursorNote.current.duration;
-							if (
-								cursorNote.current.location == note.location &&
-								(prevNote == null ||
-									prevNote.location !=
-										cursorNote.current.location ||
-									prevNote.pitch > cursorNote.current.pitch)
-							) {
-								setSelectedNote(note);
-								sameLoc = true;
-								cursorNote.current.location = note.location;
-								cursorNote.current.pitch = note.pitch;
-							}
-							cursorNote.current.location -=
-								cursorNote.current.duration;
-							if (
-								cursorNote.current.location == note.location &&
-								!sameLoc
-							) {
-								setSelectedNote(note);
-							}
-						});
-						if (selectedNote.current == null) {
-							clearAnnouncer("assertive");
-							announce(
-								"rest at " + cursorNote.current.location,
-								"assertive",
-								7000
-							);
-						} else {
-							cursorNote.current.location =
-								selectedNote.current.location;
-							cursorNote.current.pitch =
-								selectedNote.current.pitch;
-							clearAnnouncer("assertive");
-							announce(
-								"Note at " +
-									selectedNote.current?.pitchName() +
-									" " +
-									selectedNote.current?.location,
-								"assertive",
-								7000
-							);
-						}
 						break;
-					}
-					break;
 
-				case "ArrowRight":
-					if (handler.ctrl == true && selectedNote.current != null) {
+					case "ArrowRight":
+						if (
+							handler.ctrl == true &&
+							selectedNote.current != null
+						) {
+							if (
+								cursorNote.current.location +
+									cursorNote.current.duration * 2 <=
+								sequence.length
+							) {
+								cursorNote.current.location +=
+									cursorNote.current.duration;
+								const newNote = new Note(cursorNote.current);
+								removeAndAddNote(selectedNote.current, newNote);
+								setSelectedNote(newNote);
+								clearAnnouncer("assertive");
+								announce(
+									"Move" +
+										newNote.pitchName() +
+										"to" +
+										newNote.location,
+									"assertive",
+									7000
+								);
+								break;
+							}
+						}
 						if (
 							cursorNote.current.location +
 								cursorNote.current.duration * 2 <=
@@ -353,85 +380,66 @@ useHotkeys("shift+k", function (event, handler) {
 						) {
 							cursorNote.current.location +=
 								cursorNote.current.duration;
-							const newNote = new Note(cursorNote.current);
-							removeAndAddNote(selectedNote.current, newNote);
-							setSelectedNote(newNote);
-							clearAnnouncer("assertive");
-							announce(
-								"Move" +
-									newNote.pitchName() +
-									"to" +
-									newNote.location,
-								"assertive",
-								7000
-							);
+							const prevNote = selectedNote.current;
+							setSelectedNote(null);
+							console.log(selectedNote);
+							let sameLoc = false;
+							noteMap.forEach((note) => {
+								cursorNote.current.location -=
+									cursorNote.current.duration;
+								if (
+									cursorNote.current.location ===
+										note.location &&
+									(prevNote == null ||
+										prevNote.location !==
+											cursorNote.current.location ||
+										prevNote.pitch <
+											cursorNote.current.pitch)
+								) {
+									setSelectedNote(note);
+									sameLoc = true;
+									cursorNote.current.location = note.location;
+									cursorNote.current.pitch = note.pitch;
+								}
+								cursorNote.current.location +=
+									cursorNote.current.duration;
+								if (
+									cursorNote.current.location ===
+										note.location &&
+									!sameLoc
+								) {
+									setSelectedNote(note);
+								}
+							});
+
+							if (selectedNote.current == null) {
+								clearAnnouncer("assertive");
+								announce(
+									"Rest at " + cursorNote.current.location,
+									"assertive",
+									7000
+								);
+							} else {
+								cursorNote.current.location =
+									selectedNote.current.location;
+								cursorNote.current.pitch =
+									selectedNote.current.pitch;
+								clearAnnouncer("assertive");
+								announce(
+									"Note at " +
+										selectedNote.current.pitchName() +
+										" " +
+										selectedNote.current.location,
+									"assertive",
+									7000
+								);
+							}
 							break;
 						}
-					}
-					if (
-						cursorNote.current.location +
-							cursorNote.current.duration * 2 <=
-						sequence.length
-					) {
-						cursorNote.current.location +=
-							cursorNote.current.duration;
-						const prevNote = selectedNote.current;
-						setSelectedNote(null);
-						console.log(selectedNote);
-						let sameLoc = false;
-						noteMap.forEach((note) => {
-							cursorNote.current.location -=
-								cursorNote.current.duration;
-							if (
-								cursorNote.current.location === note.location &&
-								(prevNote == null ||
-									prevNote.location !==
-										cursorNote.current.location ||
-									prevNote.pitch < cursorNote.current.pitch)
-							) {
-								setSelectedNote(note);
-								sameLoc = true;
-								cursorNote.current.location = note.location;
-								cursorNote.current.pitch = note.pitch;
-							}
-							cursorNote.current.location +=
-								cursorNote.current.duration;
-							if (
-								cursorNote.current.location === note.location &&
-								!sameLoc
-							) {
-								setSelectedNote(note);
-							}
-						});
-
-						if (selectedNote.current == null) {
-							clearAnnouncer("assertive");
-							announce(
-								"Rest at " + cursorNote.current.location,
-								"assertive",
-								7000
-							);
-						} else {
-							cursorNote.current.location =
-								selectedNote.current.location;
-							cursorNote.current.pitch =
-								selectedNote.current.pitch;
-							clearAnnouncer("assertive");
-							announce(
-								"Note at " +
-									selectedNote.current.pitchName() +
-									" " +
-									selectedNote.current.location,
-								"assertive",
-								7000
-							);
-						}
-						break;
-					}
+				}
 			}
 		}
-		}
-		);
+	);
 	useHotkeys("ctrl+n, command+n", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
@@ -492,8 +500,5 @@ useHotkeys("shift+k", function (event, handler) {
 		announce("Action redone");
 	});
 
-		
-		
-		return null;
+	return null;
 }
-

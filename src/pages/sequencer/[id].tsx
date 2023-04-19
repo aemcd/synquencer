@@ -191,31 +191,6 @@ export default function Home({ id }: PageParams) {
 		return Array.from(notes.values());
 	}, [notes]);
 
-	const removeAndAddNote = useCallback(
-		(rmNote: Note, addNote: Note) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			const rmKey = rmNote.getNoteKey().serialize();
-			const addKey = addNote.getNoteKey().serialize();
-			const rmPrevValue = flNotes.get(rmKey);
-			if (flNotes.delete(rmKey)) {
-				undoRedoHandler.push({
-					key: rmKey,
-					currentValue: undefined,
-					previousValue: rmPrevValue,
-				});
-			}
-			const addPrevValue = flNotes.get(addKey);
-			flNotes.set(addKey, addNote);
-			undoRedoHandler.push({
-				key: addKey,
-				currentValue: addNote,
-				previousValue: addPrevValue,
-			});
-			undoRedoHandler.finish();
-		},
-		[fluidInitialObjects, undoRedoHandler]
-	);
-
 	const voteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(1);
@@ -255,6 +230,62 @@ export default function Home({ id }: PageParams) {
 					key: key,
 					currentValue: undefined,
 					previousValue: prevValue,
+				});
+			}
+			undoRedoHandler.finish();
+		},
+		[fluidInitialObjects, undoRedoHandler]
+	);
+
+	const removeAndAddNote = useCallback(
+		(rmNote: Note, addNote: Note) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+			const rmKey = rmNote.getNoteKey().serialize();
+			const addKey = addNote.getNoteKey().serialize();
+			const rmPrevValue = flNotes.get(rmKey);
+			if (flNotes.delete(rmKey)) {
+				undoRedoHandler.push({
+					key: rmKey,
+					currentValue: undefined,
+					previousValue: rmPrevValue,
+				});
+			}
+			const addPrevValue = flNotes.get(addKey);
+			flNotes.set(addKey, addNote);
+			undoRedoHandler.push({
+				key: addKey,
+				currentValue: addNote,
+				previousValue: addPrevValue,
+			});
+			undoRedoHandler.finish();
+		},
+		[fluidInitialObjects, undoRedoHandler]
+	);
+
+	const removeAddMultiple = useCallback(
+		(rmNotes: Note[], addNotes: Note[]) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+			for (const rmNote of rmNotes) {
+				const rmKey = rmNote.getNoteKey().serialize();
+				const rmPrevValue = flNotes.get(rmKey);
+				if (flNotes.delete(rmKey)) {
+					undoRedoHandler.push({
+						key: rmKey,
+						currentValue: undefined,
+						previousValue: rmPrevValue,
+					});
+				}
+			}
+
+			for (const addNote of addNotes) {
+				const addKey = addNote.getNoteKey().serialize();
+
+				const addPrevValue = flNotes.get(addKey);
+				flNotes.set(addKey, addNote);
+				undoRedoHandler.push({
+					key: addKey,
+					currentValue: addNote,
+					previousValue: addPrevValue,
 				});
 			}
 			undoRedoHandler.finish();

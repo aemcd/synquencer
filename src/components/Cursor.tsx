@@ -1,5 +1,5 @@
 import { announce, clearAnnouncer } from "@react-aria/live-announcer";
-import React, { useEffect } from "react";
+import React, { useEffect , useRef} from "react";
 import {
 	Instrument,
 	instrumentList,
@@ -17,7 +17,8 @@ type Props = {
 	removeAndAddNote: (rmNote: Note, addNote: Note) => void;
 	undo: () => boolean;
 	redo: () => boolean;
-};
+	PlayNote: (note: Note) => void;
+}
 export default function Cursor({
 	noteMap,
 	sequence,
@@ -26,7 +27,7 @@ export default function Cursor({
 	removeAndAddNote,
 	undo,
 	redo,
-}: Props) {
+ PlayNote,  }: Props) {
 	const cursorNote = React.useRef(
 		new Note({
 			location: 0,
@@ -36,9 +37,12 @@ export default function Cursor({
 			instrument: instrumentList.Piano,
 		})
 	);
-	let mod = React.useRef<number>(0);
-	let selectedNote = React.useRef<Note | null>(null);
 
+	let mod = React.useRef<number>(0);
+	let mode = React.useRef(true);
+
+		let selectedNote = React.useRef<Note | null>(null);
+		
 	function setSelectedNote(note: Note | null) {
 		selectedNote.current = note;
 	}
@@ -46,9 +50,27 @@ export default function Cursor({
 	function setMod(n: number) {
 		mod.current = n;
 	}
+useHotkeys("shift+k", function (event, handler) {
+	if (mode.current == true) {
+				mode.current  = false;
+	clearAnnouncer("assertive");
+	announce("Input mode");
+} else {
+	mode.current = true;
+	clearAnnouncer("assertive");
+	announce("Keyboard mode");
+}
+	
+	});
 
-	useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
-		// Prevent the default refresh event under WINDOWS system
+		useHotkeys("a, b, c, d, e, f, g", function (event, handler) {
+		if (mode.current == true) {
+			return;
+		} else {
+			// Prevent the default refresh event under WINDOWS system
+
+
+		
 		event.preventDefault();
 		setSelectedNote(null);
 		let noteChange = -3;
@@ -85,10 +107,16 @@ export default function Cursor({
 			7000
 		);
 		setSelectedNote(newNote);
-	});
+ 
+ }
+});
 
 	useHotkeys("up, down", function (event, handler) {
-		event.preventDefault();
+		if (mode.current == true) {
+			return;
+		}
+		else {
+			event.preventDefault();
 		let action = "Position";
 		switch (event.key) {
 			case "ArrowUp":
@@ -121,12 +149,16 @@ export default function Cursor({
 			"assertive",
 			7000
 		);
-	});
+ }
+});
 
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 
-		event.preventDefault();
+		if (mode.current == true) {
+			return;
+		} else {
+			event.preventDefault();
 		let action = "Position ";
 		switch (event.key) {
 			case "ArrowUp":
@@ -160,7 +192,8 @@ export default function Cursor({
 			7000
 		);
 		//alert("Move note" + event.key + "an octave");
-	});
+ }
+});
 	useHotkeys("1, 2, 3, 4, 5", function (event, handler) {
 		switch (event.key) {
 			case "1":
@@ -222,7 +255,10 @@ export default function Cursor({
 	useHotkeys(
 		"ArrowLeft, ArrowRight, ctrl+ArrowLeft, ctrl+ArrowRight",
 		function (event, handler) {
-			switch (event.key) {
+			if (mode.current == true) {
+				return;
+			} else {
+				switch (event.key) {
 				case "ArrowLeft":
 					if (handler.ctrl == true && selectedNote.current != null) {
 						if (
@@ -394,7 +430,8 @@ export default function Cursor({
 					}
 			}
 		}
-	);
+		}
+		);
 	useHotkeys("ctrl+n, command+n", function (event, handler) {
 		// Prevent the default refresh event under WINDOWS system
 		event.preventDefault();
@@ -455,5 +492,8 @@ export default function Cursor({
 		announce("Action redone");
 	});
 
-	return null;
+		
+		
+		return null;
 }
+

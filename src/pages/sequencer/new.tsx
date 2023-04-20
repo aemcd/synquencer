@@ -62,22 +62,18 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 	metadata.set("bpm", newSeq.bpm);
 	metadata.set("numerator", newSeq.numerator);
 	metadata.set("denominator", newSeq.denominator);
-	const response = await AddSequence(newSeq);
 
-	//await client.getContainer(id, schema);
-
-	//container.dispose();
-	if (container != null && response?.acknowledged === true) {
+	if (container != null) {
 		return {
 			redirect: {
-				permanent: true,
+				permanent: false,
 				destination: `/sequencer/${id}`,
 			},
 		};
 	}
 	return {
 		redirect: {
-			permanent: true,
+			permanent: false,
 			destination: "..",
 		},
 	};

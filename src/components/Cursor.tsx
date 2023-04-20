@@ -494,16 +494,60 @@ export default function Cursor({
 		setSelectedNote(null);
 		announce("Action redone");
 	});
-useHotkeys("a", function(event, handler) {
+useHotkeys("a, w, s, e, d, f, t, g, y, h, u, j, k", function(event, handler) {
 	if (mode.current == false) {
 		return;
 	} else {
 		setSelectedNote(null);
 		let noteChange = 0;
+		switch(event.key) {
+			case "a": 
+			noteChange = 0;
+			break;
+			case "w":
+				noteChange = 1;
+break;
+case "s":
+	noteChange = 2;
+	break;
+	case "e":
+		noteChange = 3;
+		break;
+		case "d": 
+		noteChange = 4;
+		break;
+		case "f":
+			noteChange = 5;
+			break;
+			case "t": 
+			noteChange = 6;
+			break;
+			case "g": 
+			noteChange = 7;
+		break;
+		case "y":
+			noteChange = 8;
+			break;;
+			case "h":
+				noteChange = 9;
+				break;
+				case "u":
+				noteChange = 10;
+				break;
+				case "j": 
+				noteChange = 11;
+				break;
+				case "k": 
+				noteChange = 12;
+				break;
+
+		}
 		cursorNote.current.pitch += noteChange - (mod.current % 12);
 		setMod(mod.current + noteChange - (mod.current % 12));
 			PlayNote(cursorNote.current);
-
+			cursorNote.current.pitch -= noteChange - (mod.current % 12);
+			setMod(mod.current 		- noteChange - (mod.current % 12));
+			
 
 
 	}

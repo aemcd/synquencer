@@ -46,7 +46,6 @@ export default function Cursor({
 		announce("Sequencer Start");
 	}, []);
 
-	const mod = React.useRef<number>(0);
 	const mode = React.useRef(false);
 
 	const setSelectedNote = useCallback(
@@ -55,11 +54,6 @@ export default function Cursor({
 		},
 		[selectedNote]
 	);
-
-	const setMod = useCallback((n: number) => {
-		mod.current = n;
-	}, []);
-
 	const editAndSetSelected = useCallback(() => {
 		if (selectedNote.current != null) {
 			const newNote = new Note(cursorNote.current);
@@ -88,13 +82,13 @@ export default function Cursor({
 
 			event.preventDefault();
 			setSelectedNote(null);
-			let noteChange = -3;
+			let noteChange = 0;
 			switch (event.key) {
 				case "a":
-					noteChange = -3;
+					noteChange = 9;
 					break;
 				case "b":
-					noteChange = -1;
+					noteChange = 11;
 					break;
 				case "c":
 					noteChange = 0;
@@ -112,8 +106,8 @@ export default function Cursor({
 					noteChange = 7;
 					break;
 			}
-			cursorNote.current.pitch += noteChange - (mod.current % 12);
-			setMod(mod.current + noteChange - (mod.current % 12));
+			cursorNote.current.pitch +=
+				noteChange - (cursorNote.current.pitch % 12);
 			const newNote = new Note(cursorNote.current);
 			addNote(newNote);
 			clearAnnouncer("assertive");
@@ -135,7 +129,6 @@ export default function Cursor({
 			switch (event.key) {
 				case "ArrowUp":
 					cursorNote.current.pitch++;
-					setMod(mod.current + 1);
 					if (selectedNote.current != null) {
 						editAndSetSelected();
 						action = "Note";
@@ -143,7 +136,6 @@ export default function Cursor({
 					break;
 				case "ArrowDown":
 					cursorNote.current.pitch--;
-					setMod(mod.current - 1);
 					if (selectedNote.current != null) {
 						editAndSetSelected();
 						action = "Note";
@@ -173,7 +165,6 @@ export default function Cursor({
 			switch (event.key) {
 				case "ArrowUp":
 					cursorNote.current.pitch += 12;
-					setMod(mod.current + 12);
 					if (selectedNote.current != null) {
 						editAndSetSelected();
 						action = "Note";
@@ -181,7 +172,6 @@ export default function Cursor({
 					break;
 				case "ArrowDown":
 					cursorNote.current.pitch -= 12;
-					setMod(mod.current - 12);
 					if (selectedNote.current != null) {
 						editAndSetSelected();
 						action = "Note";
@@ -501,8 +491,6 @@ export default function Cursor({
 		} else {
 			setSelectedNote(null);
 			let noteChange = 0;
-			cursorNote.current.pitch += noteChange - (mod.current % 12);
-			setMod(mod.current + noteChange - (mod.current % 12));
 			PlayNote(cursorNote.current);
 		}
 	});

@@ -1,3 +1,4 @@
 #!/bin/bash
 npx @fluidframework/azure-local-service@latest &>/dev/null &
-npm run dev &>/dev/null
+npm run dev &>/dev/null &
+lt --port 3000

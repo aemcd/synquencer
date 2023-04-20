@@ -1,4 +1,4 @@
-import { announce, clearAnnouncer } from "@react-aria/live-announcer";
+ import { announce, clearAnnouncer } from "@react-aria/live-announcer";
 import React, { useCallback, useEffect } from "react";
 import {
 	Instrument,
@@ -534,12 +534,28 @@ case "s":
 				break;
 
 		}
-		cursorNote.current.pitch += noteChange;
+		cursorNote.current.pitch += noteChange - cursorNote.current.pitch % 12;
 			PlayNote(cursorNote.current);
-			cursorNote.current.pitch -= noteChange;
-}
+cursorNote.current.pitch -= noteChange; 
+}	
 });
 
 
-	return null;
+	useHotkeys("z, x", function (event, handler) {
+		if (mode.current == false) {
+			return;
+		} else {
+		switch(event.key) {
+			case "z": 
+			cursorNote.current.pitch -= 12;
+			break;
+			case "x": 
+			cursorNote.current.pitch += 12;
+			break;
+		}
+
+
+	}
+	});
+		return null;
 }

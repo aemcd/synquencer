@@ -57,6 +57,16 @@ export default function TopBar({
 					▶
 				</button>
 				<button
+					style={{
+						width: "84px",
+					}}
+					className="top-button"
+					aria-label="Synchronized Play"
+					onClick={playSequence}
+				>
+					▷ 0/9
+				</button>
+				<button
 					className="top-button"
 					aria-label="Stop"
 					onClick={stopSequence}

@@ -8,7 +8,7 @@ import {
 	SequenceMetadata,
 } from "@/server/types";
 import { useHotkeys } from "react-hotkeys-hook";
-import {playNote} from "@/client/write_midi";
+import { playNote } from "@/client/write_midi";
 
 type Props = {
 	noteMap: Map<string, Note>;
@@ -91,6 +91,7 @@ export default function Cursor({
 			let noteChange = -3;
 			switch (event.key) {
 				case "a":
+					noteChange = -3;
 					break;
 				case "b":
 					noteChange = -1;
@@ -494,20 +495,17 @@ export default function Cursor({
 		setSelectedNote(null);
 		announce("Action redone");
 	});
-useHotkeys("a", function(event, handler) {
-	if (mode.current == false) {
-		return;
-	} else {
-		setSelectedNote(null);
-		let noteChange = 0;
-		cursorNote.current.pitch += noteChange - (mod.current % 12);
-		setMod(mod.current + noteChange - (mod.current % 12));
+	useHotkeys("a", function (event, handler) {
+		if (mode.current == false) {
+			return;
+		} else {
+			setSelectedNote(null);
+			let noteChange = 0;
+			cursorNote.current.pitch += noteChange - (mod.current % 12);
+			setMod(mod.current + noteChange - (mod.current % 12));
 			PlayNote(cursorNote.current);
-
-
-
-	}
-});
+		}
+	});
 
 	return null;
 }

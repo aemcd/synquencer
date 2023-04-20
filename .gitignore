@@ -37,3 +37,4 @@ next-env.d.ts
 
 # VS code
 .vscode
+src/components/Cursor.tsx

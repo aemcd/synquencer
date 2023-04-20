@@ -458,6 +458,14 @@ export default function PianoRoll({
 				}
 			} else {
 				// no note found; creating new note
+				/* if (!(startPos.current.loc >= 0 &&
+					startPos.current.pitch >= 0 &&
+					startPos.current.pitch <= 127))
+				{
+					dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
+					return;
+				} */
+
 				dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
 				setSelectedNotes([new Note({
 					location: startPos.current.loc,
@@ -485,16 +493,20 @@ export default function PianoRoll({
 			if (clickedNote) {
 				copiedNote.current = new Note(clickedNote);
 			} else if (copiedNote.current) {
-				let newNote = new Note({
-					location: startPos.current.loc,
-					velocity: copiedNote.current.velocity,
-					duration: copiedNote.current.duration,
-					pitch: startPos.current.pitch,
-					instrument: currentInstrument.instrument,
-				});
-				addNote(newNote);
-				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
-				setSelectedNotes([newNote]);
+				if (startPos.current.loc >= 0 &&
+					startPos.current.pitch >= 0 &&
+					startPos.current.pitch <= 127) {
+					let newNote = new Note({
+						location: startPos.current.loc,
+						velocity: copiedNote.current.velocity,
+						duration: copiedNote.current.duration,
+						pitch: startPos.current.pitch,
+						instrument: currentInstrument.instrument,
+					});
+					addNote(newNote);
+					//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
+					setSelectedNotes([newNote]);
+				}
 			}
 		}
 	}
@@ -577,6 +589,7 @@ export default function PianoRoll({
 							note.pitch + pitch - startPos.current!.pitch >= 0 &&
 							note.pitch + pitch - startPos.current!.pitch <= 127) {
 						// new note position is valid
+						console.log(note.location + location - startPos.current!.loc);
 						notesToAdd.push(new Note({
 							location: note.location + location - startPos.current!.loc,
 							velocity: note.velocity,

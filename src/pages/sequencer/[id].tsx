@@ -22,6 +22,8 @@ import {
 	WriteMidi,
 	setLoop,
 	clearLoop,
+	playNote,
+	playNoteDefault,
 } from "@/client/write_midi";
 import { SharedCounter } from "@fluidframework/counter";
 import Cursor from "@/components/Cursor";
@@ -55,7 +57,8 @@ export default function Home({ id }: PageParams) {
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
 	const [fluidContainer, setFluidContainer] = useState<IFluidContainer>();
-	const [fluidServices, setFluidServices] = useState<TinyliciousContainerServices>();
+	const [fluidServices, setFluidServices] =
+		useState<TinyliciousContainerServices>();
 	const [renderState, setRenderState] = useState<number>(RenderState.wait);
 	const [voteCount, setVoteCount] = useState(0);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
@@ -134,7 +137,8 @@ export default function Home({ id }: PageParams) {
 		if (fluidInitialObjects != null) {
 			const flSeq = fluidInitialObjects.metadata as SharedMap;
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
-			const flVotes = fluidInitialObjects.syncPlaybackVotes as SharedCounter;
+			const flVotes =
+				fluidInitialObjects.syncPlaybackVotes as SharedCounter;
 
 			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
@@ -187,31 +191,6 @@ export default function Home({ id }: PageParams) {
 		return Array.from(notes.values());
 	}, [notes]);
 
-	const removeAndAddNote = useCallback(
-		(rmNote: Note, addNote: Note) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			const rmKey = rmNote.getNoteKey().serialize();
-			const addKey = addNote.getNoteKey().serialize();
-			const rmPrevValue = flNotes.get(rmKey);
-			if (flNotes.delete(rmKey)) {
-				undoRedoHandler.push({
-					key: rmKey,
-					currentValue: undefined,
-					previousValue: rmPrevValue,
-				});
-			}
-			const addPrevValue = flNotes.get(addKey);
-			flNotes.set(addKey, addNote);
-			undoRedoHandler.push({
-				key: addKey,
-				currentValue: addNote,
-				previousValue: addPrevValue,
-			});
-			undoRedoHandler.finish();
-		},
-		[fluidInitialObjects, undoRedoHandler]
-	);
-
 	const voteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(1);
@@ -251,6 +230,62 @@ export default function Home({ id }: PageParams) {
 					key: key,
 					currentValue: undefined,
 					previousValue: prevValue,
+				});
+			}
+			undoRedoHandler.finish();
+		},
+		[fluidInitialObjects, undoRedoHandler]
+	);
+
+	const removeAndAddNote = useCallback(
+		(rmNote: Note, addNote: Note) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+			const rmKey = rmNote.getNoteKey().serialize();
+			const addKey = addNote.getNoteKey().serialize();
+			const rmPrevValue = flNotes.get(rmKey);
+			if (flNotes.delete(rmKey)) {
+				undoRedoHandler.push({
+					key: rmKey,
+					currentValue: undefined,
+					previousValue: rmPrevValue,
+				});
+			}
+			const addPrevValue = flNotes.get(addKey);
+			flNotes.set(addKey, addNote);
+			undoRedoHandler.push({
+				key: addKey,
+				currentValue: addNote,
+				previousValue: addPrevValue,
+			});
+			undoRedoHandler.finish();
+		},
+		[fluidInitialObjects, undoRedoHandler]
+	);
+
+	const removeAddMultiple = useCallback(
+		(rmNotes: Note[], addNotes: Note[]) => {
+			const flNotes = fluidInitialObjects?.sequence as SharedMap;
+			for (const rmNote of rmNotes) {
+				const rmKey = rmNote.getNoteKey().serialize();
+				const rmPrevValue = flNotes.get(rmKey);
+				if (flNotes.delete(rmKey)) {
+					undoRedoHandler.push({
+						key: rmKey,
+						currentValue: undefined,
+						previousValue: rmPrevValue,
+					});
+				}
+			}
+
+			for (const addNote of addNotes) {
+				const addKey = addNote.getNoteKey().serialize();
+
+				const addPrevValue = flNotes.get(addKey);
+				flNotes.set(addKey, addNote);
+				undoRedoHandler.push({
+					key: addKey,
+					currentValue: addNote,
+					previousValue: addPrevValue,
 				});
 			}
 			undoRedoHandler.finish();
@@ -413,6 +448,7 @@ export default function Home({ id }: PageParams) {
 				tick={tick}
 			/>
 			<Cursor
+				PlayNote={playNoteDefault}
 				addNote={addNote}
 				removeNote={removeNote}
 				removeAndAddNote={removeAndAddNote}

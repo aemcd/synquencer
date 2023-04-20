@@ -39,6 +39,9 @@ export default function Cursor({
 		})
 	);
 
+	useEffect( () => {
+		announce("Sequencer Start");
+	  },[]);
 	let mod = React.useRef<number>(0);
 	let mode = React.useRef(true);
 

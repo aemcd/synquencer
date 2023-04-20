@@ -446,6 +446,7 @@ export default function Home({ id }: PageParams) {
 				removeNote={removeNote}
 				removeAndAddNote={removeAndAddNote}
 				tick={tick}
+				removeAddMultiple={removeAddMultiple}
 			/>
 			<Cursor
 				PlayNote={playNoteDefault}

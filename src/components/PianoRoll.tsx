@@ -9,7 +9,7 @@ import React, {
 	useState,
 	useCallback,
 } from "react";
-import { Instrument, Note, NoteKey, SequenceMetadata } from "@/server/types";
+import { Instrument, Note, NoteKey, SequenceMetadata, user } from "@/server/types";
 import { playNoteDefault } from "@/client/write_midi";
 
 type ContentPageProps = {
@@ -22,6 +22,7 @@ type ContentPageProps = {
 		accent: string;
 	};
 	removeAndAddNote: (rmNote: Note, addNote: Note) => void;
+	removeAddMultiple: (rmNotes: Note[], addNotes: Note[]) => void;
 	addNote: (note: Note) => void;
 	removeNote: (note: Note) => void;
 	tick: number;
@@ -56,12 +57,13 @@ export default function PianoRoll({
 	addNote,
 	removeNote,
 	removeAndAddNote,
+	removeAddMultiple,
 	tick,
 }: ContentPageProps) {
 	// pitch 24 is C1
 
 	const dragStatus = useRef<number>(DRAG_STATUSES.NOT_DRAGGING);
-	const lastMouseMove = useRef<MouseEvent | null>(null);
+	const lastMouseEvent = useRef<MouseEvent | null>(null);
 
 	const [view, setView] = useState({
 		loc: 0,
@@ -74,10 +76,11 @@ export default function PianoRoll({
 		gridHeight: 24
 	});
 
-	let selectedNote: Note | null = null;
-	let copiedNote: Note | null = null;
-	let startGridX = -1;
-	let startGridY = -1;
+	const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
+
+	const copiedNote = useRef<Note | null>(null);
+
+	const startPos = useRef<{loc: number, pitch: number} | null>(null);
 
 	const computedStyle = useRef<CSSStyleDeclaration | null>(null);
 
@@ -110,10 +113,14 @@ export default function PianoRoll({
 		drawBG();
 		drawFG();
 
-		if (lastMouseMove.current) {
-			handleMouseMove(lastMouseMove.current);
+		if (lastMouseEvent.current) {
+			handleMouseMove(lastMouseEvent.current);
 		}
 	});
+
+	useEffect(() => {
+		setSelectedNotes([]);
+	}, [currentInstrument]);
 
 	useEffect(() => {
 		if (sequenceMap != null && drawFG != null) {
@@ -255,7 +262,7 @@ export default function PianoRoll({
 
 		sequenceMap.forEach((value) => {
 			if (
-				value != selectedNote &&
+				!selectedNotes.some(note => note.getNoteKey().serialize() === value.getNoteKey().serialize()) &&
 				value.instrument.name == currentInstrument.instrument.name
 			) {
 				drawNote(
@@ -275,23 +282,21 @@ export default function PianoRoll({
 			}
 		});
 
-		if (
-			selectedNote &&
-			dragStatus.current == DRAG_STATUSES.NOT_DRAGGING &&
-			selectedNote.instrument.name == currentInstrument.instrument.name
-		) {
-			drawNote(
-				selectedNote.location,
-				selectedNote.pitch,
-				selectedNote.duration,
-				computedStyle.current.getPropertyValue(
-					currentInstrument.primary
-				),
-				computedStyle.current.getPropertyValue(
-					currentInstrument.accent
-				),
-				true
-			);
+		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING) {
+			selectedNotes.forEach(note => {
+				drawNote(
+					note.location,
+					note.pitch,
+					note.duration,
+					computedStyle.current!.getPropertyValue(
+						currentInstrument.primary
+					),
+					computedStyle.current!.getPropertyValue(
+						currentInstrument.accent
+					),
+					true
+				);
+			});
 		}
 
 		// draw location labels
@@ -364,7 +369,7 @@ export default function PianoRoll({
 		}
 	}
 
-	function velocityAlert(velocity: number) {
+	/* function velocityAlert(velocity: number) {
 		if (!fgCtx.current || !selectedNote || !computedStyle.current) return;
 
 		fgCtx.current.fillStyle =
@@ -374,7 +379,7 @@ export default function PianoRoll({
 		fgCtx.current.fillStyle =
 			computedStyle.current.getPropertyValue("--fg0");
 		fgCtx.current.fillText(`Velocity: ${selectedNote.velocity}%`, 6, 24);
-	}
+	} */
 
 	function getGridPos(e: MouseEvent) {
 		let rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
@@ -399,11 +404,14 @@ export default function PianoRoll({
 
 		let { location, pitch, isRightHalf } = getGridPos(e);
 
-		startGridX = location;
-		startGridY = pitch;
+		startPos.current = {
+			loc: location,
+			pitch: pitch
+		}
 
-		selectedNote = null;
+		lastMouseEvent.current = e;
 
+		let clickedNote: Note | null = null;
 		sequenceMap.forEach((value) => {
 			if (
 				value.instrument.name === currentInstrument.instrument.name &&
@@ -412,52 +420,57 @@ export default function PianoRoll({
 				location < value.location + value.duration
 			) {
 				// Clicked cell lies within an existing note. Only take the last one, which will be on top because of the render order.
-				selectedNote = value;
+				clickedNote = value;
 			}
 		});
 
 		if (e.button === 2) {
 			// right click - delete if note was found
-			if (selectedNote != null) {
-				// @ts-ignore
-				removeNote(selectedNote);
-				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
+			if (clickedNote != null) {
+				removeNote(clickedNote);
 			}
-			selectedNote = null;
-			drawFG();
+			setSelectedNotes([]);
 		} else if (e.button == 0) {
 			// left click
-			if (selectedNote != null) {
+			if (clickedNote != null) {
 				// note found
 				// @ts-ignore
 				if (
 					location == // @ts-ignore
-						selectedNote.location + // @ts-ignore
-							selectedNote.duration -
+						clickedNote.location + // @ts-ignore
+							clickedNote.duration -
 							stepLength &&
 					isRightHalf
 				) {
 					// end of the note was clicked - start changing length
 					dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
+					setSelectedNotes([clickedNote]);
 				} else {
 					// another part of the note was clicked - start moving
 					dragStatus.current = DRAG_STATUSES.MOVING_NOTE;
+					if (e.shiftKey) {
+						if (!selectedNotes.some(note => note.getNoteKey().serialize() === clickedNote!.getNoteKey().serialize())) {
+							setSelectedNotes([...selectedNotes, clickedNote]);
+						}
+					} else {
+						setSelectedNotes([clickedNote]);
+					}
 				}
 			} else {
 				// no note found; creating new note
-				selectedNote = new Note({
-					location: startGridX,
+				dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
+				setSelectedNotes([new Note({
+					location: startPos.current.loc,
 					velocity: 100,
 					duration: stepLength,
-					pitch: startGridY,
+					pitch: startPos.current.pitch,
 					instrument: currentInstrument.instrument,
-				});
-				dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
-				drawFG();
+				})]);
+				/* drawFG();
 				drawNote(
 					startGridX,
 					startGridY,
-					selectedNote.duration,
+					selectedNote[].duration,
 					computedStyle.current.getPropertyValue(
 						currentInstrument.primary
 					),
@@ -465,24 +478,23 @@ export default function PianoRoll({
 						currentInstrument.accent
 					),
 					false
-				);
+				); */
 			}
 		} else if (e.button == 1) {
-			if (selectedNote) {
-				copiedNote = selectedNote;
-			} else if (copiedNote) {
+			// middle click
+			if (clickedNote) {
+				copiedNote.current = new Note(clickedNote);
+			} else if (copiedNote.current) {
 				let newNote = new Note({
-					location: startGridX,
-					velocity: copiedNote.velocity,
-					duration: copiedNote.duration,
-					pitch: startGridY,
+					location: startPos.current.loc,
+					velocity: copiedNote.current.velocity,
+					duration: copiedNote.current.duration,
+					pitch: startPos.current.pitch,
 					instrument: currentInstrument.instrument,
 				});
 				addNote(newNote);
 				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
-				selectedNote = newNote;
-				copiedNote = newNote;
-				drawFG();
+				setSelectedNotes([newNote]);
 			}
 		}
 	}
@@ -496,36 +508,40 @@ export default function PianoRoll({
 
 		(document.activeElement as HTMLElement).blur();
 
-		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING) return;
+		if (dragStatus.current === DRAG_STATUSES.NOT_DRAGGING || !startPos.current) return;
 
-		if (!selectedNote) return;
+		if (selectedNotes.length === 0) return;
 
 		let { location, pitch } = getGridPos(e);
+
+		lastMouseEvent.current = e;
 
 		if (dragStatus.current == DRAG_STATUSES.MOVING_NOTE) {
 			// moving note
 			drawFG();
-			drawNote(
-				selectedNote.location + location - startGridX,
-				pitch,
-				selectedNote.duration,
-				computedStyle.current.getPropertyValue(
-					currentInstrument.primary
-				),
-				computedStyle.current.getPropertyValue(
-					currentInstrument.accent
-				),
-				false
-			);
+			selectedNotes.forEach(note => {
+				drawNote(
+					note.location + location - startPos.current!.loc,
+					note.pitch + pitch - startPos.current!.pitch,
+					note.duration,
+					computedStyle.current!.getPropertyValue(
+						currentInstrument.primary
+					),
+					computedStyle.current!.getPropertyValue(
+						currentInstrument.accent
+					),
+					false
+				);
+			})
 		} else {
 			// changing note length
 			drawFG();
 			drawNote(
-				selectedNote.location,
-				startGridY,
+				selectedNotes[0].location,
+				startPos.current.pitch,
 				Math.max(
 					stepLength,
-					location - selectedNote.location + stepLength
+					location - selectedNotes[0].location + stepLength
 				),
 				computedStyle.current.getPropertyValue(
 					currentInstrument.primary
@@ -541,63 +557,69 @@ export default function PianoRoll({
 	function handleMouseUp(e: MouseEvent) {
 		e.preventDefault();
 
-		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING) return;
+		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING || !startPos.current) return;
 
-		if (!selectedNote) return;
+		if (selectedNotes.length === 0) return;
 
 		let { location, pitch } = getGridPos(e);
 
+		lastMouseEvent.current = e;
+
 		if (dragStatus.current == DRAG_STATUSES.MOVING_NOTE) {
 			// done moving note
-			if (!(location == startGridX && pitch == startGridY)) {
-				// check to make sure we're actually changing the note location
-				let newNote = new Note({
-					location: selectedNote.location + location - startGridX,
-					velocity: selectedNote.velocity,
-					duration: selectedNote.duration,
-					pitch: pitch,
-					instrument: currentInstrument.instrument,
+			if (!(location == startPos.current.loc && pitch == startPos.current.pitch)) {
+				// check to make sure that either we're actually changing the note location or we're creating a new note
+
+				let notesToAdd: Note[] = [];
+
+				selectedNotes.forEach(note => {
+					if (note.location + location - startPos.current!.loc >= 0 &&
+							note.pitch + pitch - startPos.current!.pitch >= 0 &&
+							note.pitch + pitch - startPos.current!.pitch <= 127) {
+						// new note position is valid
+						notesToAdd.push(new Note({
+							location: note.location + location - startPos.current!.loc,
+							velocity: note.velocity,
+							duration: note.duration,
+							pitch: note.pitch + pitch - startPos.current!.pitch,
+							instrument: note.instrument,
+						}));
+					}
 				});
-				removeAndAddNote(selectedNote, newNote);
-				//sequenceMap.set(newNote.getNoteKey().serialize(),newNote);
-				//sequenceMap.delete(selectedNote.getNoteKey().serialize());
-				selectedNote = newNote;
+
+				dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
+				removeAddMultiple(selectedNotes, notesToAdd);
+				setSelectedNotes(notesToAdd);
+				return;
 			}
 		} else {
 			// done changing note length
 			if (
 				!(
-					location == startGridX &&
-					pitch == startGridY &&
-					sequenceMap.has(
-						new NoteKey({
-							pitch: startGridY,
-							location: startGridX,
-							instrument: currentInstrument.instrument,
-						}).serialize()
-					)
+					location == startPos.current.loc &&
+					pitch == startPos.current.pitch &&
+					sequenceMap.has(selectedNotes[0].getNoteKey().serialize())
 				)
 			) {
-				// check to make sure we're actually changing the length
+				// now we're sure the note length is actually changing
 				let newNote = new Note({
-					location: selectedNote.location,
-					velocity: selectedNote.velocity,
+					location: selectedNotes[0].location,
+					velocity: selectedNotes[0].velocity,
 					duration: Math.max(
 						stepLength,
-						location - selectedNote.location + stepLength
+						location - selectedNotes[0].location + stepLength
 					),
-					pitch: startGridY,
+					pitch: selectedNotes[0].pitch,
 					instrument: currentInstrument.instrument,
 				});
+				
+				dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
 				addNote(newNote);
-				// sequenceMap.set(selectedNote.getNoteKey().serialize(),newNote);
-				selectedNote = newNote;
+				setSelectedNotes([newNote]);
+				return;
 			}
 		}
-
 		dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
-		// selectedNote = null;
-
 		drawFG();
 	}
 
@@ -609,7 +631,7 @@ export default function PianoRoll({
 
 		drawFG();
 	}
-
+ 
 	function handleContextMenu(e: MouseEvent) {
 		e.preventDefault();
 	}
@@ -690,7 +712,7 @@ export default function PianoRoll({
 		playNoteDefault(
 			new Note({
 				location: 0,
-				velocity: selectedNote ? selectedNote.velocity : 100,
+				velocity: selectedNotes[0] ? selectedNotes[0].velocity : 100,
 				duration: 0,
 				pitch: pitch,
 				instrument: currentInstrument.instrument,

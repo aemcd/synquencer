@@ -39,6 +39,7 @@ import { AzureClient } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
 import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
+import {removeNoteCallback, addNoteCallback, removeAndAddNoteCallback, removeAddMultipleCallback} from "./fluid";
 
 type PageParams = {
 	id: string;
@@ -208,89 +209,28 @@ export default function Home({ id }: PageParams) {
 
 	const addNote = useCallback(
 		(note: Note) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			const key = note.getNoteKey().serialize();
-			const prevValue = flNotes.get(key);
-			flNotes.set(key, note);
-			undoRedoHandler.push({
-				key: key,
-				currentValue: note,
-				previousValue: prevValue,
-			});
-			undoRedoHandler.finish();
+			addNoteCallback(note, fluidInitialObjects, undoRedoHandler);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeNote = useCallback(
 		(note: Note) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			const key = note.getNoteKey().serialize();
-			const prevValue = flNotes.get(key);
-			if (flNotes.delete(key)) {
-				undoRedoHandler.push({
-					key: key,
-					currentValue: undefined,
-					previousValue: prevValue,
-				});
-			}
-			undoRedoHandler.finish();
+			removeNoteCallback(note, fluidInitialObjects, undoRedoHandler);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeAndAddNote = useCallback(
 		(rmNote: Note, addNote: Note) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			const rmKey = rmNote.getNoteKey().serialize();
-			const addKey = addNote.getNoteKey().serialize();
-			const rmPrevValue = flNotes.get(rmKey);
-			if (flNotes.delete(rmKey)) {
-				undoRedoHandler.push({
-					key: rmKey,
-					currentValue: undefined,
-					previousValue: rmPrevValue,
-				});
-			}
-			const addPrevValue = flNotes.get(addKey);
-			flNotes.set(addKey, addNote);
-			undoRedoHandler.push({
-				key: addKey,
-				currentValue: addNote,
-				previousValue: addPrevValue,
-			});
-			undoRedoHandler.finish();
+			removeAndAddNoteCallback(rmNote, addNote, fluidInitialObjects, undoRedoHandler);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeAddMultiple = useCallback(
 		(rmNotes: Note[], addNotes: Note[]) => {
-			const flNotes = fluidInitialObjects?.sequence as SharedMap;
-			for (const rmNote of rmNotes) {
-				const rmKey = rmNote.getNoteKey().serialize();
-				const rmPrevValue = flNotes.get(rmKey);
-				if (flNotes.delete(rmKey)) {
-					undoRedoHandler.push({
-						key: rmKey,
-						currentValue: undefined,
-						previousValue: rmPrevValue,
-					});
-				}
-			}
-
-			for (const addNote of addNotes) {
-				const addKey = addNote.getNoteKey().serialize();
-
-				const addPrevValue = flNotes.get(addKey);
-				flNotes.set(addKey, addNote);
-				undoRedoHandler.push({
-					key: addKey,
-					currentValue: addNote,
-					previousValue: addPrevValue,
-				});
-			}
-			undoRedoHandler.finish();
+			removeAddMultipleCallback(rmNotes, addNotes, fluidInitialObjects, undoRedoHandler);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);

@@ -458,13 +458,13 @@ export default function PianoRoll({
 				}
 			} else {
 				// no note found; creating new note
-				/* if (!(startPos.current.loc >= 0 &&
+				if (!(startPos.current.loc >= 0 &&
 					startPos.current.pitch >= 0 &&
 					startPos.current.pitch <= 127))
 				{
 					dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
 					return;
-				} */
+				}
 
 				dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
 				setSelectedNotes([new Note({

@@ -75,6 +75,8 @@ export default function Home({ id }: PageParams) {
 		accent: "--yellow-accent",
 	});
 
+	const cursorSelectedNote = useRef<Note | null>(null);
+
 	useEffect(() => {
 		const client: AzureClient = new AzureClient(connectionConfig);
 		client
@@ -449,6 +451,7 @@ export default function Home({ id }: PageParams) {
 				removeAddMultiple={removeAddMultiple}
 			/>
 			<Cursor
+				selectedNote={cursorSelectedNote}
 				PlayNote={playNoteDefault}
 				addNote={addNote}
 				removeNote={removeNote}

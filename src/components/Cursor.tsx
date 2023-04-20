@@ -117,7 +117,8 @@ export default function Cursor({
 				7000
 			);
 			setSelectedNote(newNote);
-		}
+		PlayNote(newNote);
+	}
 	});
 
 	useHotkeys("up, down", function (event, handler) {
@@ -151,7 +152,8 @@ export default function Cursor({
 				"assertive",
 				7000
 			);
-		}
+		PlayNote(cursorNote.current);
+	}
 	});
 
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
@@ -187,6 +189,7 @@ export default function Cursor({
 				"assertive",
 				7000
 			);
+			PlayNote(cursorNote.current);
 			//alert("Move note" + event.key + "an octave");
 		}
 	});
@@ -331,7 +334,8 @@ export default function Cursor({
 									"assertive",
 									7000
 								);
-							}
+							PlayNote(cursorNote.current);
+						}
 							break;
 						}
 						break;
@@ -423,7 +427,8 @@ export default function Cursor({
 									"assertive",
 									7000
 								);
-							}
+							PlayNote(cursorNote.current);
+						}
 							break;
 						}
 				}

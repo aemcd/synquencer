@@ -62,6 +62,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 	metadata.set("bpm", newSeq.bpm);
 	metadata.set("numerator", newSeq.numerator);
 	metadata.set("denominator", newSeq.denominator);
+	container.dispose();
 
 	if (container != null) {
 		return {

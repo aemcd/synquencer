@@ -9,7 +9,13 @@ import React, {
 	useState,
 	useCallback,
 } from "react";
-import { Instrument, Note, NoteKey, SequenceMetadata, user } from "@/server/types";
+import {
+	Instrument,
+	Note,
+	NoteKey,
+	SequenceMetadata,
+	user,
+} from "@/server/types";
 import { clearLoop, playNoteDefault } from "@/client/write_midi";
 import { clear } from "console";
 
@@ -26,9 +32,9 @@ type ContentPageProps = {
 	removeAddMultiple: (rmNotes: Note[], addNotes: Note[]) => void;
 	addNote: (note: Note) => void;
 	removeNote: (note: Note) => void;
-	tick: number;
 	setLoop: (start: number, end: number) => void;
 	clearLoop: () => void;
+	tickUpdateCall: (func: (tick: number) => void) => void;
 };
 
 const KEY_COLORS: boolean[] = [
@@ -61,14 +67,15 @@ export default function PianoRoll({
 	removeNote,
 	removeAndAddNote,
 	removeAddMultiple,
-	tick,
 	setLoop,
-	clearLoop
+	clearLoop,
+	tickUpdateCall,
 }: ContentPageProps) {
 	// pitch 24 is C1
 
 	const dragStatus = useRef<number>(DRAG_STATUSES.NOT_DRAGGING);
 	const lastMouseEvent = useRef<MouseEvent | null>(null);
+	const [tick, setTick] = useState(-1);
 
 	const [view, setView] = useState({
 		loc: 0,
@@ -78,22 +85,22 @@ export default function PianoRoll({
 		height: 575,
 
 		gridWidth: 24,
-		gridHeight: 24
+		gridHeight: 24,
 	});
 
 	const [loopState, setLoopState] = useState<{
-		start: number | null,
-		end: number | null
+		start: number | null;
+		end: number | null;
 	}>({
 		start: null,
-		end: null
+		end: null,
 	});
 
 	const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
 
 	const copiedNote = useRef<Note | null>(null);
 
-	const startPos = useRef<{loc: number, pitch: number} | null>(null);
+	const startPos = useRef<{ loc: number; pitch: number } | null>(null);
 
 	const computedStyle = useRef<CSSStyleDeclaration | null>(null);
 
@@ -109,10 +116,11 @@ export default function PianoRoll({
 
 	useEffect(() => {
 		computedStyle.current = getComputedStyle(document.body);
+		tickUpdateCall((newTick: number) => setTick(newTick));
 
 		if (transportRef.current) {
 			transportCtx.current = transportRef.current.getContext("2d");
-		}		
+		}
 
 		if (pianoRef.current) {
 			pianoCtx.current = pianoRef.current.getContext("2d");
@@ -125,6 +133,8 @@ export default function PianoRoll({
 		if (fgRef.current) {
 			fgCtx.current = fgRef.current.getContext("2d");
 		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -159,33 +169,54 @@ export default function PianoRoll({
 		// draw loop indicator
 		if (loopState.start != null && loopState.end != null) {
 			transportCtx.current.fillStyle =
-			computedStyle.current.getPropertyValue("--bg2");
-			transportCtx.current.fillRect((loopState.start - view.loc) * view.gridWidth, 25, (loopState.end - loopState.start + 1) * view.gridWidth, 18);
+				computedStyle.current.getPropertyValue("--bg2");
+			transportCtx.current.fillRect(
+				(loopState.start - view.loc) * view.gridWidth,
+				25,
+				(loopState.end - loopState.start + 1) * view.gridWidth,
+				18
+			);
 		}
 
 		if (loopState.end != null) {
 			transportCtx.current.textAlign = "end";
 			transportCtx.current.fillStyle =
 				computedStyle.current.getPropertyValue("--blue");
-			transportCtx.current.fillText("◀", (loopState.end + 1 - view.loc) * view.gridWidth + 2, 42);
+			transportCtx.current.fillText(
+				"◀",
+				(loopState.end + 1 - view.loc) * view.gridWidth + 2,
+				42
+			);
 		}
 		if (loopState.start != null) {
 			transportCtx.current.textAlign = "start";
 			transportCtx.current.fillStyle =
 				computedStyle.current.getPropertyValue("--red");
-			transportCtx.current.fillText("▶", (loopState.start - view.loc) * view.gridWidth - 2, 42);
+			transportCtx.current.fillText(
+				"▶",
+				(loopState.start - view.loc) * view.gridWidth - 2,
+				42
+			);
 		}
 
 		// draw vertical grid lines
-		transportCtx.current.fillStyle = computedStyle.current.getPropertyValue("--bg4");
+		transportCtx.current.fillStyle =
+			computedStyle.current.getPropertyValue("--bg4");
 		for (let i = 0; i < view.width / view.gridWidth; i++) {
-			if ((view.loc + i + 1) % ((sequence.numerator * 16) / sequence.denominator) == 0 &&
-				(view.loc + i + 1) % stepLength == 0)
-			{
-				transportCtx.current.fillRect(view.gridWidth * (i + 1) - 1, 0, 2, 48);
+			if (
+				(view.loc + i + 1) %
+					((sequence.numerator * 16) / sequence.denominator) ==
+					0 &&
+				(view.loc + i + 1) % stepLength == 0
+			) {
+				transportCtx.current.fillRect(
+					view.gridWidth * (i + 1) - 1,
+					0,
+					2,
+					48
+				);
 			}
 		}
-		
 
 		// draw location labels
 		transportCtx.current.font = "24px monospace";
@@ -262,7 +293,8 @@ export default function PianoRoll({
 
 		// clear bg
 		// bgCtx.current.clearRect(0, 0, view.width, view.height);
-		bgCtx.current.fillStyle = computedStyle.current.getPropertyValue("--roll-bg");
+		bgCtx.current.fillStyle =
+			computedStyle.current.getPropertyValue("--roll-bg");
 		bgCtx.current.fillRect(0, 0, view.width, view.height);
 
 		// color rows to match keys
@@ -285,7 +317,12 @@ export default function PianoRoll({
 		bgCtx.current.fillStyle =
 			computedStyle.current.getPropertyValue("--roll-bg");
 		for (let i = 0; i < view.height / view.gridHeight; i++) {
-			bgCtx.current.fillRect(0, view.gridHeight * (i + 1) - 1, view.width, 2);
+			bgCtx.current.fillRect(
+				0,
+				view.gridHeight * (i + 1) - 1,
+				view.width,
+				2
+			);
 		}
 
 		// vertical grid lines
@@ -342,7 +379,11 @@ export default function PianoRoll({
 
 		sequenceMap.forEach((value) => {
 			if (
-				!selectedNotes.some(note => note.getNoteKey().serialize() === value.getNoteKey().serialize()) &&
+				!selectedNotes.some(
+					(note) =>
+						note.getNoteKey().serialize() ===
+						value.getNoteKey().serialize()
+				) &&
 				value.instrument.name == currentInstrument.instrument.name
 			) {
 				drawNote(
@@ -363,7 +404,7 @@ export default function PianoRoll({
 		});
 
 		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING) {
-			selectedNotes.forEach(note => {
+			selectedNotes.forEach((note) => {
 				drawNote(
 					note.location,
 					note.pitch,
@@ -394,7 +435,9 @@ export default function PianoRoll({
 		fgCtx.current.fillStyle = colorFill;
 		fgCtx.current.fillRect(
 			(location - view.loc) * view.gridWidth,
-			view.height - ((pitch - view.pitch) * view.gridHeight + view.gridHeight) + 1,
+			view.height -
+				((pitch - view.pitch) * view.gridHeight + view.gridHeight) +
+				1,
 			view.gridWidth * length,
 			view.gridHeight
 		);
@@ -402,14 +445,18 @@ export default function PianoRoll({
 		fgCtx.current.lineWidth = 2;
 		fgCtx.current.strokeRect(
 			(location - view.loc) * view.gridWidth,
-			view.height - ((pitch - view.pitch) * view.gridHeight + view.gridHeight) + 1,
+			view.height -
+				((pitch - view.pitch) * view.gridHeight + view.gridHeight) +
+				1,
 			view.gridWidth * length,
 			view.gridHeight
 		);
 		fgCtx.current.fillStyle = colorOutline;
 		fgCtx.current.fillRect(
 			(location - view.loc + length) * view.gridWidth - 6,
-			view.height - ((pitch - view.pitch) * view.gridHeight + view.gridHeight) + 5,
+			view.height -
+				((pitch - view.pitch) * view.gridHeight + view.gridHeight) +
+				5,
 			2,
 			view.gridHeight - 8
 		);
@@ -449,7 +496,8 @@ export default function PianoRoll({
 		let isRightHalf = pixelX % view.gridWidth > view.gridWidth / 2;
 
 		let location = view.loc + Math.floor(pixelX / view.gridWidth);
-		let pitch = view.pitch + Math.floor((view.height - pixelY) / view.gridHeight);
+		let pitch =
+			view.pitch + Math.floor((view.height - pixelY) / view.gridHeight);
 
 		return { location, pitch, isRightHalf };
 	}
@@ -465,8 +513,8 @@ export default function PianoRoll({
 
 		startPos.current = {
 			loc: location,
-			pitch: pitch
-		}
+			pitch: pitch,
+		};
 
 		lastMouseEvent.current = e;
 
@@ -508,7 +556,13 @@ export default function PianoRoll({
 					// another part of the note was clicked - start moving
 					dragStatus.current = DRAG_STATUSES.MOVING_NOTE;
 					if (e.shiftKey) {
-						if (!selectedNotes.some(note => note.getNoteKey().serialize() === clickedNote!.getNoteKey().serialize())) {
+						if (
+							!selectedNotes.some(
+								(note) =>
+									note.getNoteKey().serialize() ===
+									clickedNote!.getNoteKey().serialize()
+							)
+						) {
 							setSelectedNotes([...selectedNotes, clickedNote]);
 						}
 					} else {
@@ -517,22 +571,27 @@ export default function PianoRoll({
 				}
 			} else {
 				// no note found; creating new note
-				if (!(startPos.current.loc >= 0 &&
-					startPos.current.pitch >= 0 &&
-					startPos.current.pitch <= 127))
-				{
+				if (
+					!(
+						startPos.current.loc >= 0 &&
+						startPos.current.pitch >= 0 &&
+						startPos.current.pitch <= 127
+					)
+				) {
 					dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
 					return;
 				}
 
 				dragStatus.current = DRAG_STATUSES.CHANGING_LENGTH;
-				setSelectedNotes([new Note({
-					location: startPos.current.loc,
-					velocity: 100,
-					duration: stepLength,
-					pitch: startPos.current.pitch,
-					instrument: currentInstrument.instrument,
-				})]);
+				setSelectedNotes([
+					new Note({
+						location: startPos.current.loc,
+						velocity: 100,
+						duration: stepLength,
+						pitch: startPos.current.pitch,
+						instrument: currentInstrument.instrument,
+					}),
+				]);
 				/* drawFG();
 				drawNote(
 					startGridX,
@@ -552,9 +611,11 @@ export default function PianoRoll({
 			if (clickedNote) {
 				copiedNote.current = new Note(clickedNote);
 			} else if (copiedNote.current) {
-				if (startPos.current.loc >= 0 &&
+				if (
+					startPos.current.loc >= 0 &&
 					startPos.current.pitch >= 0 &&
-					startPos.current.pitch <= 127) {
+					startPos.current.pitch <= 127
+				) {
 					let newNote = new Note({
 						location: startPos.current.loc,
 						velocity: copiedNote.current.velocity,
@@ -579,7 +640,11 @@ export default function PianoRoll({
 
 		(document.activeElement as HTMLElement).blur();
 
-		if (dragStatus.current === DRAG_STATUSES.NOT_DRAGGING || !startPos.current) return;
+		if (
+			dragStatus.current === DRAG_STATUSES.NOT_DRAGGING ||
+			!startPos.current
+		)
+			return;
 
 		if (selectedNotes.length === 0) return;
 
@@ -590,7 +655,7 @@ export default function PianoRoll({
 		if (dragStatus.current == DRAG_STATUSES.MOVING_NOTE) {
 			// moving note
 			drawFG();
-			selectedNotes.forEach(note => {
+			selectedNotes.forEach((note) => {
 				drawNote(
 					note.location + location - startPos.current!.loc,
 					note.pitch + pitch - startPos.current!.pitch,
@@ -603,7 +668,7 @@ export default function PianoRoll({
 					),
 					false
 				);
-			})
+			});
 		} else {
 			// changing note length
 			drawFG();
@@ -628,7 +693,11 @@ export default function PianoRoll({
 	function handleMouseUp(e: MouseEvent) {
 		e.preventDefault();
 
-		if (dragStatus.current == DRAG_STATUSES.NOT_DRAGGING || !startPos.current) return;
+		if (
+			dragStatus.current == DRAG_STATUSES.NOT_DRAGGING ||
+			!startPos.current
+		)
+			return;
 
 		if (selectedNotes.length === 0) return;
 
@@ -638,23 +707,38 @@ export default function PianoRoll({
 
 		if (dragStatus.current == DRAG_STATUSES.MOVING_NOTE) {
 			// done moving note
-			if (!(location == startPos.current.loc && pitch == startPos.current.pitch)) {
+			if (
+				!(
+					location == startPos.current.loc &&
+					pitch == startPos.current.pitch
+				)
+			) {
 				// check to make sure that either we're actually changing the note location or we're creating a new note
 
 				let notesToAdd: Note[] = [];
 
-				selectedNotes.forEach(note => {
-					if (note.location + location - startPos.current!.loc >= 0 &&
-							note.pitch + pitch - startPos.current!.pitch >= 0 &&
-							note.pitch + pitch - startPos.current!.pitch <= 127) {
+				selectedNotes.forEach((note) => {
+					if (
+						note.location + location - startPos.current!.loc >= 0 &&
+						note.pitch + pitch - startPos.current!.pitch >= 0 &&
+						note.pitch + pitch - startPos.current!.pitch <= 127
+					) {
 						// new note position is valid
-						notesToAdd.push(new Note({
-							location: note.location + location - startPos.current!.loc,
-							velocity: note.velocity,
-							duration: note.duration,
-							pitch: note.pitch + pitch - startPos.current!.pitch,
-							instrument: note.instrument,
-						}));
+						notesToAdd.push(
+							new Note({
+								location:
+									note.location +
+									location -
+									startPos.current!.loc,
+								velocity: note.velocity,
+								duration: note.duration,
+								pitch:
+									note.pitch +
+									pitch -
+									startPos.current!.pitch,
+								instrument: note.instrument,
+							})
+						);
 					}
 				});
 
@@ -683,7 +767,7 @@ export default function PianoRoll({
 					pitch: selectedNotes[0].pitch,
 					instrument: currentInstrument.instrument,
 				});
-				
+
 				dragStatus.current = DRAG_STATUSES.NOT_DRAGGING;
 				addNote(newNote);
 				setSelectedNotes([newNote]);
@@ -702,7 +786,7 @@ export default function PianoRoll({
 
 		drawFG();
 	}
- 
+
 	function handleContextMenu(e: MouseEvent) {
 		e.preventDefault();
 	}
@@ -744,18 +828,18 @@ export default function PianoRoll({
 		velocityAlert(selectedNote.velocity);
 	} */
 
-	function handleRollScroll(e: any) {		
+	function handleRollScroll(e: any) {
 		if (e.shiftKey) {
 			// shift is held
 			if (e.deltaY > 0) {
 				// zoom out
 				if (view.gridWidth > 3) {
-					setView({...view, gridWidth: view.gridWidth / 2});
+					setView({ ...view, gridWidth: view.gridWidth / 2 });
 				}
 			} else if (e.deltaY < 0) {
 				// zoom in
 				if (view.gridWidth < 96) {
-					setView({...view, gridWidth: view.gridWidth * 2});
+					setView({ ...view, gridWidth: view.gridWidth * 2 });
 				}
 			}
 		} else if (e.deltaY > 0) {
@@ -783,7 +867,7 @@ export default function PianoRoll({
 			clearLoop();
 			setLoopState({
 				start: location,
-				end: null
+				end: null,
 			});
 		} else if (e.button === 2) {
 			// right click
@@ -792,13 +876,13 @@ export default function PianoRoll({
 					setLoop(loopState.start, location);
 					setLoopState({
 						start: loopState.start,
-						end: location
-					})
+						end: location,
+					});
 				} else {
 					clearLoop();
 					setLoopState({
 						start: null,
-						end: null
+						end: null,
 					});
 				}
 			}
@@ -814,7 +898,8 @@ export default function PianoRoll({
 
 		let pixelY = e.clientY - rect.top - 2;
 
-		let pitch = view.pitch + Math.floor((view.height - pixelY) / view.gridHeight);
+		let pitch =
+			view.pitch + Math.floor((view.height - pixelY) / view.gridHeight);
 
 		playNoteDefault(
 			new Note({
@@ -861,7 +946,7 @@ export default function PianoRoll({
 					border: "solid",
 					borderColor: "var(--bg4)",
 					borderWidth: "2px",
-					backgroundColor: "var(--roll-bg)"
+					backgroundColor: "var(--roll-bg)",
 				}}
 			/>
 			<canvas
@@ -895,7 +980,7 @@ export default function PianoRoll({
 					border: "solid",
 					borderColor: "var(--bg4)",
 					borderWidth: "2px",
-					backgroundColor: "var(--roll-bg)"
+					backgroundColor: "var(--roll-bg)",
 				}}
 			/>
 			<canvas

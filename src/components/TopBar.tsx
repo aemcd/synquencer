@@ -178,7 +178,7 @@ export default function TopBar({
 							) {
 								e.target.value = "1";
 							} else if (parseInt(e.target.value) > 999) {
-								e.target.value = "99";
+								e.target.value = "999";
 							}
 							setLength(e.target.value);
 						}}

@@ -64,7 +64,7 @@ const RenderState = {
 
 export default function Home({ id }: PageParams) {
 	const router = useRouter();
-	const [tick, setTick] = useState(-1);
+	const tickUpdater = useRef<(tick: number) => void>((tick: number) => {});
 	const [stepLength, setStepLength] = useState(1);
 	const [fluidInitialObjects, setFluidInitialObjects] =
 		useState<LoadableObjectRecord>();
@@ -195,7 +195,6 @@ export default function Home({ id }: PageParams) {
 			const flAudience = fluidServices.audience;
 
 			const fluidUpdateCurrentUsers = () => {
-				console.log(flAudience.getMembers().size);
 				if (flAudience.getMembers().size != undefined) {
 					setCurrentUsers(flAudience.getMembers().size);
 				}
@@ -278,7 +277,7 @@ export default function Home({ id }: PageParams) {
 		if (voteCount === currentUsers && currentUsers > 0) {
 			PlaySequence();
 			setTickFunction(() => {
-				setTick(getTick());
+				tickUpdater.current(getTick());
 			});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -411,7 +410,7 @@ export default function Home({ id }: PageParams) {
 				playSequence={() => {
 					PlaySequence();
 					setTickFunction(() => {
-						setTick(getTick());
+						tickUpdater.current(getTick());
 					});
 				}}
 				stopSequence={() => {
@@ -483,7 +482,9 @@ export default function Home({ id }: PageParams) {
 				addNote={addNote}
 				removeNote={removeNote}
 				removeAndAddNote={removeAndAddNote}
-				tick={tick}
+				tickUpdateCall={(newFunc: (tick: number) => void) =>
+					(tickUpdater.current = newFunc)
+				}
 				removeAddMultiple={removeAddMultiple}
 				setLoop={setLoop}
 				clearLoop={clearLoop}

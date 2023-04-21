@@ -45,8 +45,9 @@ export function clearLoop() {
  * @param note The note to play
  */
 export function playNoteDefault(note: Note) {
-	note.duration = 2;
-	playNote(120, 4, note);
+	const newNote = new Note(note);
+	newNote.duration = 2;
+	playNote(120, 4, newNote);
 }
 
 /**

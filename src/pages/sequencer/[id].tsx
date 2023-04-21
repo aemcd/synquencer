@@ -398,6 +398,7 @@ export default function Home({ id }: PageParams) {
 					newSeqData.length = parseInt(length);
 					changeSeq(newSeqData);
 				}}
+				fluidServices={fluidServices}
 			/>
 			<PianoRoll
 				sequence={seqData}

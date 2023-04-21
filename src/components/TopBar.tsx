@@ -11,6 +11,7 @@ import Link from "next/link";
 import { announce, clearAnnouncer } from "@react-aria/live-announcer";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 
 type ContentPageProps = {
 	sequence: SequenceMetadata;
@@ -28,6 +29,7 @@ type ContentPageProps = {
 	setInstrument: (instrument: string) => void;
 	setLength: (length: string) => void;
 	setTimeSig: (timeSig: string) => void;
+	fluidServices: TinyliciousContainerServices | undefined;
 };
 
 export default function TopBar({
@@ -42,6 +44,7 @@ export default function TopBar({
 	setInstrument,
 	setLength,
 	setTimeSig,
+	fluidServices
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	const { theme, setTheme } = useTheme();
@@ -64,7 +67,7 @@ export default function TopBar({
 					aria-label="Synchronized Play"
 					onClick={playSequence}
 				>
-					▷ 0/9
+					▷ 0/{fluidServices?.audience.getMembers().size}
 				</button>
 				<button
 					className="top-button"

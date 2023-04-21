@@ -171,6 +171,20 @@ h1 {
   vertical-align: top;
 }
 
+.top-button-activated {
+  font-family: monospace;
+  font-size: 1.25rem;
+  line-height: 0px;
+  height: 40px;
+  width: 40px;
+  margin: 6px 0px 6px 6px;
+  color: var(--fg2);
+  background-color: var(--bg4);
+  border-style: none;
+  border-radius: 6px;
+  vertical-align: top;
+}
+
 .top-button:hover {
   background-color: var(--bg3);
   cursor: pointer;

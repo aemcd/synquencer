@@ -7,6 +7,7 @@ import {
 	NoteKey,
 	schema,
 	SequenceMetadata,
+	user,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
 import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
@@ -40,10 +41,10 @@ import {
 import {
 	AzureClient,
 	AzureContainerServices,
+	AzureMember,
 } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
-import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 import {
 	removeNoteCallback,
 	addNoteCallback,
@@ -199,9 +200,16 @@ export default function Home({ id }: PageParams) {
 					setCurrentUsers(flAudience.getMembers().size);
 				}
 			};
-			const alertMemberAdded = () => {
-				if (!alertTimeout.current) {
-					alert("A user has joined!");
+			const alertMemberAdded = (
+				clientID: string,
+				member: AzureMember<any>
+			) => {
+				if (
+					!alertTimeout.current &&
+					member.userId !== user.id &&
+					member.userName != null
+				) {
+					alert(`${member.userName} has joined!`);
 					alertTimeout.current = true;
 					const wait = async () => {
 						await new Promise((f) => setTimeout(f, 500));
@@ -210,9 +218,16 @@ export default function Home({ id }: PageParams) {
 					wait();
 				}
 			};
-			const alertMemberRemoved = () => {
-				if (!alertTimeout.current) {
-					alert("A user has left!");
+			const alertMemberRemoved = (
+				clientID: string,
+				member: AzureMember<any>
+			) => {
+				if (
+					!alertTimeout.current &&
+					member.userId !== user.id &&
+					member.userName != null
+				) {
+					alert(`${member.userName} has left!`);
 					alertTimeout.current = true;
 					const wait = async () => {
 						await new Promise((f) => setTimeout(f, 500));
@@ -221,6 +236,7 @@ export default function Home({ id }: PageParams) {
 					wait();
 				}
 			};
+			fluidUpdateCurrentUsers();
 			flAudience.on("membersChanged", fluidUpdateCurrentUsers);
 			flAudience.on("memberAdded", alertMemberAdded);
 			flAudience.on("memberRemoved", alertMemberRemoved);
@@ -236,10 +252,9 @@ export default function Home({ id }: PageParams) {
 		(newSequence: SequenceMetadata) => {
 			const flSeq = fluidInitialObjects?.metadata as SharedMap;
 			if (flSeq != null) {
-				Object.keys(newSequence).forEach((key) => {
+				for (let key of Object.keys(newSequence)) {
 					flSeq.set(key, newSequence[key as keyof SequenceMetadata]);
-				});
-				setSeq(new SequenceMetadata(newSequence));
+				}
 			}
 		},
 		[fluidInitialObjects]
@@ -383,7 +398,7 @@ export default function Home({ id }: PageParams) {
 				setBPM={(newBPM) => {
 					let newSeqData = new SequenceMetadata(seqData);
 					newSeqData.bpm = newBPM;
-					setSeq(newSeqData);
+					changeSeq(newSeqData);
 				}}
 				goHome={() => {
 					fluidContainer?.dispose();

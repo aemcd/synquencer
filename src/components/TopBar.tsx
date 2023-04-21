@@ -50,16 +50,16 @@ export default function TopBar({
 	currentUsers,
 	voteCount,
 	voteForSyncPlayback,
-	unvoteForSyncPlayback
+	unvoteForSyncPlayback,
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	const [isVoting, setIsVoting] = useState(false);
 
-	const {theme, setTheme} = useTheme();
+	const { theme, setTheme } = useTheme();
 
 	return (
 		<div className="top-bar">
-			<div style={{display: "inline-block"}}>
+			<div style={{ display: "inline-block" }}>
 				<button
 					className="top-button"
 					aria-label="Play"
@@ -83,7 +83,8 @@ export default function TopBar({
 						}
 					}}
 				>
-					<span aria-hidden="true">▷ </span><span>{`${voteCount}/${currentUsers}`}</span>
+					<span aria-hidden="true">▷ </span>
+					<span>{`${voteCount}/${currentUsers}`}</span>
 				</button>
 				<button
 					className="top-button"
@@ -105,7 +106,7 @@ export default function TopBar({
 						type="number"
 						min="1"
 						max="999"
-						defaultValue={sequence.bpm ? sequence.bpm : "120"}
+						value={sequence.bpm ? sequence.bpm : "120"}
 						onChange={(e) => {
 							if (
 								e.target.value === "" ||
@@ -132,7 +133,7 @@ export default function TopBar({
 						onChange={(e) => {
 							setTimeSig(e.target.value);
 						}}
-						defaultValue={
+						value={
 							sequence.denominator
 								? `${sequence.numerator}/${sequence.denominator}`
 								: "4/4"
@@ -152,7 +153,9 @@ export default function TopBar({
 							marginLeft: "4px",
 							marginRight: "-2px",
 						}}
-						onChange={(e) => setStepLength(parseInt(e.target.value))}
+						onChange={(e) =>
+							setStepLength(parseInt(e.target.value))
+						}
 					>
 						<option value="1">1/16</option>
 						<option value="2">1/8</option>
@@ -166,21 +169,21 @@ export default function TopBar({
 						aria-label="Length"
 						type="number"
 						min="1"
-						max="99"
-						defaultValue={sequence.length ? sequence.length : "1"}
+						max="999"
+						value={sequence.length ? sequence.length : "1"}
 						onChange={(e) => {
 							if (
 								e.target.value === "" ||
 								parseInt(e.target.value) < 0
 							) {
 								e.target.value = "1";
-							} else if (parseInt(e.target.value) > 99) {
+							} else if (parseInt(e.target.value) > 999) {
 								e.target.value = "99";
 							}
 							setLength(e.target.value);
 						}}
 						style={{
-							width: "38px",
+							width: "58px",
 							marginRight: "-6px",
 							marginLeft: "6px",
 						}}
@@ -194,7 +197,7 @@ export default function TopBar({
 					aria-label="Instrument"
 					className="instrument-selection dropdown"
 					onChange={(e) => setInstrument(e.target.value)}
-					defaultValue={
+					value={
 						currentInstrument.instrument
 							? currentInstrument.instrument.name
 							: "Piano"
@@ -234,7 +237,13 @@ export default function TopBar({
 					/>
 				</div> */}
 			</div>
-			<div style={{display: "inline-block", float: "right", marginRight: "6px"}}>
+			<div
+				style={{
+					display: "inline-block",
+					float: "right",
+					marginRight: "6px",
+				}}
+			>
 				<button
 					className="top-button"
 					aria-label="Download"
@@ -258,7 +267,7 @@ export default function TopBar({
 					aria-hidden="true"
 					style={{
 						width: "58px",
-						padding: "0px 0px 0px 8px"
+						padding: "0px 0px 0px 8px",
 					}}
 					onChange={(e) => {
 						setTheme(e.target.value);
@@ -269,9 +278,13 @@ export default function TopBar({
 				>
 					<option value="light">☀</option>
 					<option value="dark">🌘︎</option>
-					<option value="solarized">☯</option>		
+					<option value="solarized">☯</option>
 				</select>
-				<button className="top-button" aria-label="Home" onClick={goHome}>
+				<button
+					className="top-button"
+					aria-label="Home"
+					onClick={goHome}
+				>
 					<svg width="20" height="20" viewBox="0 0 238.1 198.4">
 						<path
 							fill="var(--fg2)"

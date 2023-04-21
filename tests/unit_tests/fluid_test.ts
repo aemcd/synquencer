@@ -1,4 +1,4 @@
-import * as fluid from "../../src/pages/sequencer/fluid";
+import * as fluid from "@/pages/sequencer/fluid";
 import {
 	SequenceMetadata,
 	Note,
@@ -6,7 +6,6 @@ import {
     instrumentList
 } from "@/server/types";
 import { IFluidContainer, LoadableObjectRecord, SharedMap } from "fluid-framework";
-import { SharedCounter } from "@fluidframework/counter";
 import { TinyliciousClient, TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 

@@ -171,6 +171,12 @@ export default function Home({ id }: PageParams) {
 					setCurrentUsers(flAudience?.getMembers().size);
 				}
 			}
+			const alertMemberAdded = () => {
+				alert("A user has joined!");
+			}
+			const alertMemberRemoved = () => {
+				alert("A user has left!")
+			}
 
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
@@ -179,6 +185,8 @@ export default function Home({ id }: PageParams) {
 			flNotes.on("valueChanged", fluidUpdateNotes);
 			flVotes.on("incremented", fluidUpdateVoteCount);
 			flAudience?.on("membersChanged", fluidUpdateCurrentUsers);
+			flAudience?.on("memberAdded", alertMemberAdded);
+			flAudience?.on("memberRemoved", alertMemberRemoved);
 			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
@@ -187,6 +195,8 @@ export default function Home({ id }: PageParams) {
 				flNotes.off("valueChanged", fluidUpdateNotes);
 				flVotes.off("incremented", fluidUpdateVoteCount);
 				flAudience?.off("membersChanged", fluidUpdateCurrentUsers);
+				flAudience?.off("memberAdded", alertMemberAdded);
+				flAudience?.off("memberRemoved", alertMemberRemoved);
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps

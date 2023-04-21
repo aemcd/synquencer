@@ -25,6 +25,7 @@ const n = 10;
 
 let undoRedoHandler = new UndoRedoStack();
 let allContainers = new Array<ContainerServices>(n);
+
 for (let i = 0; i < n; i++) {
     fluid.getFluidData().then((data) => {allContainers[i] = data});
 }
@@ -33,6 +34,32 @@ for (let i = 0; i < n; i++) {
     let container = allContainers[i].container;
     let note = new Note({location: 0, velocity: 0, duration: 0, pitch: 0, instrument: instrumentList.Piano});
     fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
+    checkContainers();
+    undoRedoHandler.undo();
+    checkContainers();
+    undoRedoHandler.redo();
+    checkContainers();
+
+    fluid.removeNoteCallback(note, container.initialObjects, undoRedoHandler);
+    checkContainers();
+    undoRedoHandler.undo();
+    checkContainers();
+    undoRedoHandler.redo();
+    checkContainers();
+
+    fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
+    let newNote = new Note({location: 1, velocity: 1, duration: 1, pitch: 1, instrument: instrumentList.Bass});
+    fluid.removeAndAddNoteCallback(note, newNote, container.initialObjects, undoRedoHandler);
+    checkContainers();
+    undoRedoHandler.undo();
+    checkContainers();
+    undoRedoHandler.redo();
+    checkContainers();
+
+    let otherNote = new Note({location: 2, velocity: 2, duration: 2, pitch: 2, instrument: instrumentList.Guitar});
+    let rmNotes = [note, newNote];
+    let addNotes = [otherNote];
+    fluid.removeAddMultipleCallback(rmNotes, addNotes, container.initialObjects, undoRedoHandler);
     checkContainers();
     undoRedoHandler.undo();
     checkContainers();

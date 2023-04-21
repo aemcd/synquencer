@@ -260,7 +260,7 @@ export default function Home({ id }: PageParams) {
 	}, [fluidInitialObjects]);
 
 	useEffect(() => {
-		if (voteCount === currentUsers) {
+		if (voteCount === currentUsers && currentUsers > 0) {
 			PlaySequence();
 			setTickFunction(() => {
 				setTick(getTick());

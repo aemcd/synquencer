@@ -11,6 +11,7 @@ import {
 import { IFluidContainer, LoadableObjectRecord, SharedMap } from "fluid-framework";
 import { TinyliciousClient, TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
 import { UndoRedoStack } from "@/client/undo_redo";
+import { Console } from "console";
 
 type ContainerServices = {container: IFluidContainer, services: TinyliciousContainerServices};
 
@@ -18,9 +19,11 @@ type ContainerServices = {container: IFluidContainer, services: TinyliciousConta
 
 function checkContainers(allContainers: Array<ContainerServices>) {
     for (let i = 1; i < allContainers.length; i++) {
-        const notes1 = allContainers[i].container.initialObjects.sequence as SharedMap;
-        const notes2 = allContainers[i-1].container.initialObjects.sequence as SharedMap;
-        if (notes1.entries() != notes2.entries()) {
+        const notes1 = Array.from((allContainers[i].container.initialObjects.sequence as SharedMap).values());
+        const notes2 = Array.from((allContainers[i-1].container.initialObjects.sequence as SharedMap).values());
+		//console.log(notes1);
+		//console.log(notes2);
+        if (notes1.toString() != notes2.toString()) {
             console.log('Containers %d and %d do not match!', i-1, i);
         }
     }
@@ -36,9 +39,10 @@ async function runCode() {
 		allContainers[i] = await fluid.getFluidData();
 	}
 
-	console.log(allContainers);
+	//console.log(allContainers);
 
 	for (let j = 0; j < allContainers.length; j++) {
+		console.log('Now testing iteration %d', j);
 		let container = allContainers[j].container;
 		let note = new Note({location: 0, velocity: 0, duration: 0, pitch: 0, instrument: instrumentList.Piano});
 		fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
@@ -73,8 +77,8 @@ async function runCode() {
 		checkContainers(allContainers);
 		undoRedoHandler.redo();
 		checkContainers(allContainers);
-}
-
+	}
+	console.log('Done with testing');
 }
 
 export default function Home() {

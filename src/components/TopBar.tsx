@@ -1,5 +1,5 @@
 import { WriteMidi } from "@/client/write_midi";
-import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
+import { AddNote, AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import {
 	Note,
 	SequenceMetadata,
@@ -33,6 +33,9 @@ type ContentPageProps = {
 	voteCount: number;
 	voteForSyncPlayback: () => void;
 	unvoteForSyncPlayback: () => void;
+	selectedNotes: Note[];
+	setSelectedNotes: (notes: Note[]) => void;
+	addNote: (note: Note) => void;
 };
 
 export default function TopBar({
@@ -51,6 +54,9 @@ export default function TopBar({
 	voteCount,
 	voteForSyncPlayback,
 	unvoteForSyncPlayback,
+	selectedNotes,
+	setSelectedNotes,
+	addNote
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	const [isVoting, setIsVoting] = useState(false);
@@ -236,6 +242,42 @@ export default function TopBar({
 						maxLength={3}
 					/>
 				</div> */}
+				<div className="settings">
+					<span aria-hidden="true">Vel:</span>
+					<input
+						className="settings-input"
+						aria-label="Velocity"
+						type="number"
+						min="0"
+						max="100"
+						step="10"
+						value={selectedNotes[0] && selectedNotes.length === 1 ? selectedNotes[0].velocity : ""}
+						onChange={(e) => {
+							if (!selectedNotes[0] || selectedNotes.length !== 1) return;
+							if (
+								e.target.value === "" ||
+								parseInt(e.target.value) < 1
+							) {
+								e.target.value = "1";
+							} else if (parseInt(e.target.value) > 100) {
+								e.target.value = "100";
+							}
+
+							let newNote = new Note({
+								location: selectedNotes[0].location,
+								velocity: parseInt(e.target.value),
+								duration: selectedNotes[0].duration,
+								pitch: selectedNotes[0].pitch,
+								instrument: selectedNotes[0].instrument,
+							});
+							addNote(newNote);
+							setSelectedNotes([newNote]);
+						}}
+						style={{ width: "48px", marginRight: "-6px" }}
+						maxLength={3}
+					/>
+					
+				</div>
 			</div>
 			<div
 				style={{

@@ -91,6 +91,8 @@ export default function Home({ id }: PageParams) {
 
 	const cursorSelectedNote = useRef<Note | null>(null);
 
+	const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
+
 	useEffect(() => {
 		const client: AzureClient = new AzureClient(connectionConfig);
 		client
@@ -473,6 +475,9 @@ export default function Home({ id }: PageParams) {
 				voteCount={voteCount}
 				voteForSyncPlayback={voteForSyncPlayback}
 				unvoteForSyncPlayback={unvoteForSyncPlayback}
+				selectedNotes={selectedNotes}
+				setSelectedNotes={setSelectedNotes}
+				addNote={addNote}
 			/>
 			<PianoRoll
 				sequence={seqData}
@@ -488,6 +493,8 @@ export default function Home({ id }: PageParams) {
 				removeAddMultiple={removeAddMultiple}
 				setLoop={setLoop}
 				clearLoop={clearLoop}
+				selectedNotes={selectedNotes}
+				setSelectedNotes={setSelectedNotes}
 			/>
 			<Cursor
 				selectedNote={cursorSelectedNote}

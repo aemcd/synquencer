@@ -35,6 +35,8 @@ type ContentPageProps = {
 	setLoop: (start: number, end: number) => void;
 	clearLoop: () => void;
 	tickUpdateCall: (func: (tick: number) => void) => void;
+	selectedNotes: Note[];
+	setSelectedNotes: (notes: Note[]) => void;
 };
 
 const KEY_COLORS: boolean[] = [
@@ -70,6 +72,8 @@ export default function PianoRoll({
 	setLoop,
 	clearLoop,
 	tickUpdateCall,
+	selectedNotes,
+	setSelectedNotes
 }: ContentPageProps) {
 	// pitch 24 is C1
 
@@ -95,8 +99,6 @@ export default function PianoRoll({
 		start: null,
 		end: null,
 	});
-
-	const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
 
 	const copiedNote = useRef<Note | null>(null);
 
@@ -150,6 +152,7 @@ export default function PianoRoll({
 
 	useEffect(() => {
 		setSelectedNotes([]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentInstrument]);
 
 	useEffect(() => {

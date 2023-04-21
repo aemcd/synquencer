@@ -15,16 +15,14 @@ import { Console } from "console";
 
 type ContainerServices = {container: IFluidContainer, services: TinyliciousContainerServices};
 
-
-
-function checkContainers(allContainers: Array<ContainerServices>) {
+function checkContainers(allContainers: Array<ContainerServices>, message: string) {
     for (let i = 1; i < allContainers.length; i++) {
         const notes1 = Array.from((allContainers[i].container.initialObjects.sequence as SharedMap).values());
         const notes2 = Array.from((allContainers[i-1].container.initialObjects.sequence as SharedMap).values());
 		//console.log(notes1);
 		//console.log(notes2);
         if (notes1.toString() != notes2.toString()) {
-            console.log('Containers %d and %d do not match!', i-1, i);
+            console.log('Containers %d and %d do not match! Failed test: %s', i-1, i, message);
         }
     }
 }
@@ -35,8 +33,11 @@ async function runCode() {
 	let undoRedoHandler = new UndoRedoStack();
 	let allContainers = new Array<ContainerServices>(n);	
 
-	for (let i = 0; i < allContainers.length; i++) {
-		allContainers[i] = await fluid.getFluidData();
+	let initialContainer = await fluid.getFluidData();
+	const id = initialContainer.id;
+	allContainers[0] = {container: initialContainer.container, services: initialContainer.services};
+	for (let i = 1; i < allContainers.length; i++) {
+		allContainers[i] = await fluid.getAttachedContainer(id);
 	}
 
 	//console.log(allContainers);
@@ -46,37 +47,37 @@ async function runCode() {
 		let container = allContainers[j].container;
 		let note = new Note({location: 0, velocity: 0, duration: 0, pitch: 0, instrument: instrumentList.Piano});
 		fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers);
+		checkContainers(allContainers, "add");
 		undoRedoHandler.undo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "add undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "add redo");
 
 		fluid.removeNoteCallback(note, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers);
+		checkContainers(allContainers, "remove");
 		undoRedoHandler.undo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "remove undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "remove redo");
 
 		fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
 		let newNote = new Note({location: 1, velocity: 1, duration: 1, pitch: 1, instrument: instrumentList.Bass});
 		fluid.removeAndAddNoteCallback(note, newNote, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeandadd");
 		undoRedoHandler.undo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeandadd undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeandadd redo");
 
 		let otherNote = new Note({location: 2, velocity: 2, duration: 2, pitch: 2, instrument: instrumentList.Guitar});
 		let rmNotes = [note, newNote];
 		let addNotes = [otherNote];
 		fluid.removeAddMultipleCallback(rmNotes, addNotes, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeaddmultiple");
 		undoRedoHandler.undo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeaddmultiple undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers);
+		checkContainers(allContainers, "removeaddmultiple redo");
 	}
 	console.log('Done with testing');
 }

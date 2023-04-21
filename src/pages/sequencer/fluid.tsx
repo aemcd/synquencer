@@ -30,23 +30,34 @@ export const getFluidData = async () => {
 	};
 	let container: IFluidContainer;
 	let services: TinyliciousContainerServices;
-	const containerId = location.hash.substring(1);
-	if (!containerId) {
-		({ container, services } = await client.createContainer(schema));
-		const id = await container.attach();
-		location.hash = id;
-		if (!(container != null)) {
-			console.log("null container");
-		}
-	} else {
-		({ container, services } = await client.getContainer(
-			containerId,
-			schema
-		));
-	}
 
-	return { container, services };
+	({ container, services } = await client.createContainer(schema));
+	const id = await container.attach();
+	return {container, services, id};
 };
+
+export async function getAttachedContainer(id: string) {
+	let client = new TinyliciousClient();
+	
+	const schema = {
+		initialObjects: {
+			metadata: SharedMap,
+			sequence: SharedMap,
+			syncPlaybackVotes: SharedCounter,
+		},
+		dynamicObjectTypes: [],
+	};
+	let container: IFluidContainer;
+	let services: TinyliciousContainerServices;
+
+	({ container, services } = await client.getContainer(
+		id,
+		schema
+	));
+
+	return {container, services};
+}
+
 
 export function addNoteCallback(
 	note: Note,

@@ -12,10 +12,21 @@ let currentInterval: NodeJS.Timer;
 let doLoop = false;
 let startTick = -1;
 let endTick = -1;
+let curNoteMap: Map<string, Note> = new Map<string, Note>();
+let curSeq: SequenceMetadata = new SequenceMetadata();
+
 const instruments: Map<string, Soundfont.Player> = new Map<
 	string,
 	Soundfont.Player
 >();
+
+export function setCurNoteMap(map: Map<string, Note>) {
+	curNoteMap = map;
+}
+
+export function setCurSeq(seq: SequenceMetadata) {
+	curSeq = seq;
+}
 
 /**
  * Create a loop section for playback
@@ -151,21 +162,19 @@ function setIntervalWrapper(
 
 function PlayTick(
 	intervalID: NodeJS.Timer | undefined,
-	sequence: SequenceMetadata,
-	notes: Map<string, Note>,
 	instruments: Map<string, Soundfont.Player>
 ): any {
 	if (doLoop && currentTick > endTick) {
 		currentTick = startTick;
 	}
-	if (currentTick >= sequence.length && !doLoop) {
+	if (currentTick >= curSeq.length && !doLoop) {
 		clearInterval(intervalID);
 		currentTick = -1;
 		tickFunction();
 		return;
 	} else {
 		const notesToPlay: Note[] = new Array<Note>();
-		notes.forEach((mapNote) => {
+		curNoteMap.forEach((mapNote) => {
 			if (mapNote.location === currentTick) {
 				notesToPlay.push(mapNote);
 			}
@@ -179,8 +188,8 @@ function PlayTick(
 				instrument.play(note.pitchName(), undefined, {
 					gain: note.velocity / 50,
 					duration: toSec(
-						sequence.bpm,
-						sequence.denominator,
+						curSeq.bpm,
+						curSeq.denominator,
 						note.duration
 					),
 				});
@@ -219,17 +228,12 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): string {
 	return writer.dataUri();
 }
 
-export function PlaySequence(
-	sequence: SequenceMetadata,
-	notes: Map<string, Note>
-) {
+export function PlaySequence() {
 	clearInterval(currentInterval);
 	currentTick = doLoop ? startTick : 0;
 	currentInterval = setIntervalWrapper(
 		PlayTick,
-		toSec(sequence.bpm, sequence.denominator, 1) * 1000,
-		sequence,
-		notes,
+		toSec(curSeq.bpm, curSeq.denominator, 1) * 1000,
 		getInstruments()
 	);
 }

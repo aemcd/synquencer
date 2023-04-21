@@ -24,6 +24,8 @@ import {
 	clearLoop,
 	playNote,
 	playNoteDefault,
+	setCurNoteMap,
+	setCurSeq,
 } from "@/client/write_midi";
 import { SharedCounter } from "@fluidframework/counter";
 import Cursor from "@/components/Cursor";
@@ -169,13 +171,13 @@ export default function Home({ id }: PageParams) {
 				if (flAudience?.getMembers().size != undefined) {
 					setCurrentUsers(flAudience?.getMembers().size);
 				}
-			}
+			};
 			const alertMemberAdded = () => {
 				alert("A user has joined!");
-			}
+			};
 			const alertMemberRemoved = () => {
-				alert("A user has left!")
-			}
+				alert("A user has left!");
+			};
 
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
@@ -230,7 +232,10 @@ export default function Home({ id }: PageParams) {
 
 	useEffect(() => {
 		if (voteCount === currentUsers) {
-			PlaySequence(seqData, notes);
+			PlaySequence();
+			setTickFunction(() => {
+				setTick(getTick());
+			});
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [voteCount]);
@@ -280,6 +285,11 @@ export default function Home({ id }: PageParams) {
 	const redo = useCallback(() => {
 		return undoRedoHandler.redo();
 	}, [undoRedoHandler]);
+
+	useEffect(() => {
+		setCurNoteMap(notes);
+		setCurSeq(seqData);
+	}, [notes, seqData]);
 
 	if (renderState === RenderState.wait) {
 		return (
@@ -355,7 +365,7 @@ export default function Home({ id }: PageParams) {
 					WriteMidi(seqData, noteArr);
 				}}
 				playSequence={() => {
-					PlaySequence(seqData, notes);
+					PlaySequence();
 					setTickFunction(() => {
 						setTick(getTick());
 					});

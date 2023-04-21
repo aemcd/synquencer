@@ -39,7 +39,12 @@ import { AzureClient } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
 import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
-import {removeNoteCallback, addNoteCallback, removeAndAddNoteCallback, removeAddMultipleCallback} from "./fluid";
+import {
+	removeNoteCallback,
+	addNoteCallback,
+	removeAndAddNoteCallback,
+	removeAddMultipleCallback,
+} from "./fluid";
 
 type PageParams = {
 	id: string;
@@ -80,6 +85,7 @@ export default function Home({ id }: PageParams) {
 
 	useEffect(() => {
 		const client: AzureClient = new AzureClient(connectionConfig);
+		console.log(connectionConfig);
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {
@@ -197,15 +203,19 @@ export default function Home({ id }: PageParams) {
 	const voteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(1);
-		if (flVotes.value == fluidServices?.audience.getMembers().size) {
-			//TODO: synchronized playback
-		}
-	}, [fluidInitialObjects, fluidServices]);
+	}, [fluidInitialObjects]);
 
 	const unvoteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(-1);
 	}, [fluidInitialObjects]);
+
+	useEffect(() => {
+		if (voteCount === fluidServices?.audience.getMembers().size) {
+			PlaySequence(seqData, notes);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [voteCount]);
 
 	const addNote = useCallback(
 		(note: Note) => {
@@ -223,14 +233,24 @@ export default function Home({ id }: PageParams) {
 
 	const removeAndAddNote = useCallback(
 		(rmNote: Note, addNote: Note) => {
-			removeAndAddNoteCallback(rmNote, addNote, fluidInitialObjects, undoRedoHandler);
+			removeAndAddNoteCallback(
+				rmNote,
+				addNote,
+				fluidInitialObjects,
+				undoRedoHandler
+			);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeAddMultiple = useCallback(
 		(rmNotes: Note[], addNotes: Note[]) => {
-			removeAddMultipleCallback(rmNotes, addNotes, fluidInitialObjects, undoRedoHandler);
+			removeAddMultipleCallback(
+				rmNotes,
+				addNotes,
+				fluidInitialObjects,
+				undoRedoHandler
+			);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
@@ -392,6 +412,7 @@ export default function Home({ id }: PageParams) {
 			/>
 			<Cursor
 				selectedNote={cursorSelectedNote}
+				currentInstrument={currentInstrument.instrument}
 				PlayNote={playNoteDefault}
 				addNote={addNote}
 				removeNote={removeNote}

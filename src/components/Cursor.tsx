@@ -1,4 +1,4 @@
- import { announce, clearAnnouncer } from "@react-aria/live-announcer";
+import { announce, clearAnnouncer } from "@react-aria/live-announcer";
 import React, { useCallback, useEffect } from "react";
 import {
 	Instrument,
@@ -20,6 +20,7 @@ type Props = {
 	undo: () => boolean;
 	redo: () => boolean;
 	PlayNote: (note: Note) => void;
+	currentInstrument: Instrument;
 };
 export default function Cursor({
 	noteMap,
@@ -31,6 +32,7 @@ export default function Cursor({
 	undo,
 	redo,
 	PlayNote,
+	currentInstrument,
 }: Props) {
 	const cursorNote = React.useRef(
 		new Note({
@@ -54,6 +56,12 @@ export default function Cursor({
 		},
 		[selectedNote]
 	);
+
+	useEffect(() => {
+		cursorNote.current.instrument = currentInstrument;
+		setSelectedNote(null);
+	}, [currentInstrument, setSelectedNote]);
+
 	const editAndSetSelected = useCallback(() => {
 		if (selectedNote.current != null) {
 			const newNote = new Note(cursorNote.current);
@@ -117,8 +125,8 @@ export default function Cursor({
 				7000
 			);
 			setSelectedNote(newNote);
-		PlayNote(newNote);
-	}
+			PlayNote(newNote);
+		}
 	});
 
 	useHotkeys("up, down", function (event, handler) {
@@ -152,8 +160,8 @@ export default function Cursor({
 				"assertive",
 				7000
 			);
-		PlayNote(cursorNote.current);
-	}
+			PlayNote(cursorNote.current);
+		}
 	});
 
 	useHotkeys("ctrl + ArrowUp, ctrl + ArrowDown", function (event, handler) {
@@ -334,8 +342,8 @@ export default function Cursor({
 									"assertive",
 									7000
 								);
-							PlayNote(cursorNote.current);
-						}
+								PlayNote(cursorNote.current);
+							}
 							break;
 						}
 						break;
@@ -427,8 +435,8 @@ export default function Cursor({
 									"assertive",
 									7000
 								);
-							PlayNote(cursorNote.current);
-						}
+								PlayNote(cursorNote.current);
+							}
 							break;
 						}
 				}
@@ -489,78 +497,77 @@ export default function Cursor({
 		redo();
 		setSelectedNote(null);
 		announce("Action redone");
-
 	});
-	useHotkeys("a, w, s, e, d, f, t, g, y, h, u, j, k", function(event, handler) {
-	if (mode.current == false) {
-		return;
-	} else {
-		setSelectedNote(null);
-		let noteChange = 0;
-		switch(event.key) {
-			case "a": 
-			noteChange = 0;
-			break;
-			case "w":
-				noteChange = 1;
-break;
-case "s":
-	noteChange = 2;
-	break;
-	case "e":
-		noteChange = 3;
-		break;
-		case "d": 
-		noteChange = 4;
-		break;
-		case "f":
-			noteChange = 5;
-			break;
-			case "t": 
-			noteChange = 6;
-			break;
-			case "g": 
-			noteChange = 7;
-		break;
-		case "y":
-			noteChange = 8;
-			break;;
-			case "h":
-				noteChange = 9;
-				break;
-				case "u":
-				noteChange = 10;
-				break;
-				case "j": 
-				noteChange = 11;
-				break;
-				case "k": 
-				noteChange = 12;
-				break;
-
+	useHotkeys(
+		"a, w, s, e, d, f, t, g, y, h, u, j, k",
+		function (event, handler) {
+			if (mode.current == false) {
+				return;
+			} else {
+				setSelectedNote(null);
+				let noteChange = 0;
+				switch (event.key) {
+					case "a":
+						noteChange = 0;
+						break;
+					case "w":
+						noteChange = 1;
+						break;
+					case "s":
+						noteChange = 2;
+						break;
+					case "e":
+						noteChange = 3;
+						break;
+					case "d":
+						noteChange = 4;
+						break;
+					case "f":
+						noteChange = 5;
+						break;
+					case "t":
+						noteChange = 6;
+						break;
+					case "g":
+						noteChange = 7;
+						break;
+					case "y":
+						noteChange = 8;
+						break;
+					case "h":
+						noteChange = 9;
+						break;
+					case "u":
+						noteChange = 10;
+						break;
+					case "j":
+						noteChange = 11;
+						break;
+					case "k":
+						noteChange = 12;
+						break;
+				}
+				cursorNote.current.pitch +=
+					noteChange - (cursorNote.current.pitch % 12);
+				PlayNote(cursorNote.current);
+				cursorNote.current.pitch -= noteChange;
+			}
 		}
-		cursorNote.current.pitch += noteChange - cursorNote.current.pitch % 12;
-			PlayNote(cursorNote.current);
-cursorNote.current.pitch -= noteChange; 
-}	
-});
-
+	);
 
 	useHotkeys("z, x", function (event, handler) {
 		if (mode.current == false) {
 			return;
 		} else {
-		switch(event.key) {
-			case "z": 
-			cursorNote.current.pitch -= 12;
-			break;
-			case "x": 
-			cursorNote.current.pitch += 12;
-			break;
+			switch (event.key) {
+				case "z":
+					cursorNote.current.pitch -= 12;
+					break;
+				case "x":
+					cursorNote.current.pitch += 12;
+					break;
+			}
 		}
-
-
-	}
 	});
-		return null;
+	return null;
 }

@@ -8,6 +8,7 @@ import { getRandomName } from "@fluidframework/server-services-client";
 import { AzureClientProps } from "@fluidframework/azure-client";
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 import { SharedCounter } from "@fluidframework/counter";
+import { useAzure } from "@/config";
 
 export abstract class Serializable {
 	serialize() {
@@ -192,8 +193,6 @@ export const instrumentColors = {
 	Trumpet: { primary: "--red", accent: "--red-accent" },
 	Synth_Drum: { primary: "--purple", accent: "--purple-accent" },
 } as const;
-
-export const useAzure = false;
 
 export function generateUser() {
 	const userConfig = {

@@ -410,6 +410,8 @@ export default function Home({ id }: PageParams) {
 				removeAndAddNote={removeAndAddNote}
 				tick={tick}
 				removeAddMultiple={removeAddMultiple}
+				setLoop={setLoop}
+				clearLoop={clearLoop}
 			/>
 			<Cursor
 				selectedNote={cursorSelectedNote}

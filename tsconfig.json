@@ -1,4 +1,11 @@
+//Code referenced:
+//https://stackoverflow.com/a/71907867
 {
+	"ts-node": {
+		"compilerOptions": {
+		  "module": "commonjs"
+		}
+	  },	
 	"compilerOptions": {
 		"target": "es5",
 		"lib": ["dom", "dom.iterable", "esnext"],

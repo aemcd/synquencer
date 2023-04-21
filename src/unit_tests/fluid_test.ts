@@ -66,3 +66,5 @@ for (let i = 0; i < n; i++) {
     undoRedoHandler.redo();
     checkContainers();
 }
+
+export {};

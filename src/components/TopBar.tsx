@@ -30,6 +30,9 @@ type ContentPageProps = {
 	setLength: (length: string) => void;
 	setTimeSig: (timeSig: string) => void;
 	fluidServices: TinyliciousContainerServices | undefined;
+	voteCount: number;
+	voteForSyncPlayback: () => void;
+	unvoteForSyncPlayback: () => void;
 };
 
 export default function TopBar({
@@ -44,10 +47,15 @@ export default function TopBar({
 	setInstrument,
 	setLength,
 	setTimeSig,
-	fluidServices
+	fluidServices,
+	voteCount,
+	voteForSyncPlayback,
+	unvoteForSyncPlayback
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
-	const { theme, setTheme } = useTheme();
+	const [isVoting, setIsVoting] = useState(false);
+
+	const {theme, setTheme} = useTheme();
 
 	return (
 		<div className="top-bar">
@@ -60,14 +68,22 @@ export default function TopBar({
 					▶
 				</button>
 				<button
+					className={isVoting ? "top-button-activated" : "top-button"}
 					style={{
 						width: "84px",
 					}}
-					className="top-button"
 					aria-label="Synchronized Play"
-					onClick={playSequence}
+					onClick={() => {
+						if (!isVoting) {
+							voteForSyncPlayback();
+							setIsVoting(true);
+						} else {
+							unvoteForSyncPlayback();
+							setIsVoting(false);
+						}
+					}}
 				>
-					▷ 0/{fluidServices?.audience.getMembers().size}
+					<span aria-hidden="true">▷ </span><span>{`${voteCount}/${fluidServices?.audience.getMembers().size}`}</span>
 				</button>
 				<button
 					className="top-button"

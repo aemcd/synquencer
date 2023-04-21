@@ -170,7 +170,7 @@ export default function Home({ id }: PageParams) {
 			setVoteCount(flVotes.value);
 			flSeq.on("valueChanged", fluidUpdateSeq);
 			flNotes.on("valueChanged", fluidUpdateNotes);
-			flVotes.on("valueChanged", fluidUpdateVoteCount);
+			flVotes.on("incremented", fluidUpdateVoteCount);
 			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
@@ -399,6 +399,9 @@ export default function Home({ id }: PageParams) {
 					changeSeq(newSeqData);
 				}}
 				fluidServices={fluidServices}
+				voteCount={voteCount}
+				voteForSyncPlayback={voteForSyncPlayback}
+				unvoteForSyncPlayback={unvoteForSyncPlayback}
 			/>
 			<PianoRoll
 				sequence={seqData}

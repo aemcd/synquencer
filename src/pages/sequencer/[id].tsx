@@ -203,15 +203,19 @@ export default function Home({ id }: PageParams) {
 	const voteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(1);
-		if (flVotes.value == fluidServices?.audience.getMembers().size) {
-			//TODO: synchronized playback
-		}
-	}, [fluidInitialObjects, fluidServices]);
+	}, [fluidInitialObjects]);
 
 	const unvoteForSyncPlayback = useCallback(() => {
 		const flVotes = fluidInitialObjects?.syncPlaybackVotes as SharedCounter;
 		flVotes.increment(-1);
 	}, [fluidInitialObjects]);
+
+	useEffect(() => {
+		if (voteCount === fluidServices?.audience.getMembers().size) {
+			PlaySequence(seqData, notes);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [voteCount]);
 
 	const addNote = useCallback(
 		(note: Note) => {

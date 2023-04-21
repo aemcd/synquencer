@@ -6,80 +6,149 @@ import {
 	SequenceMetadata,
 	Note,
 	Instrument,
-    instrumentList
+	instrumentList,
 } from "@/server/types";
-import { IFluidContainer, LoadableObjectRecord, SharedMap } from "fluid-framework";
-import { TinyliciousClient, TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
+import {
+	ConnectionState,
+	IFluidContainer,
+	LoadableObjectRecord,
+	SharedMap,
+} from "fluid-framework";
+import {
+	TinyliciousClient,
+	TinyliciousContainerServices,
+} from "@fluidframework/tinylicious-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { Console } from "console";
 
-type ContainerServices = {container: IFluidContainer, services: TinyliciousContainerServices};
+type ContainerServices = {
+	container: IFluidContainer;
+	services: TinyliciousContainerServices;
+};
 
-function checkContainers(allContainers: Array<ContainerServices>, message: string) {
-    for (let i = 1; i < allContainers.length; i++) {
-        const notes1 = Array.from((allContainers[i].container.initialObjects.sequence as SharedMap).values());
-        const notes2 = Array.from((allContainers[i-1].container.initialObjects.sequence as SharedMap).values());
+async function checkContainers(
+	allContainers: Array<ContainerServices>,
+	message: string
+) {
+	// Allow containers to catch up
+	await new Promise((f) => setTimeout(f, 1000));
+
+	for (let i = 1; i < allContainers.length; i++) {
+		const notes1 = Array.from(
+			(
+				allContainers[i].container.initialObjects.sequence as SharedMap
+			).values()
+		);
+		const notes2 = Array.from(
+			(
+				allContainers[i - 1].container.initialObjects
+					.sequence as SharedMap
+			).values()
+		);
 		//console.log(notes1);
 		//console.log(notes2);
-        if (notes1.toString() != notes2.toString()) {
-            console.log('Containers %d and %d do not match! Failed test: %s', i-1, i, message);
-        }
-    }
+		if (notes1.toString() != notes2.toString()) {
+			console.log(
+				"Containers %d and %d do not match! Failed test: %s",
+				i - 1,
+				i,
+				message
+			);
+		}
+	}
+	return;
 }
 
 async function runCode() {
 	const n = 10;
 
 	let undoRedoHandler = new UndoRedoStack();
-	let allContainers = new Array<ContainerServices>(n);	
+	let allContainers = new Array<ContainerServices>(n);
 
 	let initialContainer = await fluid.getFluidData();
 	const id = initialContainer.id;
-	allContainers[0] = {container: initialContainer.container, services: initialContainer.services};
+	allContainers[0] = {
+		container: initialContainer.container,
+		services: initialContainer.services,
+	};
 	for (let i = 1; i < allContainers.length; i++) {
 		allContainers[i] = await fluid.getAttachedContainer(id);
 	}
 
-	//console.log(allContainers);
+	console.log(allContainers);
 
 	for (let j = 0; j < allContainers.length; j++) {
-		console.log('Now testing iteration %d', j);
+		// Time to catch up
+		await new Promise((f) => setTimeout(f, 2000));
+		console.log("Now testing iteration %d", j);
 		let container = allContainers[j].container;
-		let note = new Note({location: 0, velocity: 0, duration: 0, pitch: 0, instrument: instrumentList.Piano});
+		let note = new Note({
+			location: 0,
+			velocity: 0,
+			duration: 0,
+			pitch: 0,
+			instrument: instrumentList.Piano,
+		});
 		fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers, "add");
+		await checkContainers(allContainers, "add");
 		undoRedoHandler.undo();
-		checkContainers(allContainers, "add undo");
+		await checkContainers(allContainers, "add undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers, "add redo");
+		await checkContainers(allContainers, "add redo");
 
-		fluid.removeNoteCallback(note, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers, "remove");
+		fluid.removeNoteCallback(
+			note,
+			container.initialObjects,
+			undoRedoHandler
+		);
+		await checkContainers(allContainers, "remove");
 		undoRedoHandler.undo();
-		checkContainers(allContainers, "remove undo");
+		await checkContainers(allContainers, "remove undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers, "remove redo");
+		await checkContainers(allContainers, "remove redo");
 
 		fluid.addNoteCallback(note, container.initialObjects, undoRedoHandler);
-		let newNote = new Note({location: 1, velocity: 1, duration: 1, pitch: 1, instrument: instrumentList.Bass});
-		fluid.removeAndAddNoteCallback(note, newNote, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers, "removeandadd");
+		let newNote = new Note({
+			location: 1,
+			velocity: 1,
+			duration: 1,
+			pitch: 1,
+			instrument: instrumentList.Bass,
+		});
+		fluid.removeAndAddNoteCallback(
+			note,
+			newNote,
+			container.initialObjects,
+			undoRedoHandler
+		);
+		await checkContainers(allContainers, "removeandadd");
 		undoRedoHandler.undo();
-		checkContainers(allContainers, "removeandadd undo");
+		await checkContainers(allContainers, "removeandadd undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers, "removeandadd redo");
+		await checkContainers(allContainers, "removeandadd redo");
 
-		let otherNote = new Note({location: 2, velocity: 2, duration: 2, pitch: 2, instrument: instrumentList.Guitar});
+		let otherNote = new Note({
+			location: 2,
+			velocity: 2,
+			duration: 2,
+			pitch: 2,
+			instrument: instrumentList.Guitar,
+		});
 		let rmNotes = [note, newNote];
 		let addNotes = [otherNote];
-		fluid.removeAddMultipleCallback(rmNotes, addNotes, container.initialObjects, undoRedoHandler);
-		checkContainers(allContainers, "removeaddmultiple");
+		fluid.removeAddMultipleCallback(
+			rmNotes,
+			addNotes,
+			container.initialObjects,
+			undoRedoHandler
+		);
+		await checkContainers(allContainers, "removeaddmultiple");
 		undoRedoHandler.undo();
-		checkContainers(allContainers, "removeaddmultiple undo");
+		await checkContainers(allContainers, "removeaddmultiple undo");
 		undoRedoHandler.redo();
-		checkContainers(allContainers, "removeaddmultiple redo");
+		await checkContainers(allContainers, "removeaddmultiple redo");
 	}
-	console.log('Done with testing');
+	console.log("Done with testing");
 }
 
 export default function Home() {

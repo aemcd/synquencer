@@ -9,52 +9,14 @@ import {
 import { useRouter } from "next/router";
 import { SharedMap } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import * as MidiFile from "midi-file";
 
 export default function Home() {
 	const router = useRouter();
 
+	const [loadingState, setLoadingState] = useState<boolean>(false);
 	const uploadInput = useRef<HTMLInputElement>(null);
-
-	const upload = useCallback(() => {
-		const files = uploadInput.current?.files;
-		if (files == null) {
-			alert("Failed to upload file");
-			return;
-		}
-
-		const file = files[0];
-
-		const fileData = new Blob([file]);
-
-		const fr = new FileReader();
-		fr.onloadend = function () {
-			console.log(fr.result);
-			if (fr.result == null) {
-				return;
-			}
-
-			const byteArr = new Uint8Array(fr.result as ArrayBuffer);
-			const midiData = MidiFile.parseMidi(byteArr);
-			console.log(midiData);
-
-			const newSeq = new SequenceMetadata({
-				id: "",
-				length: 32,
-				bpm: 120,
-				numerator: 4,
-				denominator: 4,
-			});
-			const notes = new Array<Note>();
-		};
-
-		fr.onerror = function (error) {
-			console.log("Error: ", error);
-		};
-
-		fr.readAsArrayBuffer(fileData);
-	}, []);
 
 	const create = useCallback(
 		async (newSeq: SequenceMetadata, notes: Array<Note>) => {
@@ -76,14 +38,134 @@ export default function Home() {
 				noteMap.set(n.getNoteKey().serialize(), n);
 			}
 
-			if (container != null) {
+			container.once("saved", () => {
+				container.dispose();
 				router.push(`/sequencer/${id}`);
-			} else {
+			});
+
+			if (container == null) {
 				router.push(`/`);
 			}
 		},
 		[router]
 	);
+
+	const upload = useCallback(() => {
+		setLoadingState(true);
+		const files = uploadInput.current?.files;
+		if (files == null) {
+			alert("Failed to upload file");
+			setLoadingState(false);
+			return;
+		}
+
+		const file = files[0];
+
+		const fileData = new Blob([file]);
+
+		const fr = new FileReader();
+		fr.onloadend = function () {
+			if (fr.result == null) {
+				setLoadingState(true);
+				return;
+			}
+
+			const byteArr = new Uint8Array(fr.result as ArrayBuffer);
+			const midiData = MidiFile.parseMidi(byteArr);
+			const tPerBeat =
+				midiData.header.ticksPerBeat != null
+					? midiData.header.ticksPerBeat
+					: 128;
+
+			console.log(midiData);
+			let newSeq = new SequenceMetadata({
+				id: "",
+				length: 32,
+				bpm: 120,
+				numerator: 4,
+				denominator: 4,
+			});
+			const notes = new Array<Note>();
+
+			let currentTime = 0;
+			let unfinishedNotes = new Array<UnfinishedNote>();
+			for (let i = 0; i < midiData.tracks[0].length; i++) {
+				let event = midiData.tracks[0][i];
+				currentTime += event.deltaTime;
+				if (event.type === "timeSignature") {
+					newSeq.numerator = event.numerator;
+					newSeq.denominator = event.denominator;
+				}
+
+				if (event.type === "setTempo") {
+					newSeq.bpm = Math.round(
+						(60 * 1000000) / event.microsecondsPerBeat
+					);
+				}
+
+				if (event.type === "noteOn") {
+					unfinishedNotes.push({
+						start: currentTime,
+						pitch: event.noteNumber,
+						velocity: event.velocity,
+						channel: event.channel,
+					});
+				}
+
+				if (event.type === "noteOff") {
+					let un: UnfinishedNote | null = null;
+					for (let j = 0; j < unfinishedNotes.length; j++) {
+						let uNote = unfinishedNotes[j];
+						if (
+							event.channel === uNote.channel &&
+							event.noteNumber === uNote.pitch
+						) {
+							un = {
+								pitch: uNote.pitch,
+								velocity: uNote.velocity,
+								channel: uNote.channel,
+								start: uNote.start,
+							};
+							unfinishedNotes.splice(j, 1);
+							break;
+						}
+					}
+					console.log(un);
+
+					if (un != null) {
+						let newNote = new Note({
+							location: toBeat(un.start, tPerBeat),
+							velocity: Math.round((un.velocity * 100) / 127),
+							duration: toBeat(currentTime - un.start, tPerBeat),
+							pitch: un.pitch,
+							instrument: instrumentList.Piano,
+						});
+						for (let inst of Object.values(instrumentList)) {
+							if (un.channel === inst.channel) {
+								newNote.instrument = inst;
+							}
+						}
+
+						notes.push(newNote);
+					}
+				}
+
+				if (event.type === "endOfTrack") {
+					if (toBeat(currentTime, tPerBeat) > newSeq.length) {
+						newSeq.length = toBeat(currentTime, tPerBeat);
+					}
+				}
+			}
+
+			create(newSeq, notes);
+		};
+
+		fr.onerror = function (error) {
+			console.log("Error: ", error);
+		};
+
+		fr.readAsArrayBuffer(fileData);
+	}, [create]);
 
 	return (
 		<>
@@ -110,16 +192,33 @@ export default function Home() {
 						textAlign: "center",
 					}}
 				>
-					<h2 style={{ margin: "0 0 24px 0" }}>Upload File</h2>
-					<input
-						type="file"
-						accept="audio/midi"
-						ref={uploadInput}
-						style={{ textAlign: "center", margin: "auto" }}
-						onChange={upload}
-					></input>
+					{loadingState ? (
+						<h2 style={{ margin: "0 0 24px 0" }}>Uploading...</h2>
+					) : (
+						<h2 style={{ margin: "0 0 24px 0" }}>Upload File</h2>
+					)}
+					{loadingState ? null : (
+						<input
+							type="file"
+							accept="audio/midi"
+							ref={uploadInput}
+							style={{ textAlign: "center", margin: "auto" }}
+							onChange={upload}
+						></input>
+					)}
 				</div>
 			</div>
 		</>
 	);
 }
+
+function toBeat(tick: number, ticksPerBeat: number) {
+	return Math.round(tick / (ticksPerBeat / 4));
+}
+
+type UnfinishedNote = {
+	start: number;
+	pitch: number;
+	velocity: number;
+	channel: number;
+};

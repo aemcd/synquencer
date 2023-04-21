@@ -26,12 +26,15 @@ type ContainerServices = {
 	services: TinyliciousContainerServices;
 };
 
+let fail = false;
+
 async function checkContainers(
 	allContainers: Array<ContainerServices>,
 	message: string
 ) {
 	// Allow containers to catch up
-	await new Promise((f) => setTimeout(f, 1000));
+	await new Promise((f) => setTimeout(f, 300));
+	let thisFail = false;
 
 	for (let i = 1; i < allContainers.length; i++) {
 		const notes1 = Array.from(
@@ -54,7 +57,12 @@ async function checkContainers(
 				i,
 				message
 			);
+			fail = true;
+			thisFail = true;
 		}
+	}
+	if (!thisFail) {
+		console.log("Passed test: %s", message);
 	}
 	return;
 }
@@ -79,6 +87,7 @@ async function runCode() {
 
 	for (let j = 0; j < allContainers.length; j++) {
 		// Time to catch up
+		fail = false;
 		await new Promise((f) => setTimeout(f, 2000));
 		console.log("Now testing iteration %d", j);
 		let container = allContainers[j].container;
@@ -147,6 +156,9 @@ async function runCode() {
 		await checkContainers(allContainers, "removeaddmultiple undo");
 		undoRedoHandler.redo();
 		await checkContainers(allContainers, "removeaddmultiple redo");
+		if (!fail) {
+			console.log(`Iteration ${j} passed`);
+		}
 	}
 	console.log("Done with testing");
 }

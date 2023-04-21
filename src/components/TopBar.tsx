@@ -253,16 +253,24 @@ export default function TopBar({
 						/>
 					</svg>
 				</button>
-				<button className="top-button" aria-hidden="true"
-					onClick={() => {
-						setTheme(theme === "light" ? "dark" : "light");
+				<select
+					className="top-button dropdown"
+					aria-hidden="true"
+					style={{
+						width: "58px",
+						padding: "0px 0px 0px 8px"
+					}}
+					onChange={(e) => {
+						setTheme(e.target.value);
 						setTimeout(() => {
 							setInstrument(currentInstrument.instrument.name);
 						}, 0);
 					}}
 				>
-					{theme === "light" ? "🌘︎" : "☀"}
-				</button>
+					<option value="light">☀</option>
+					<option value="dark">🌘︎</option>
+					<option value="solarized">☯</option>		
+				</select>
 				<button className="top-button" aria-label="Home" onClick={goHome}>
 					<svg width="20" height="20" viewBox="0 0 238.1 198.4">
 						<path

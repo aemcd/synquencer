@@ -118,6 +118,46 @@ html {
   --piano-line: #504945;
 }
 
+[data-theme="solarized"] {
+  /* gruvbox light */
+  --fg: #EEE8D5;
+  --fg0: #839496;
+  --fg1: #93a1a1;
+  --fg2: #eee8d5;
+  --fg3: #fdf6e3;
+  --fg4: #ffffff;
+  --bg: #002B36;
+  --bg0: #002b36;
+  --bg1: #073642;
+  --bg2: #586e75;
+  --bg3: #657b83;
+  --bg4: #93A1A1;
+
+  --black: #002B36;
+  --red: #DC322F;
+  --green: #859900;
+  --yellow: #B58900;
+  --blue: #268BD2;
+  --purple: #D33682;
+  --cyan: #2AA198;
+  --white: #EEE8D5;
+  --black-accent: #073642;
+  --red-accent: #CB4B16;
+  --green-accent: #586E75;
+  --yellow-accent: #657B83;
+  --blue-accent: #839496;
+  --purple-accent: #6C71C4;
+  --cyan-accent: #93A1A1;
+  --white-accent: #FDF6E3;
+
+  --roll-bg: #002B36;
+  --roll-bg-accent: #073642;
+
+  --piano-black: #202020;
+  --piano-white: #DFDFDF;
+  --piano-line: #586e75;
+}
+
 body {
   color: var(--fg);
   background-color: var(--bg);

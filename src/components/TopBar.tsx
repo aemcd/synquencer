@@ -29,7 +29,7 @@ type ContentPageProps = {
 	setInstrument: (instrument: string) => void;
 	setLength: (length: string) => void;
 	setTimeSig: (timeSig: string) => void;
-	fluidServices: TinyliciousContainerServices | undefined;
+	currentUsers: number;
 	voteCount: number;
 	voteForSyncPlayback: () => void;
 	unvoteForSyncPlayback: () => void;
@@ -47,7 +47,7 @@ export default function TopBar({
 	setInstrument,
 	setLength,
 	setTimeSig,
-	fluidServices,
+	currentUsers,
 	voteCount,
 	voteForSyncPlayback,
 	unvoteForSyncPlayback
@@ -83,12 +83,18 @@ export default function TopBar({
 						}
 					}}
 				>
-					<span aria-hidden="true">▷ </span><span>{`${voteCount}/${fluidServices?.audience.getMembers().size}`}</span>
+					<span aria-hidden="true">▷ </span><span>{`${voteCount}/${currentUsers}`}</span>
 				</button>
 				<button
 					className="top-button"
 					aria-label="Stop"
-					onClick={stopSequence}
+					onClick={() => {
+						stopSequence();
+						if (isVoting) {
+							unvoteForSyncPlayback();
+							setIsVoting(false);
+						}
+					}}
 				>
 					◼
 				</button>

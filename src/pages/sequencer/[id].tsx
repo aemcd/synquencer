@@ -68,6 +68,7 @@ export default function Home({ id }: PageParams) {
 	const [renderState, setRenderState] = useState<number>(RenderState.wait);
 	const [voteCount, setVoteCount] = useState(0);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
+	const [currentUsers, setCurrentUsers] = useState(0);
 
 	const [notes, setNotes] = useState<Map<string, Note>>(
 		new Map<string, Note>()
@@ -148,6 +149,7 @@ export default function Home({ id }: PageParams) {
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
 			const flVotes =
 				fluidInitialObjects.syncPlaybackVotes as SharedCounter;
+			const flAudience = fluidServices?.audience;
 
 			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
@@ -164,6 +166,11 @@ export default function Home({ id }: PageParams) {
 			) => {
 				setVoteCount(flVotes.value);
 			};
+			const fluidUpdateCurrentUsers = () => {
+				if (flAudience?.getMembers().size != undefined) {
+					setCurrentUsers(flAudience?.getMembers().size);
+				}
+			}
 
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
@@ -171,13 +178,15 @@ export default function Home({ id }: PageParams) {
 			flSeq.on("valueChanged", fluidUpdateSeq);
 			flNotes.on("valueChanged", fluidUpdateNotes);
 			flVotes.on("incremented", fluidUpdateVoteCount);
+			flAudience?.on("membersChanged", fluidUpdateCurrentUsers);
 			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
 			return () => {
 				flSeq.off("valueChanged", fluidUpdateSeq);
 				flNotes.off("valueChanged", fluidUpdateNotes);
-				flVotes.off("valueChanged", fluidUpdateVoteCount);
+				flVotes.off("incremented", fluidUpdateVoteCount);
+				flAudience?.off("membersChanged", fluidUpdateCurrentUsers);
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -211,7 +220,7 @@ export default function Home({ id }: PageParams) {
 	}, [fluidInitialObjects]);
 
 	useEffect(() => {
-		if (voteCount === fluidServices?.audience.getMembers().size) {
+		if (voteCount === currentUsers) {
 			PlaySequence(seqData, notes);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -398,7 +407,7 @@ export default function Home({ id }: PageParams) {
 					newSeqData.length = parseInt(length);
 					changeSeq(newSeqData);
 				}}
-				fluidServices={fluidServices}
+				currentUsers={currentUsers}
 				voteCount={voteCount}
 				voteForSyncPlayback={voteForSyncPlayback}
 				unvoteForSyncPlayback={unvoteForSyncPlayback}

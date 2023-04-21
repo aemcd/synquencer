@@ -205,9 +205,6 @@ function GetMidi(sequence: SequenceMetadata, notes: Array<Note>): string {
 
 	notes.forEach((note) => {
 		track.addEvent(
-			new MW.ProgramChangeEvent({ instrument: note.instrument.channel })
-		);
-		track.addEvent(
 			new MW.NoteEvent({
 				pitch: note.pitchName() as MW.Pitch,
 				duration: `T${toTick(note.duration)}`,

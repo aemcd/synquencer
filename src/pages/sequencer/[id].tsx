@@ -86,7 +86,6 @@ export default function Home({ id }: PageParams) {
 
 	useEffect(() => {
 		const client: AzureClient = new AzureClient(connectionConfig);
-		console.log(connectionConfig);
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {

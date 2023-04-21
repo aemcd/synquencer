@@ -37,7 +37,10 @@ import {
 	IValueChanged,
 	IFluidContainer,
 } from "fluid-framework";
-import { AzureClient } from "@fluidframework/azure-client";
+import {
+	AzureClient,
+	AzureContainerServices,
+} from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
 import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
@@ -66,10 +69,11 @@ export default function Home({ id }: PageParams) {
 		useState<LoadableObjectRecord>();
 	const [fluidContainer, setFluidContainer] = useState<IFluidContainer>();
 	const [fluidServices, setFluidServices] =
-		useState<TinyliciousContainerServices>();
+		useState<AzureContainerServices>();
 	const [renderState, setRenderState] = useState<number>(RenderState.wait);
 	const [voteCount, setVoteCount] = useState(0);
 	const [undoRedoHandler] = useState(new UndoRedoStack());
+	const alertTimeout = useRef(false);
 	const [currentUsers, setCurrentUsers] = useState(0);
 
 	const [notes, setNotes] = useState<Map<string, Note>>(
@@ -150,7 +154,6 @@ export default function Home({ id }: PageParams) {
 			const flNotes = fluidInitialObjects.sequence as SharedMap;
 			const flVotes =
 				fluidInitialObjects.syncPlaybackVotes as SharedCounter;
-			const flAudience = fluidServices?.audience;
 
 			const fluidUpdateSeq = (changed: IValueChanged, local: boolean) => {
 				setSeq(getMetadata(flSeq));
@@ -167,17 +170,6 @@ export default function Home({ id }: PageParams) {
 			) => {
 				setVoteCount(flVotes.value);
 			};
-			const fluidUpdateCurrentUsers = () => {
-				if (flAudience?.getMembers().size != undefined) {
-					setCurrentUsers(flAudience?.getMembers().size);
-				}
-			};
-			const alertMemberAdded = () => {
-				alert("A user has joined!");
-			};
-			const alertMemberRemoved = () => {
-				alert("A user has left!");
-			};
 
 			setSeq(getMetadata(flSeq));
 			setNotes(getNoteMap(flNotes));
@@ -185,9 +177,6 @@ export default function Home({ id }: PageParams) {
 			flSeq.on("valueChanged", fluidUpdateSeq);
 			flNotes.on("valueChanged", fluidUpdateNotes);
 			flVotes.on("incremented", fluidUpdateVoteCount);
-			flAudience?.on("membersChanged", fluidUpdateCurrentUsers);
-			flAudience?.on("memberAdded", alertMemberAdded);
-			flAudience?.on("memberRemoved", alertMemberRemoved);
 			undoRedoHandler.setNoteMap(flNotes);
 			setRenderState(RenderState.ready);
 
@@ -195,13 +184,53 @@ export default function Home({ id }: PageParams) {
 				flSeq.off("valueChanged", fluidUpdateSeq);
 				flNotes.off("valueChanged", fluidUpdateNotes);
 				flVotes.off("incremented", fluidUpdateVoteCount);
-				flAudience?.off("membersChanged", fluidUpdateCurrentUsers);
-				flAudience?.off("memberAdded", alertMemberAdded);
-				flAudience?.off("memberRemoved", alertMemberRemoved);
 			};
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [fluidInitialObjects]);
+
+	useEffect(() => {
+		if (fluidServices != null) {
+			const flAudience = fluidServices.audience;
+
+			const fluidUpdateCurrentUsers = () => {
+				console.log(flAudience.getMembers().size);
+				if (flAudience.getMembers().size != undefined) {
+					setCurrentUsers(flAudience.getMembers().size);
+				}
+			};
+			const alertMemberAdded = () => {
+				if (!alertTimeout.current) {
+					alert("A user has joined!");
+					alertTimeout.current = true;
+					const wait = async () => {
+						await new Promise((f) => setTimeout(f, 500));
+						alertTimeout.current = false;
+					};
+					wait();
+				}
+			};
+			const alertMemberRemoved = () => {
+				if (!alertTimeout.current) {
+					alert("A user has left!");
+					alertTimeout.current = true;
+					const wait = async () => {
+						await new Promise((f) => setTimeout(f, 500));
+						alertTimeout.current = false;
+					};
+					wait();
+				}
+			};
+			flAudience.on("membersChanged", fluidUpdateCurrentUsers);
+			flAudience.on("memberAdded", alertMemberAdded);
+			flAudience.on("memberRemoved", alertMemberRemoved);
+			return () => {
+				flAudience.off("membersChanged", fluidUpdateCurrentUsers);
+				flAudience.off("memberAdded", alertMemberAdded);
+				flAudience.off("memberRemoved", alertMemberRemoved);
+			};
+		}
+	}, [fluidServices]);
 
 	const changeSeq = useCallback(
 		(newSequence: SequenceMetadata) => {

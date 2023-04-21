@@ -39,7 +39,12 @@ import { AzureClient } from "@fluidframework/azure-client";
 import { UndoRedoStack } from "@/client/undo_redo";
 import { useRouter } from "next/router";
 import { TinyliciousContainerServices } from "@fluidframework/tinylicious-client";
-import {removeNoteCallback, addNoteCallback, removeAndAddNoteCallback, removeAddMultipleCallback} from "./fluid";
+import {
+	removeNoteCallback,
+	addNoteCallback,
+	removeAndAddNoteCallback,
+	removeAddMultipleCallback,
+} from "./fluid";
 
 type PageParams = {
 	id: string;
@@ -80,6 +85,7 @@ export default function Home({ id }: PageParams) {
 
 	useEffect(() => {
 		const client: AzureClient = new AzureClient(connectionConfig);
+		console.log(connectionConfig);
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {
@@ -223,14 +229,24 @@ export default function Home({ id }: PageParams) {
 
 	const removeAndAddNote = useCallback(
 		(rmNote: Note, addNote: Note) => {
-			removeAndAddNoteCallback(rmNote, addNote, fluidInitialObjects, undoRedoHandler);
+			removeAndAddNoteCallback(
+				rmNote,
+				addNote,
+				fluidInitialObjects,
+				undoRedoHandler
+			);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
 
 	const removeAddMultiple = useCallback(
 		(rmNotes: Note[], addNotes: Note[]) => {
-			removeAddMultipleCallback(rmNotes, addNotes, fluidInitialObjects, undoRedoHandler);
+			removeAddMultipleCallback(
+				rmNotes,
+				addNotes,
+				fluidInitialObjects,
+				undoRedoHandler
+			);
 		},
 		[fluidInitialObjects, undoRedoHandler]
 	);
@@ -392,6 +408,7 @@ export default function Home({ id }: PageParams) {
 			/>
 			<Cursor
 				selectedNote={cursorSelectedNote}
+				currentInstrument={currentInstrument.instrument}
 				PlayNote={playNoteDefault}
 				addNote={addNote}
 				removeNote={removeNote}

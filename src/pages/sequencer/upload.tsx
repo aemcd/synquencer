@@ -2,7 +2,7 @@ import Head from "next/head";
 import {
 	Note,
 	SequenceMetadata,
-	connectionConfig,
+	getConnectionConfig,
 	instrumentList,
 	schema,
 } from "@/server/types";
@@ -20,7 +20,7 @@ export default function Home() {
 
 	const create = useCallback(
 		async (newSeq: SequenceMetadata, notes: Array<Note>) => {
-			const client: AzureClient = new AzureClient(connectionConfig);
+			const client: AzureClient = new AzureClient(getConnectionConfig());
 			const { container, services } = await client.createContainer(
 				schema
 			);

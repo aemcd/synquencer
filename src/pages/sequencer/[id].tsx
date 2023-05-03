@@ -1,16 +1,13 @@
 import Head from "next/head";
 import {
-	connectionConfig,
-	Instrument,
+	getConnectionConfig,
 	instrumentList,
 	Note,
-	NoteKey,
 	schema,
 	SequenceMetadata,
 	user,
 } from "@/server/types";
 import { GetServerSidePropsContext, GetServerSidePropsResult } from "next";
-import { AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import PianoRoll from "@/components/PianoRoll";
 import TopBar from "@/components/TopBar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -94,7 +91,7 @@ export default function Home({ id }: PageParams) {
 	const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
 
 	useEffect(() => {
-		const client: AzureClient = new AzureClient(connectionConfig);
+		const client: AzureClient = new AzureClient(getConnectionConfig());
 		client
 			.getContainer(id, schema)
 			.then(({ container, services }) => {

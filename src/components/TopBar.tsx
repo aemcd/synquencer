@@ -1,5 +1,3 @@
-import { WriteMidi } from "@/client/write_midi";
-import { AddNote, AddNotes, ClearNotes, EditSequence } from "@/database/calls";
 import {
 	Note,
 	SequenceMetadata,
@@ -56,7 +54,7 @@ export default function TopBar({
 	unvoteForSyncPlayback,
 	selectedNotes,
 	setSelectedNotes,
-	addNote
+	addNote,
 }: ContentPageProps) {
 	const [message, setMessage] = useState("");
 	const [isVoting, setIsVoting] = useState(false);
@@ -251,9 +249,14 @@ export default function TopBar({
 						min="0"
 						max="100"
 						step="10"
-						value={selectedNotes[0] && selectedNotes.length === 1 ? selectedNotes[0].velocity : ""}
+						value={
+							selectedNotes[0] && selectedNotes.length === 1
+								? selectedNotes[0].velocity
+								: ""
+						}
 						onChange={(e) => {
-							if (!selectedNotes[0] || selectedNotes.length !== 1) return;
+							if (!selectedNotes[0] || selectedNotes.length !== 1)
+								return;
 							if (
 								e.target.value === "" ||
 								parseInt(e.target.value) < 1
@@ -276,7 +279,6 @@ export default function TopBar({
 						style={{ width: "48px", marginRight: "-6px" }}
 						maxLength={3}
 					/>
-					
 				</div>
 			</div>
 			<div

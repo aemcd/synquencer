@@ -1,24 +1,8 @@
 import Head from "next/head";
-import TopBar from "@/components/TopBar";
-import PianoRoll from "@/components/PianoRoll";
-import { AddSequence } from "@/database/calls";
-import {
-	Note,
-	SequenceMetadata,
-	connectionConfig,
-	instrumentList,
-	schema,
-} from "@/server/types";
-import * as randomstring from "randomstring";
-import { useRouter } from "next/router";
-import {
-	GetServerSideProps,
-	GetServerSidePropsContext,
-	GetServerSidePropsResult,
-} from "next";
-import { InsertOneResult } from "mongodb";
-import TinyliciousClient from "@fluidframework/tinylicious-client";
-import { IFluidContainer, SharedMap } from "fluid-framework";
+
+import { SequenceMetadata, getConnectionConfig, schema } from "@/server/types";
+import { GetServerSidePropsContext } from "next";
+import { SharedMap } from "fluid-framework";
 import { AzureClient } from "@fluidframework/azure-client";
 
 type route = {
@@ -46,7 +30,7 @@ export default function Home() {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-	const client: AzureClient = new AzureClient(connectionConfig);
+	const client: AzureClient = new AzureClient(getConnectionConfig());
 	const { container, services } = await client.createContainer(schema);
 	const id = await container.attach();
 	const newSeq = new SequenceMetadata({

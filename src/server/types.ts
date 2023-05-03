@@ -8,7 +8,6 @@ import { getRandomName } from "@fluidframework/server-services-client";
 import { AzureClientProps } from "@fluidframework/azure-client";
 import { InsecureTokenProvider } from "@fluidframework/test-client-utils";
 import { SharedCounter } from "@fluidframework/counter";
-import { useAzure } from "@/config";
 
 export abstract class Serializable {
 	serialize() {
@@ -204,22 +203,28 @@ export function generateUser() {
 
 export const user = generateUser();
 
-export const connectionConfig: AzureClientProps = useAzure
-	? ({
+export function getConnectionConfig(): AzureClientProps {
+	if (process.env.USE_AZURE === "true") {
+		const connection: AzureClientProps = {
 			connection: {
-				tenantId: "c3172c50-a661-4db0-8a69-e03fb1a39f3b",
+				tenantId: process.env.FLUID_TENANT_ID as string,
 				tokenProvider: new InsecureTokenProvider(
-					"043eecec8e88cffd7263ea50a6aa8240",
+					process.env.FLUID_TENANT_KEY as string,
 					user
 				),
 				type: "remote",
-				endpoint: "https://us.fluidrelay.azure.com",
+				endpoint: process.env.FLUID_API_URL as string,
 			},
-	  } as const)
-	: ({
+		} as const;
+		return connection;
+	} else {
+		const connection: AzureClientProps = {
 			connection: {
 				tokenProvider: new InsecureTokenProvider("fooBar", user),
 				type: "local",
 				endpoint: "http://localhost:7070",
 			},
-	  } as const);
+		} as const;
+		return connection;
+	}
+}
